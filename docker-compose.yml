@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: seiga_db
+      POSTGRES_USER: seiga
+      POSTGRES_PASSWORD: seiga_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seiga -d seiga_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://seiga:seiga_password@postgres:5432/seiga_db
+      PORT: 25570
+      PUBLIC_BASE_URL: http://localhost:25570
+    ports:
+      - "25570:25570"
+    volumes:
+      - uploads:/app/uploads
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run seed && npm start"
+
+volumes:
+  postgres_data:
+  uploads:

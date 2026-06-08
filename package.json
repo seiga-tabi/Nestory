@@ -1,0 +1,31 @@
+{
+  "name": "seiga-studio-platform",
+  "version": "1.0.0",
+  "description": "Seiga Studio streamer profile platform with Express, Prisma, PostgreSQL, Twitch OAuth, fan cards, schedules, analytics, and admin approval.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "check": "prisma validate && node scripts/check-server-syntax.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.1",
+    "node-cron": "^4.0.7",
+    "nodemailer": "^8.0.10",
+    "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "prisma": "^6.9.0"
+  }
+}

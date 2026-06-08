@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Studio - 방송 통계 화면</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span>Streamer Dashboard</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong>관리자 메모</strong>
+        <p>통계 화면은 실제 연동 시 Twitch API, 자체 방문 로그, 팬 카드 DB를 합쳐서 보여주면 좋습니다.</p>
+        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1>방송 통계 화면</h1>
+          <p>방송 성장, 프로필 유입, 팬 카드 전환을 데이터로 확인하세요.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" type="button" data-analytics-range="7d">7일</button><button class="ghost-btn" type="button" data-analytics-range="30d">30일</button><button class="primary-btn" id="exportAnalyticsButton" type="button">리포트 내보내기</button>
+        </div>
+      </header>
+      
+<section class="grid-4">
+  <article class="card stat-card"><div class="stat-label">평균 시청자</div><div class="stat-value" id="averageViewersValue">-</div><div class="stat-change">방송 스냅샷 평균</div></article>
+  <article class="card stat-card" style="--accent:rgba(249,168,212,.28)"><div class="stat-label">최근 방문</div><div class="stat-value" id="weeklyViewsValue">-</div><div class="stat-change">선택 기간 기준</div></article>
+  <article class="card stat-card" style="--accent:rgba(147,197,253,.32)"><div class="stat-label">오늘 방문 비율</div><div class="stat-value" id="profileClickRateValue">-</div><div class="stat-change">전체 방문 대비</div></article>
+  <article class="card stat-card" style="--accent:rgba(134,239,172,.28)"><div class="stat-label">팬 카드 전환</div><div class="stat-value" id="fanCardConversionValue">-</div><div class="stat-change">방문자 대비 작성률</div></article>
+</section>
+
+<section class="analytics-layout">
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-title"><div><h2>방문자/시청 반응</h2><p>프로필 방문 흐름을 표시합니다.</p></div><span class="badge" id="analyticsRangeBadge">7일</span></div>
+      <div class="mini-chart" id="analyticsChart" style="height:260px">
+        <div class="list-item"><div class="item-content"><strong>차트 데이터를 불러오는 중입니다.</strong></div></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <article class="panel"><div class="panel-title"><div><h2>팬 카드 상태</h2><p>상태별 팬 카드 분포</p></div></div><div id="fanCardStatusList"><div class="list-item"><div class="item-content"><strong>팬 카드 통계를 불러오는 중입니다.</strong></div></div></div></article>
+      <article class="panel"><div class="panel-title"><div><h2>방송 스냅샷</h2><p>Twitch/스냅샷 수집 기준</p></div></div><div class="list" id="streamSnapshotList"><div class="list-item"><div class="item-content"><strong>방송 스냅샷을 불러오는 중입니다.</strong></div></div></div></article>
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="panel"><div class="panel-title"><div><h2>유입 경로</h2><p>프로필 방문 기준</p></div></div><div id="trafficSourcePanel"><div class="list-item"><div class="item-content"><strong>유입 경로 데이터는 아직 수집되지 않았습니다.</strong></div></div></div></section>
+    <section class="panel"><div class="panel-title"><div><h2>개선 제안</h2><p>데이터 기반 운영 체크</p></div><span class="badge">Rule Note</span></div><div class="list" id="analyticsNotesList"><div class="list-item"><div class="item-content"><strong>통계 데이터를 불러오는 중입니다.</strong></div></div></div></section>
+  </aside>
+</section>
+
+<div id="analyticsError" class="card" hidden>통계 데이터를 불러오지 못했습니다.</div>
+
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

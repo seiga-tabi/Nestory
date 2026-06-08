@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Studio - 프로필 카드 화면</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Simple liquid-glass profile card preview */
+    .simple-profile-card {
+      position: relative;
+      isolation: isolate;
+      width: min(370px, 100%);
+      height: 620px;
+      min-height: 0;
+      margin: 0 auto;
+      padding: 12px;
+      border-radius: 34px;
+      color: #15151f;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.38)),
+        rgba(255, 255, 255, 0.54);
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      box-shadow:
+        0 28px 70px rgba(80, 76, 110, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(28px) saturate(1.25);
+      -webkit-backdrop-filter: blur(28px) saturate(1.25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .simple-profile-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.92), transparent 34%),
+        radial-gradient(circle at 84% 16%, rgba(167, 139, 250, 0.20), transparent 32%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04));
+      pointer-events: none;
+    }
+
+    .simple-profile-card::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: 4;
+      border-radius: 33px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+    }
+
+    .simple-profile-card .simple-card-photo {
+      position: relative;
+      z-index: 1;
+      height: 360px;
+      flex: 0 0 360px;
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.88), transparent 34%),
+        linear-gradient(145deg, rgba(226, 232, 240, 0.92), rgba(148, 163, 184, 0.72));
+      box-shadow:
+        0 18px 36px rgba(30, 30, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.64);
+    }
+
+    .simple-profile-card .simple-card-image {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--card-sub, #f9a8d4), var(--card-main, #7c3aed));
+      box-shadow: none;
+    }
+
+    .simple-profile-card .simple-card-image span {
+      font-size: 92px;
+      font-weight: 950;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .simple-profile-card .simple-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .simple-profile-card .simple-card-image:not(.has-image) img {
+      display: none;
+    }
+
+    .simple-profile-card .simple-card-image.has-image span {
+      display: none;
+    }
+
+    .simple-profile-card .simple-card-image.has-image img {
+      display: block;
+    }
+
+    .simple-profile-card .simple-card-status {
+      display: none;
+    }
+
+    .simple-profile-card .simple-card-body {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      margin-top: 12px;
+      padding: 20px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      border-radius: 26px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24));
+      border: 1px solid rgba(255, 255, 255, 0.54);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        0 14px 30px rgba(30, 30, 42, 0.06);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    }
+
+    .simple-profile-card .simple-name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      margin-bottom: 4px;
+    }
+
+    .simple-profile-card .simple-name-row h3 {
+      min-width: 0;
+      color: #15151f;
+      font-size: 29px;
+      line-height: 1.08;
+      letter-spacing: -0.055em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .simple-profile-card .simple-verified {
+      flex: 0 0 auto;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #31d158, #16a34a);
+      font-size: 15px;
+      font-weight: 950;
+      box-shadow:
+        0 8px 18px rgba(34, 197, 94, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.44);
+    }
+
+    .simple-profile-card .simple-handle {
+      color: #8a8798;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 13px;
+    }
+
+    .simple-profile-card .simple-card-body h4 {
+      color: #30303d;
+      font-size: 16px;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+      margin-bottom: 0;
+    }
+
+    .simple-profile-card .simple-intro,
+    .simple-profile-card .simple-card-meta,
+    .simple-profile-card .simple-hidden-support {
+      display: none !important;
+    }
+
+    .simple-profile-card .simple-card-links {
+      margin-top: auto;
+      padding-top: 18px;
+    }
+
+    .simple-profile-card .link-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .simple-profile-card .link-chip {
+      min-height: 42px;
+      padding: 0 13px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #15151f;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.38));
+      border: 1px solid rgba(255, 255, 255, 0.64);
+      box-shadow:
+        0 10px 22px rgba(30, 30, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .simple-profile-card.style-clean {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.48)),
+        rgba(255, 255, 255, 0.58);
+    }
+
+    .simple-profile-card.style-soft,
+    .simple-profile-card.style-dark {
+      position: relative;
+      background: rgba(255, 255, 255, 0.58);
+      backdrop-filter: blur(28px) saturate(1.25);
+      -webkit-backdrop-filter: blur(28px) saturate(1.25);
+    }
+
+    .simple-profile-card.style-soft .simple-card-photo,
+    .simple-profile-card.style-dark .simple-card-photo {
+      position: absolute;
+      inset: 12px;
+      height: auto;
+      flex-basis: auto;
+      border-radius: 28px;
+      z-index: 0;
+    }
+
+    .simple-profile-card.style-soft .simple-card-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 34%, rgba(245, 246, 247, 0.28) 56%, rgba(255, 255, 255, 0.88) 100%);
+    }
+
+    .simple-profile-card.style-dark {
+      background: rgba(20, 24, 26, 0.82);
+      color: #fff;
+    }
+
+    .simple-profile-card.style-dark .simple-card-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 30%, rgba(20, 24, 24, 0.24) 58%, rgba(20, 24, 24, 0.84) 100%);
+    }
+
+    .simple-profile-card.style-soft .simple-card-body,
+    .simple-profile-card.style-dark .simple-card-body {
+      position: relative;
+      z-index: 2;
+      flex: 0 0 auto;
+      margin: auto 12px 12px;
+      padding: 22px;
+    }
+
+    .simple-profile-card.style-dark .simple-name-row h3,
+    .simple-profile-card.style-dark .simple-card-body h4 {
+      color: #fff;
+    }
+
+    .simple-profile-card.style-dark .simple-handle {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .simple-profile-card.style-dark .link-chip {
+      color: #fff;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .design-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .design-choice {
+      position: relative;
+      min-height: 118px;
+      padding: 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .design-choice input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .design-choice input:checked + .design-swatch {
+      outline: 3px solid rgba(124, 58, 237, 0.28);
+      outline-offset: 3px;
+    }
+
+    .design-swatch {
+      height: 72px;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      background: #f6f6f7;
+      box-shadow: inset 0 0 0 1px rgba(20, 20, 30, 0.06);
+    }
+
+    .design-swatch.clean {
+      background: linear-gradient(to bottom, #dfe7ea 0 56%, #ffffff 56% 100%);
+    }
+
+    .design-swatch.soft {
+      background:
+        linear-gradient(to bottom, rgba(224, 231, 235, 0.95), rgba(224, 231, 235, 0.4)),
+        linear-gradient(135deg, #dfe7ea, #ffffff);
+    }
+
+    .design-swatch.dark {
+      background:
+        linear-gradient(to top, rgba(20, 24, 26, 0.55), transparent 58%),
+        linear-gradient(135deg, #dfe7ea, #8a9698);
+    }
+
+    .design-choice strong {
+      display: block;
+      color: #202033;
+      font-size: 12px;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .calendar-editor {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 8px;
+    }
+
+    .calendar-day {
+      min-width: 0;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+    }
+
+    .calendar-day strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #202033;
+      font-size: 12px;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .calendar-day input {
+      width: 100%;
+      height: 36px;
+      padding: 0 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(150, 140, 180, 0.2);
+      background: rgba(255, 255, 255, 0.72);
+      color: #202033;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      outline: none;
+    }
+
+    .calendar-day input + input {
+      margin-top: 6px;
+    }
+
+    .profile-image-only {
+      grid-template-columns: 1fr;
+    }
+
+    .profile-image-only .upload-box {
+      min-height: 132px;
+    }
+
+    .profile-image-only .upload-box div {
+      max-width: 220px;
+    }
+
+    .editor-profile-card {
+      min-height: 0;
+    }
+
+    .editor-profile-card,
+    .editor-profile-card .card-name-block h3,
+    .editor-profile-card .card-intro h4 {
+      letter-spacing: 0;
+    }
+
+    .editor-profile-card.style-clean {
+      color: #202033;
+      background:
+        radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--card-sub) 46%, transparent), transparent 34%),
+        radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--card-main) 34%, transparent), transparent 36%),
+        linear-gradient(135deg, #fff 0%, #f6f7fb 52%, #eef7ff 100%);
+    }
+
+    .editor-profile-card.style-clean::before {
+      background: linear-gradient(90deg, rgba(255,255,255,.88), rgba(255,255,255,.42) 58%, rgba(255,255,255,.7));
+    }
+
+    .editor-profile-card.style-clean .card-status,
+    .editor-profile-card.style-clean .card-tag,
+    .editor-profile-card.style-clean .link-chip,
+    .editor-profile-card.style-clean .schedule-chip,
+    .editor-profile-card.style-clean .info-box,
+    .editor-profile-card.style-clean .floating-card {
+      color: #202033;
+      background: rgba(255, 255, 255, 0.62);
+      border-color: rgba(124, 58, 237, 0.14);
+    }
+
+    .editor-profile-card.style-clean .card-name-block p,
+    .editor-profile-card.style-clean .card-intro p,
+    .editor-profile-card.style-clean .floating-card span,
+    .editor-profile-card.style-clean .info-box-title {
+      color: rgba(32, 32, 51, 0.64);
+    }
+
+    .editor-profile-card.style-soft {
+      background:
+        radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--card-sub) 76%, transparent), transparent 34%),
+        radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--card-main) 64%, transparent), transparent 36%),
+        linear-gradient(135deg, #322045 0%, #5d3a8e 48%, #25364f 100%);
+    }
+
+    .editor-profile-card.style-dark {
+      background:
+        radial-gradient(circle at 18% 10%, rgba(249, 168, 212, 0.24), transparent 34%),
+        radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--card-main) 52%, transparent), transparent 36%),
+        linear-gradient(135deg, #15151f 0%, #241833 52%, #111827 100%);
+    }
+
+    .editor-profile-card .card-content {
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    }
+
+    .card-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .visibility-status {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .visibility-status.private {
+      opacity: .78;
+    }
+
+    .editor-profile-card .card-intro {
+      display: grid;
+      gap: 8px;
+    }
+
+    .editor-profile-card .card-intro h4,
+    .editor-profile-card .card-intro p,
+    .editor-profile-card .floating-card span {
+      overflow-wrap: anywhere;
+      word-break: keep-all;
+    }
+
+    .editor-profile-card .card-intro h4 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+
+    .editor-profile-card .card-intro p {
+      -webkit-line-clamp: 4;
+    }
+
+    .editor-profile-card .card-tags {
+      min-width: 0;
+    }
+
+    .editor-profile-card .card-tag,
+    .editor-profile-card .link-chip,
+    .editor-profile-card .schedule-chip {
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: keep-all;
+      line-height: 1.35;
+    }
+
+    .card-tags-inline {
+      display: contents;
+    }
+
+    .preview-background-image {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: none;
+      filter: saturate(1.04);
+    }
+
+    .visual-area.has-background .preview-background-image {
+      display: block;
+    }
+
+    .visual-area.has-background::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(90deg, rgba(12, 10, 18, 0.18), rgba(12, 10, 18, 0.34));
+      pointer-events: none;
+    }
+
+    .visual-area.has-background .character-placeholder {
+      opacity: 0;
+    }
+
+    .editor-profile-card .floating-card {
+      z-index: 2;
+    }
+
+    .editor-profile-card .card-avatar img {
+      object-fit: contain;
+      background: color-mix(in srgb, var(--card-main) 16%, #fff);
+    }
+
+    .editor-profile-card .card-bottom {
+      grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+    }
+
+    .editor-profile-card .info-box {
+      overflow: hidden;
+    }
+
+    @media (max-width: 680px) {
+      .simple-profile-card {
+        width: 100%;
+        height: 610px;
+      }
+
+      .simple-profile-card .simple-card-photo {
+        height: 330px;
+        flex-basis: 330px;
+      }
+
+      .simple-profile-card .link-row {
+        grid-template-columns: 1fr;
+      }
+
+      .design-choice-grid,
+      .calendar-editor {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-profile-card .card-content {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/card.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span>Streamer Dashboard</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong>관리자 메모</strong>
+        <p>카드 미리보기는 입력값이 즉시 반영되며 저장 버튼으로 DB에 반영됩니다.</p>
+        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1>프로필 카드 화면</h1>
+          <p>스트리머 공개 프로필과 SNS 공유용 카드를 편집하세요.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="resetProfileButton" type="button">초기화</button><button class="ghost-btn" id="downloadProfilePngButton" type="button">PNG 다운로드</button><button class="primary-btn" id="saveProfileButton" type="button">저장</button>
+        </div>
+      </header>
+
+<section class="workspace">
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-title"><div><h2>기본 정보</h2><p>프로필 카드 상단과 소개 영역에 표시됩니다.</p></div><span class="badge">Required</span></div>
+      <div class="form-grid">
+        <div class="two-col"><div class="field"><label for="streamerName">스트리머 이름</label><input id="streamerName" type="text" autocomplete="off" /></div><div class="field"><label for="handle">Twitch ID / 핸들</label><input id="handle" type="text" autocomplete="off" /></div></div>
+        <div class="field"><label for="subtitle">소개 / Bio</label><textarea id="subtitle" autocomplete="off" maxlength="180"></textarea></div>
+        <textarea id="intro" hidden></textarea>
+        <div class="two-col">
+          <div class="field"><label for="mainContent">주 콘텐츠</label><select id="mainContent"><option value="">선택 안 함</option><option>마인크래프트</option><option>League of Legends</option><option>잡담</option><option>노래 / 음악</option><option>스토리 게임</option></select></div>
+          <div class="field"><label for="language">언어 / Language</label><select id="language"><option value="">선택 안 함</option><option value="KR">한국어</option><option value="JA">日本語</option><option value="KR/JA">KR / JA</option><option value="JA/KR">JA / KR</option></select></div>
+        </div>
+        <div class="field"><label for="playStyleTags">플레이 스타일 태그</label><input id="playStyleTags" type="text" autocomplete="off" placeholder="예: 초보 환영, 솔랭, 협동" /></div>
+        <input id="liveStatus" type="hidden" value="자동 연동" />
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>카드 디자인</h2><p>방송 상태는 Twitch API에서 자동으로 가져오고, 사용자는 카드 디자인만 선택합니다.</p></div><span class="badge">Design</span></div>
+      <div class="design-choice-grid">
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-clean" checked /><div class="design-swatch clean"></div><strong>Neon Slate</strong></label>
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-soft" /><div class="design-swatch soft"></div><strong>Pastel Raid</strong></label>
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-dark" /><div class="design-swatch dark"></div><strong>Night Boss</strong></label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>프로필 이미지</h2><p>대표 이미지와 배경 이미지를 미리보기에 바로 반영합니다.</p></div><span class="badge">Upload</span></div>
+      <div class="upload-grid"><label class="upload-box"><input id="avatarUpload" type="file" accept="image/*" /><div><strong>대표 프로필 이미지</strong><span>PNG/JPG 권장<br />인물 또는 캐릭터 이미지 추천</span></div></label><label class="upload-box"><input id="backgroundUpload" type="file" accept="image/*" /><div><strong>배경 이미지</strong><span>PNG/JPG 권장<br />카드 오른쪽 비주얼 영역</span></div></label></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>컬러 설정</h2><p>카드의 메인 컬러와 서브 컬러를 설정합니다.</p></div><span class="badge">Theme</span></div>
+      <div class="color-row"><label class="color-input"><input id="mainColor" type="color" value="#7c3aed" /><span>메인 컬러</span></label><label class="color-input"><input id="subColor" type="color" value="#f9a8d4" /><span>서브 컬러</span></label></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>링크</h2><p>비어 있는 링크는 카드에서 자동으로 숨겨집니다.</p></div><span class="badge">Social</span></div>
+      <div class="form-grid"><div class="field"><label for="twitchLink">Twitch</label><input id="twitchLink" type="text" autocomplete="off" /></div><div class="field"><label for="youtubeLink">YouTube</label><input id="youtubeLink" type="text" autocomplete="off" /></div><div class="field"><label for="xLink">X / Twitter</label><input id="xLink" type="text" autocomplete="off" /></div><div class="field"><label for="discordLink">Discord</label><input id="discordLink" type="text" autocomplete="off" /></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>방송 일정</h2><p>요일별 캘린더 형식으로 방송 시간을 관리합니다.</p></div><span class="badge">Calendar</span></div>
+      <div class="calendar-editor" id="calendarEditor">
+        <div class="calendar-day"><strong>월</strong><input data-day="월" data-type="time" placeholder="미정" /><input data-day="월" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>화</strong><input data-day="화" data-type="time" placeholder="휴방" /><input data-day="화" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>수</strong><input data-day="수" data-type="time" placeholder="미정" /><input data-day="수" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>목</strong><input data-day="목" data-type="time" placeholder="휴방" /><input data-day="목" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>금</strong><input data-day="금" data-type="time" placeholder="미정" /><input data-day="금" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>토</strong><input data-day="토" data-type="time" placeholder="미정" /><input data-day="토" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day"><strong>일</strong><input data-day="일" data-type="time" placeholder="휴방" /><input data-day="일" data-type="content" placeholder="내용" /></div>
+      </div>
+      <textarea id="scheduleText" hidden></textarea>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>표시 옵션</h2><p>공개 상태와 카드에 표시할 보조 정보를 설정합니다.</p></div><span class="badge">Display</span></div>
+      <div class="toggle-list">
+        <label class="toggle-row"><div><strong>링크 표시</strong><span>Twitch, YouTube, X, Discord 링크 버튼 표시</span></div><span class="switch"><input id="showLinks" type="checkbox" checked /><span class="switch-slider"></span></span></label>
+        <label class="toggle-row"><div><strong>공개 프로필</strong><span>끄면 미리보기와 저장 상태가 비공개로 표시됩니다.</span></div><span class="switch"><input id="isPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label>
+      </div>
+      <input id="showSchedule" type="checkbox" checked hidden />
+      <input id="showQr" type="checkbox" checked hidden />
+    </section>
+  </div>
+
+  <section class="profile-preview-panel">
+    <div class="panel-title"><div><h2>카드 미리보기</h2><p>공개 프로필용 16:9 카드 미리보기</p></div><button class="primary-btn" id="refreshPreviewButton" type="button">미리보기 갱신</button></div>
+    <div class="preview-frame">
+      <article id="profileCardPreview" class="profile-card-preview editor-profile-card game-profile-card style-clean">
+        <div class="card-content">
+          <div class="card-left">
+            <div class="card-status-row">
+              <div class="card-status"><span class="status-dot"></span><span id="previewStatus">자동 연동</span></div>
+              <div class="card-status visibility-status private" id="previewVisibility">PRIVATE</div>
+            </div>
+
+            <div class="stack">
+              <div class="card-profile">
+                <div id="previewAvatar" class="card-avatar">
+                  <img id="previewAvatarImage" alt="프로필 이미지" />
+                  <span id="previewAvatarText">?</span>
+                </div>
+                <div class="card-name-block">
+                  <h3 id="previewName">불러오는 중입니다.</h3>
+                  <p id="previewHandle"></p>
+                </div>
+              </div>
+              <div class="card-intro">
+                <h4 id="previewSubtitle"></h4>
+                <p id="previewIntro"></p>
+              </div>
+            </div>
+
+            <div class="card-tags" id="previewTagRow">
+              <span class="card-tag" id="previewContentTag"></span>
+              <span class="card-tag" id="previewLanguageTag"></span>
+              <span class="card-tags-inline" id="previewPlayStyleTags"></span>
+            </div>
+          </div>
+
+          <div class="card-right">
+            <div class="visual-area" id="previewVisualArea">
+              <img id="previewBackgroundImage" class="preview-background-image" alt="" />
+              <div class="character-placeholder"></div>
+              <div class="floating-card">
+                <strong>STREAM NOTE</strong>
+                <span id="previewFloatingText"></span>
+              </div>
+            </div>
+
+            <div class="card-bottom">
+              <div class="info-box" id="linkBox">
+                <div class="info-box-title">LINKS</div>
+                <div id="previewLinks" class="link-row"></div>
+              </div>
+              <div class="info-box" id="scheduleBox">
+                <div class="info-box-title">SCHEDULE</div>
+                <div id="previewSchedule" class="schedule-row"></div>
+              </div>
+            </div>
+            <div id="qrBox" hidden></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</section>
+
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/profile-card.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Studio - 인기 랭킹</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/public-pages.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+  <a class="brand" href="index.html">
+    <div class="logo">S</div>
+    <div class="brand-text"><strong>Seiga Studio</strong><span>Streamer Profile Platform</span></div>
+  </a>
+  <nav class="nav">
+    <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
+    <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
+    <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
+    <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
+  </nav>
+  <div class="header-actions">
+    <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="Language selector">
+      <button type="button" data-lang-option="ko">KR</button>
+      <button type="button" data-lang-option="ja">JA</button>
+    </div>
+    <a class="ghost-btn" href="login.html" data-i18n="nav.login">로그인</a>
+    <a class="primary-btn" href="access-request.html" data-i18n="nav.start">스트리머 시작하기</a>
+  </div>
+</header>
+    
+<section class="hero">
+  <div class="eyebrow" data-i18n="rankings.eyebrow">🏆 Streamer Ranking</div>
+  <h1 data-i18n="rankings.title">오늘 가장 주목받는 스트리머</h1>
+  <p data-i18n="rankings.description">라이브 상태, 공개 프로필 방문, 팬 카드 반응을 기반으로 한 공개 랭킹 화면입니다.</p>
+  <div class="hero-actions"><a class="primary-btn" href="index.html" data-i18n="rankings.findStreamers">스트리머 찾기</a><a class="ghost-btn" href="fan-card-write.html" data-i18n="rankings.sendFanCard">팬 카드 보내기</a></div>
+</section>
+
+<section class="grid-2">
+  <article class="panel">
+    <div class="panel-title"><div><h2 data-i18n="rankings.liveRanking">실시간 인기 랭킹</h2><p data-i18n="rankings.liveRankingDescription">라이브 중인 스트리머 우선 표시</p></div><span class="badge" data-i18n="common.live">LIVE</span></div>
+    <div class="rank-list" id="rankingsList" aria-live="polite">
+      <div class="liquid-card rank-card"><div class="rank-info"><strong data-i18n="rankings.loading">랭킹 데이터를 불러오는 중입니다.</strong></div></div>
+    </div>
+    <div id="rankingsEmptyState" class="empty-state" hidden data-i18n="rankings.empty">랭킹 데이터가 없습니다.</div>
+    <div id="rankingsErrorState" class="empty-state" hidden data-i18n="rankings.error">랭킹 데이터를 불러오지 못했습니다.</div>
+  </article>
+  <article class="panel">
+    <div class="panel-title"><div><h2 data-i18n="rankings.metrics">성장 지표</h2><p data-i18n="rankings.metricsDescription">랭킹 API 데이터 기준 집계</p></div><span class="badge">Metrics</span></div>
+    <div class="grid-2" id="rankingMetrics" style="margin-top:0" aria-live="polite">
+      <div class="liquid-card feature-card"><div class="feature-icon">…</div><h3 data-i18n="common.loading">불러오는 중</h3><p data-i18n="rankings.loading">랭킹 데이터를 불러오는 중입니다.</p></div>
+    </div>
+  </article>
+</section>
+
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/public.js"></script>
+  <script src="js/rankings.js"></script>
+</body>
+</html>

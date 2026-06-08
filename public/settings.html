@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Studio - 설정 화면</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span>Streamer Dashboard</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong>관리자 메모</strong>
+        <p>관리자 승인 가입과 팬 카드 사전 검토 옵션은 실제 서비스 운영 시 필수에 가깝습니다.</p>
+        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1>설정 화면</h1>
+          <p>계정, Twitch 연동, 공개 범위, 테마와 알림 설정을 관리하세요.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="resetThemeButton" type="button">기본값</button><button class="primary-btn" id="saveSettingsButton" type="button">저장</button>
+        </div>
+      </header>
+      
+<section class="settings-layout">
+  <div class="stack">
+    <section class="panel">
+      <div class="panel-title"><div><h2>계정 정보</h2><p>스트리머 대시보드에서 사용하는 기본 계정 정보입니다.</p></div><span class="badge">Account</span></div>
+      <div class="form-grid"><div class="two-col"><div class="field"><label for="settingsDisplayName">표시 이름</label><input id="settingsDisplayName" type="text" /></div><div class="field"><label>계정 역할</label><div id="settingsRoleText" class="ghost-btn" style="justify-content:flex-start;pointer-events:none;">불러오는 중입니다.</div></div></div><div class="field"><label for="settingsEmail">로그인 이메일</label><input id="settingsEmail" type="email" /></div><div class="field"><label for="settingsPublicUrl">공개 URL</label><input id="settingsPublicUrl" type="text" readonly /></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>Twitch 연동</h2><p>방송 상태와 프로필 정보를 불러오기 위한 OAuth 설정입니다.</p></div><span class="badge">OAuth</span></div>
+      <div class="list" id="twitchStatusList"><div class="list-item"><div class="item-content"><strong>Twitch 상태를 불러오는 중입니다.</strong></div></div></div>
+      <div class="hero-actions"><button class="ghost-btn" id="reconnectTwitchButton" type="button">Twitch 재연동</button><button class="danger-btn" id="disconnectTwitchButton" type="button">연동 해제</button></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title"><div><h2>공개/보안 설정</h2><p>가입 제한, 공개 범위, 팬 카드 검토 정책을 설정합니다.</p></div></div>
+      <div class="toggle-list"><label class="toggle-row"><div><strong>프로필 공개</strong><span>비로그인 방문자도 프로필 열람 가능</span></div><span class="switch"><input id="settingsPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>관리자 승인 가입</strong><span>신규 스트리머 계정은 관리자만 생성</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>팬 카드 사전 검토</strong><span>공개 전 운영자 승인 필요</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>로그인 상태 유지</strong><span>브라우저 세션 유지 기간 연장</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label></div>
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="panel">
+      <div class="panel-title"><div><h2>테마 설정</h2><p>대시보드와 카드의 기본 컬러입니다.</p></div></div>
+      <div id="themePreview" class="theme-preview"><h3>Seiga Studio</h3><p>리퀴드 글래스 + 파스텔 톤 기반의 스트리머 대시보드 테마</p></div>
+      <div class="color-row" style="margin-top:14px"><label class="color-input"><input id="settingsMainColor" type="color" value="#7c3aed" /><span>메인 컬러</span></label><label class="color-input"><input id="settingsSubColor" type="color" value="#f9a8d4" /><span>서브 컬러</span></label></div>
+    </section>
+
+    <section class="panel"><div class="panel-title"><div><h2>알림 설정</h2><p>대시보드에서 받을 알림 유형</p></div></div><div class="toggle-list"><label class="toggle-row"><div><strong>새 팬 카드 알림</strong><span>수신 즉시 대시보드 표시</span></div><span class="switch"><input id="settingsNotificationToggle" type="checkbox" /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>방송 시작 리마인더</strong><span>예정 시간 30분 전 알림</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>통계 리포트</strong><span>주간 성장 요약 표시</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label></div></section>
+
+    <section class="panel"><div class="panel-title"><div><h2>위험 영역</h2><p>민감한 계정 작업은 확인 후 처리됩니다.</p></div></div><div class="list"><button class="danger-btn" id="logoutButton" type="button">로그아웃</button><button class="danger-btn" type="button" disabled>계정 삭제 요청</button></div></section>
+  </aside>
+</section>
+
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

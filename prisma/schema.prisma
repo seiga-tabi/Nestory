@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STREAMER
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum CardDesign {
+  CLEAN_WHITE
+  SOFT_OVERLAY
+  DARK_GLASS
+}
+
+enum SocialType {
+  TWITCH
+  YOUTUBE
+  X
+  DISCORD
+  WEBSITE
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum FanCardStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  DELETED
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                    String                @id @default(cuid())
+  email                 String                @unique
+  passwordHash          String
+  displayName           String
+  role                  UserRole              @default(VIEWER)
+  status                UserStatus            @default(PENDING)
+  twitchUserId          String?               @unique
+  twitchLogin           String?
+  twitchAccessTokenEnc  String?
+  twitchRefreshTokenEnc String?
+  twitchTokenExpiresAt  DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  streamerProfile       StreamerProfile?
+  passwordResetTokens   PasswordResetToken[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model StreamerProfile {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  slug            String           @unique
+  name            String
+  handle          String
+  subtitle        String
+  mainContent     String
+  language        String
+  avatarUrl       String?
+  cardDesign      CardDesign       @default(CLEAN_WHITE)
+  mainColor       String           @default("#7c3aed")
+  subColor        String           @default("#f9a8d4")
+  isPublic        Boolean          @default(false)
+  notificationOpt Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialLinks     SocialLink[]
+  schedule        StreamSchedule[]
+  fanCards        FanCard[]
+  snapshots       StreamSnapshot[]
+  pageViews       PageView[]
+
+  @@index([isPublic])
+  @@index([mainContent])
+  @@index([language])
+}
+
+model SocialLink {
+  id        String          @id @default(cuid())
+  profileId String
+  type      SocialType
+  label     String
+  url       String
+  isVisible Boolean         @default(true)
+  sortOrder Int             @default(0)
+  profile   StreamerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([type])
+}
+
+model StreamSchedule {
+  id        String          @id @default(cuid())
+  profileId String
+  dayOfWeek DayOfWeek
+  startTime String?
+  title     String?
+  isActive  Boolean         @default(true)
+  profile   StreamerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, dayOfWeek])
+  @@index([dayOfWeek])
+}
+
+model FanCard {
+  id         String          @id @default(cuid())
+  profileId  String
+  senderName String?
+  message    String
+  emoji      String?
+  isPublic   Boolean         @default(true)
+  status     FanCardStatus   @default(PENDING)
+  ipHash     String?
+  createdAt  DateTime        @default(now())
+  profile    StreamerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, status])
+  @@index([createdAt])
+}
+
+model StreamSnapshot {
+  id             String          @id @default(cuid())
+  profileId      String
+  twitchStreamId String?
+  isLive         Boolean         @default(false)
+  title          String?
+  gameName       String?
+  viewerCount    Int             @default(0)
+  startedAt      DateTime?
+  fetchedAt      DateTime        @default(now())
+  profile        StreamerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, fetchedAt])
+  @@index([isLive])
+}
+
+model PageView {
+  id          String           @id @default(cuid())
+  profileId   String?
+  path        String
+  visitorHash String
+  referrer    String?
+  userAgent   String?
+  createdAt   DateTime         @default(now())
+  profile     StreamerProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([profileId, createdAt])
+  @@index([path])
+  @@index([visitorHash])
+}
+
+model AccessRequest {
+  id        String              @id @default(cuid())
+  name      String
+  email     String
+  twitchUrl String?
+  message   String?
+  status    AccessRequestStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  reviewedAt DateTime?
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Session {
+  sid       String   @id
+  data      Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
+}

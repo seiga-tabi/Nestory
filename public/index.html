@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seiga Studio - Streamer List</title>
+
+    <style>
+        :root {
+            --bg: #f8f5ff;
+            --glass: rgba(255, 255, 255, 0.66);
+            --glass-strong: rgba(255, 255, 255, 0.82);
+            --border: rgba(255, 255, 255, 0.72);
+            --text: #202033;
+            --muted: #7b7890;
+            --primary: #7c3aed;
+            --primary-light: #a78bfa;
+            --pink: #f9a8d4;
+            --sky: #93c5fd;
+            --mint: #86efac;
+            --danger: #fb7185;
+            --warning: #facc15;
+            --shadow: 0 24px 60px rgba(102, 88, 160, 0.18);
+            --radius-xl: 30px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR",
+            "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(circle at 8% 8%, rgba(249, 168, 212, 0.62), transparent 32%),
+                    radial-gradient(circle at 92% 10%, rgba(147, 197, 253, 0.72), transparent 34%),
+                    radial-gradient(circle at 82% 88%, rgba(167, 139, 250, 0.36), transparent 36%),
+                    linear-gradient(135deg, #fbf7ff 0%, #eef7ff 52%, #fff7fb 100%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+            background-size: 42px 42px;
+            pointer-events: none;
+            mask-image: linear-gradient(to bottom, black, transparent 78%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .page {
+            position: relative;
+            width: min(1440px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 20px 0 48px;
+        }
+
+        .header {
+            position: sticky;
+            top: 16px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-height: 76px;
+            padding: 14px 18px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 18px 44px rgba(102, 88, 160, 0.14);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 17px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 21px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--pink));
+            box-shadow: 0 14px 30px rgba(124, 58, 237, 0.24);
+            flex: 0 0 auto;
+        }
+
+        .brand-text strong {
+            display: block;
+            font-size: 17px;
+            letter-spacing: -0.03em;
+        }
+
+        .brand-text span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav a {
+            padding: 10px 13px;
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .nav a.active,
+        .nav a:hover {
+            color: var(--primary);
+            background: rgba(167, 139, 250, 0.15);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.58);
+            border: 1px solid rgba(255, 255, 255, 0.78);
+        }
+
+        .language-switcher button {
+            min-width: 36px;
+            height: 32px;
+            border: 0;
+            border-radius: 11px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 12px;
+            font-weight: 950;
+            cursor: pointer;
+        }
+
+        .language-switcher button.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--pink));
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.18);
+        }
+
+        .ghost-btn,
+        .primary-btn {
+            height: 42px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .ghost-btn {
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.76);
+            border: 1px solid rgba(255, 255, 255, 0.78);
+        }
+
+        .primary-btn {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--pink));
+            box-shadow: 0 14px 28px rgba(124, 58, 237, 0.22);
+        }
+
+        .mobile-menu {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border: 0;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.78);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+            gap: 22px;
+            margin-top: 22px;
+            align-items: stretch;
+        }
+
+        .hero-main,
+        .hero-side,
+        .section-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background: var(--glass);
+            backdrop-filter: blur(26px);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero-main {
+            padding: clamp(26px, 5vw, 56px);
+            min-height: 430px;
+            position: relative;
+        }
+
+        .hero-main::after {
+            content: "";
+            position: absolute;
+            right: -110px;
+            bottom: -130px;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.32), transparent 62%);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: max-content;
+            padding: 8px 12px;
+            margin-bottom: 22px;
+            border-radius: 999px;
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .hero h1 {
+            max-width: 760px;
+            font-size: clamp(38px, 6vw, 72px);
+            line-height: 0.98;
+            letter-spacing: -0.075em;
+            margin-bottom: 22px;
+        }
+
+        .hero p {
+            max-width: 620px;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .search-box {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            max-width: 660px;
+            margin-top: 30px;
+            padding: 8px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.82);
+        }
+
+        .search-box input {
+            width: 100%;
+            height: 50px;
+            padding: 0 16px;
+            border: 0;
+            background: transparent;
+            outline: none;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 750;
+        }
+
+        .search-box input::placeholder {
+            color: #a3a0b5;
+        }
+
+        .search-box button {
+            min-width: 112px;
+            height: 50px;
+            border: 0;
+            border-radius: 17px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--pink));
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .hero-tags {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+        .hero-tag {
+            padding: 8px 11px;
+            border-radius: 999px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.62);
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .hero-side {
+            padding: 22px;
+            display: grid;
+            gap: 14px;
+            align-content: start;
+        }
+
+        .side-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .side-title h2 {
+            font-size: 20px;
+            letter-spacing: -0.04em;
+        }
+
+        .side-title span {
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .ranking-item {
+            display: grid;
+            grid-template-columns: 34px 52px 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+        }
+
+        .rank-no {
+            width: 34px;
+            height: 34px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            background: rgba(167, 139, 250, 0.16);
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .rank-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 950;
+            background: linear-gradient(135deg, var(--pink), var(--sky));
+            overflow: hidden;
+            position: relative;
+        }
+
+        .rank-info {
+            min-width: 0;
+        }
+
+        .rank-info strong {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rank-info span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 750;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 9px;
+            border-radius: 999px;
+            color: #be123c;
+            background: rgba(251, 113, 133, 0.16);
+            font-size: 11px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .live-chip.off {
+            color: #64748b;
+            background: rgba(148, 163, 184, 0.16);
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 22px;
+            margin-top: 22px;
+            align-items: start;
+        }
+
+        .filter-panel {
+            position: sticky;
+            top: 114px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background: var(--glass);
+            backdrop-filter: blur(26px);
+            box-shadow: var(--shadow);
+        }
+
+        .filter-title {
+            margin-bottom: 16px;
+        }
+
+        .filter-title strong {
+            display: block;
+            font-size: 17px;
+            letter-spacing: -0.03em;
+        }
+
+        .filter-title span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .filter-group {
+            display: grid;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .filter-btn {
+            width: 100%;
+            min-height: 42px;
+            padding: 0 13px;
+            border: 0;
+            border-radius: 15px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.62);
+            text-align: left;
+            font-size: 13px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            color: var(--primary);
+            background: rgba(167, 139, 250, 0.16);
+        }
+
+        .list-section {
+            min-width: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .section-header h2 {
+            font-size: 26px;
+            letter-spacing: -0.05em;
+        }
+
+        .section-header p {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .sort-select {
+            height: 42px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--text);
+            outline: none;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .streamer-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .streamer-card {
+            position: relative;
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 18px 42px rgba(102, 88, 160, 0.13);
+            overflow: hidden;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .streamer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 54px rgba(102, 88, 160, 0.18);
+        }
+
+        .cover {
+            position: relative;
+            height: 128px;
+            border-radius: 21px;
+            overflow: hidden;
+            background:
+                    linear-gradient(135deg, rgba(32, 32, 51, 0.28), rgba(124, 58, 237, 0.28)),
+                    var(--cover, linear-gradient(135deg, #c4b5fd, #f9a8d4));
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 44px;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(251, 113, 133, 0.92);
+            font-size: 11px;
+            font-weight: 950;
+            backdrop-filter: blur(16px);
+        }
+
+        .status-badge.off {
+            background: rgba(71, 85, 105, 0.72);
+        }
+
+        .viewer-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(32, 32, 51, 0.36);
+            backdrop-filter: blur(16px);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .profile-avatar {
+            position: absolute;
+            left: 28px;
+            top: 108px;
+            width: 70px;
+            height: 70px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            border: 4px solid rgba(255, 255, 255, 0.82);
+            color: #fff;
+            font-size: 23px;
+            font-weight: 950;
+            background: linear-gradient(135deg, var(--pink), var(--sky));
+            box-shadow: 0 16px 32px rgba(102, 88, 160, 0.2);
+            z-index: 2;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            right: 20px;
+            top: 152px;
+            width: 42px;
+            height: 42px;
+            border: 0;
+            border-radius: 15px;
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.78);
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 12px 24px rgba(102, 88, 160, 0.12);
+        }
+
+        .card-body {
+            min-width: 0;
+        }
+
+        .streamer-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 46px;
+            margin-bottom: 7px;
+        }
+
+        .streamer-name h3 {
+            min-width: 0;
+            font-size: 19px;
+            letter-spacing: -0.04em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .verified {
+            flex: 0 0 auto;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--sky));
+            font-size: 11px;
+            font-weight: 950;
+        }
+
+        .streamer-desc {
+            min-height: 42px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 14px;
+        }
+
+        .tag {
+            padding: 6px 9px;
+            border-radius: 999px;
+            color: var(--primary);
+            background: rgba(167, 139, 250, 0.14);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .meta-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .meta {
+            padding: 10px 8px;
+            border-radius: 16px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.62);
+        }
+
+        .meta strong {
+            display: block;
+            font-size: 14px;
+            letter-spacing: -0.03em;
+            margin-bottom: 3px;
+        }
+
+        .meta span {
+            display: block;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 9px;
+        }
+
+        .view-btn,
+        .mini-btn {
+            height: 42px;
+            border: 0;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 950;
+            cursor: pointer;
+        }
+
+        .view-btn {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--pink));
+        }
+
+        .mini-btn {
+            width: 46px;
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .empty-state {
+            display: none;
+            padding: 42px 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background: var(--glass);
+            text-align: center;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .login-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            z-index: 50;
+            transform: translateX(-50%) translateY(18px);
+            opacity: 0;
+            pointer-events: none;
+            width: min(430px, calc(100% - 32px));
+            padding: 15px 16px;
+            border-radius: 18px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(22px);
+            box-shadow: 0 18px 44px rgba(102, 88, 160, 0.2);
+            font-size: 13px;
+            font-weight: 850;
+            text-align: center;
+            transition: 0.22s ease;
+        }
+
+        .login-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Streamer list cards aligned with the simple liquid-glass profile-card design */
+        .streamer-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            justify-content: stretch;
+            gap: 18px;
+        }
+
+        .streamer-card {
+            position: relative;
+            isolation: isolate;
+            height: 590px;
+            padding: 12px;
+            border-radius: 34px;
+            background:
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.38)),
+                    rgba(255, 255, 255, 0.54);
+            border: 1px solid rgba(255, 255, 255, 0.86);
+            box-shadow:
+                    0 28px 70px rgba(80, 76, 110, 0.16),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(28px) saturate(1.25);
+            -webkit-backdrop-filter: blur(28px) saturate(1.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .streamer-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background:
+                    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.92), transparent 34%),
+                    radial-gradient(circle at 84% 16%, rgba(167, 139, 250, 0.20), transparent 32%),
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04));
+            pointer-events: none;
+        }
+
+        .streamer-card::after {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            z-index: 4;
+            border-radius: 33px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+        }
+
+        .streamer-card:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                    0 34px 80px rgba(80, 76, 110, 0.22),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.22);
+        }
+
+        .streamer-card .cover {
+            position: relative;
+            z-index: 1;
+            height: 330px;
+            flex: 0 0 330px;
+            margin-bottom: 12px;
+            border-radius: 28px;
+            background:
+                    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.88), transparent 34%),
+                    linear-gradient(145deg, rgba(226, 232, 240, 0.92), rgba(148, 163, 184, 0.72)),
+                    var(--cover, linear-gradient(135deg, #c4b5fd, #f9a8d4));
+            background-size: cover;
+            background-position: center;
+            box-shadow:
+                    0 18px 36px rgba(30, 30, 42, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.64);
+        }
+
+        .streamer-card .cover::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.18)),
+                    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.34), transparent 32%);
+            pointer-events: none;
+        }
+
+        .streamer-card .status-badge {
+            top: 14px;
+            left: 14px;
+            z-index: 2;
+            padding: 8px 11px;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(20, 20, 30, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+
+        .streamer-card .status-badge.off {
+            background: rgba(20, 20, 30, 0.34);
+        }
+
+        .streamer-card .viewer-badge {
+            display: none;
+        }
+
+        .streamer-card .profile-avatar {
+            display: none;
+        }
+
+        .streamer-card .favorite-btn {
+            right: 22px;
+            top: 286px;
+            z-index: 3;
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            color: var(--primary);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.38));
+            border: 1px solid rgba(255, 255, 255, 0.64);
+            box-shadow:
+                    0 10px 22px rgba(30, 30, 42, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+            backdrop-filter: blur(16px) saturate(1.15);
+            -webkit-backdrop-filter: blur(16px) saturate(1.15);
+        }
+
+        .streamer-card .card-body {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            margin-top: 0;
+            padding: 20px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 26px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24));
+            border: 1px solid rgba(255, 255, 255, 0.54);
+            box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+                    0 14px 30px rgba(30, 30, 42, 0.06);
+            backdrop-filter: blur(18px) saturate(1.15);
+            -webkit-backdrop-filter: blur(18px) saturate(1.15);
+        }
+
+        .streamer-card .streamer-name {
+            padding-right: 0;
+            margin-bottom: 6px;
+        }
+
+        .streamer-card .streamer-name h3 {
+            font-size: 24px;
+            line-height: 1.08;
+            letter-spacing: -0.055em;
+        }
+
+        .streamer-card .verified {
+            width: 24px;
+            height: 24px;
+            font-size: 13px;
+            background: linear-gradient(135deg, #31d158, #16a34a);
+            box-shadow:
+                    0 8px 18px rgba(34, 197, 94, 0.24),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.44);
+        }
+
+        .streamer-card .streamer-handle {
+            color: #8a8798;
+            font-size: 13px;
+            line-height: 1.2;
+            font-weight: 800;
+            margin: 0 0 13px;
+        }
+
+        .streamer-card .streamer-desc {
+            min-height: 0;
+            margin-bottom: 0;
+            color: #30303d;
+            font-size: 16px;
+            line-height: 1.5;
+            letter-spacing: -0.02em;
+            font-weight: 800;
+            -webkit-line-clamp: 2;
+        }
+
+        .streamer-card .tag-row {
+            display: none;
+        }
+
+        .streamer-card .tag {
+            color: #15151f;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.30));
+            border: 1px solid rgba(255, 255, 255, 0.54);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+        }
+
+        .streamer-card .meta-row {
+            display: none;
+        }
+
+        .streamer-card .card-actions {
+            margin-top: auto;
+            padding-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+        }
+
+        .streamer-card .view-btn,
+        .streamer-card .mini-btn {
+            min-height: 42px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow:
+                    0 10px 22px rgba(30, 30, 42, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+        }
+
+        .streamer-card .view-btn {
+            color: #15151f;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.38));
+            border: 1px solid rgba(255, 255, 255, 0.64);
+            backdrop-filter: blur(16px) saturate(1.15);
+            -webkit-backdrop-filter: blur(16px) saturate(1.15);
+        }
+
+        .streamer-card .mini-btn {
+            width: auto;
+            color: var(--primary);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34));
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 1180px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-side {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .side-title {
+                grid-column: 1 / -1;
+            }
+
+            .streamer-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                justify-content: stretch;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .main-layout {
+                grid-template-columns: 240px 1fr;
+            }
+        }
+
+        @media (max-width: 920px) {
+            .nav {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-panel {
+                position: static;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .filter-group label {
+                width: 100%;
+            }
+
+            .filter-btn {
+                width: auto;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                width: min(100% - 24px, 1440px);
+                padding-top: 12px;
+            }
+
+            .header {
+                top: 10px;
+                border-radius: 22px;
+            }
+
+            .brand-text span {
+                display: none;
+            }
+
+            .header-actions .ghost-btn {
+                display: none;
+            }
+
+            .language-switcher {
+                order: -1;
+            }
+
+            .hero-main {
+                min-height: auto;
+            }
+
+            .search-box {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box button {
+                width: 100%;
+            }
+
+            .hero-side {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .streamer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .streamer-card {
+                height: 610px;
+            }
+
+            .streamer-card .cover {
+                height: 330px;
+                flex-basis: 330px;
+            }
+
+            .streamer-card .card-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .header {
+                padding: 12px;
+            }
+
+            .logo {
+                width: 42px;
+                height: 42px;
+            }
+
+            .brand-text strong {
+                font-size: 15px;
+            }
+
+            .primary-btn {
+                height: 40px;
+                padding: 0 12px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 14px;
+            }
+
+            .ranking-item {
+                grid-template-columns: 30px 46px 1fr;
+            }
+
+            .ranking-item .live-chip {
+                grid-column: 2 / -1;
+                width: max-content;
+            }
+
+            .meta-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <header class="header">
+        <a class="brand" href="#">
+            <div class="logo">S</div>
+            <div class="brand-text">
+                <strong>Seiga Studio</strong>
+                <span>Streamer Profile Platform</span>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a class="active" href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
+            <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
+            <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
+            <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
+        </nav>
+
+        <div class="header-actions">
+            <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="Language selector">
+                <button type="button" data-lang-option="ko">KR</button>
+                <button type="button" data-lang-option="ja">JA</button>
+            </div>
+            <button class="ghost-btn" type="button" onclick="location.href='login.html'" data-i18n="nav.login">
+                로그인
+            </button>
+            <button class="primary-btn" type="button" onclick="location.href='login.html'" data-i18n="nav.start">
+                스트리머 시작하기
+            </button>
+            <button class="mobile-menu" type="button">☰</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-main">
+            <div class="eyebrow" data-i18n="index.eyebrow">🌸 Public Streamer List</div>
+            <h1 data-i18n="index.title">스트리머를 찾아보세요.</h1>
+            <p data-i18n="index.description">
+                로그인하지 않아도 공개된 스트리머 프로필과 방송 정보를 둘러볼 수 있습니다. 즐겨찾기, 팬 카드 작성, 개인 대시보드는 로그인 후 이용할 수 있어요.
+            </p>
+
+            <div class="search-box">
+                <input id="searchInput" type="search" placeholder="스트리머 이름, 게임, 태그 검색" data-i18n-placeholder="index.searchPlaceholder" />
+                <button type="button" id="searchButton" data-i18n="index.searchButton">검색</button>
+            </div>
+
+            <div id="heroTagList" class="hero-tags" aria-live="polite">
+                <span class="hero-tag">태그 데이터를 불러오는 중입니다.</span>
+            </div>
+        </div>
+
+        <aside class="hero-side">
+            <div class="side-title">
+                <h2 data-i18n="index.popularTitle">오늘의 인기 스트리머</h2>
+                <span data-i18n="index.popularBadge">LIVE RANKING</span>
+            </div>
+
+            <div id="popularStreamersList" aria-live="polite">
+                <div class="empty-state" data-i18n="index.popularLoading">인기 스트리머 데이터를 불러오는 중입니다.</div>
+            </div>
+        </aside>
+    </section>
+
+    <main class="main-layout">
+        <aside class="filter-panel">
+            <div class="filter-title">
+                <strong data-i18n="index.filter">필터</strong>
+                <span data-i18n="index.filterDescription">원하는 방송 스타일과 콘텐츠를 선택해서 스트리머를 찾아보세요.</span>
+            </div>
+
+            <div class="filter-group" data-filter-group="status">
+                <label data-i18n="index.status">방송 상태</label>
+                <button class="filter-btn active" data-filter-group="status" data-filter="all" data-i18n="index.all">전체</button>
+                <button class="filter-btn" data-filter-group="status" data-filter="live" data-i18n="index.live">라이브 중</button>
+                <button class="filter-btn" data-filter-group="status" data-filter="offline" data-i18n="index.offline">오프라인</button>
+            </div>
+
+            <div class="filter-group" data-filter-group="category">
+                <label data-i18n="index.category">카테고리</label>
+                <button class="filter-btn" data-filter-group="category" data-filter="마인크래프트" data-i18n="index.categoryMinecraft">마인크래프트</button>
+                <button class="filter-btn" data-filter-group="category" data-filter="League of Legends" data-i18n="index.categoryLol">League of Legends</button>
+                <button class="filter-btn" data-filter-group="category" data-filter="잡담" data-i18n="index.categoryChat">잡담</button>
+                <button class="filter-btn" data-filter-group="category" data-filter="음악" data-i18n="index.categoryMusic">노래 / 음악</button>
+            </div>
+
+            <div class="filter-group" data-filter-group="language">
+                <label data-i18n="index.language">언어</label>
+                <button class="filter-btn" data-filter-group="language" data-filter="KR" data-i18n="index.languageKo">한국어</button>
+                <button class="filter-btn" data-filter-group="language" data-filter="JA" data-i18n="index.languageJa">日本語</button>
+                <button class="filter-btn" data-filter-group="language" data-filter="KR/JA" data-i18n="index.languageBilingual">KR / JA</button>
+            </div>
+        </aside>
+
+        <section class="list-section">
+            <div class="section-header">
+                <div>
+                    <h2 data-i18n="index.streamerList">스트리머 리스트</h2>
+                    <p id="resultText" data-i18n="index.loading">스트리머 데이터를 불러오는 중입니다.</p>
+                </div>
+
+                <select class="sort-select" aria-label="정렬" data-i18n-aria-label="index.sortLabel">
+                    <option value="popular" data-i18n="index.sortPopular">인기순</option>
+                    <option value="recent" data-i18n="index.sortRecent">최근 방송순</option>
+                    <option value="name" data-i18n="index.sortName">이름순</option>
+                </select>
+            </div>
+
+            <div id="streamerGrid" class="streamer-grid" aria-live="polite">
+                <article class="streamer-card">
+                    <div class="card-body">
+                        <p class="streamer-desc" data-i18n="common.loadingStreamers">스트리머 데이터를 불러오는 중입니다.</p>
+                    </div>
+                </article>
+            </div>
+
+            <div id="emptyState" class="empty-state" hidden data-i18n="index.empty">
+                등록된 스트리머가 없습니다.
+            </div>
+            <div id="errorState" class="empty-state error" hidden data-i18n="index.error">
+                스트리머 데이터를 불러오지 못했습니다.
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="loginToast" class="login-toast" data-i18n="index.favoriteLogin">
+    즐겨찾기는 로그인 후 사용할 수 있습니다.
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/public.js"></script>
+</body>
+</html>

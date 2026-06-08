@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Login</title>
+
+  <style>
+    :root {
+      --bg: #f8f5ff;
+      --glass: rgba(255, 255, 255, 0.66);
+      --border: rgba(255, 255, 255, 0.72);
+      --text: #202033;
+      --muted: #7b7890;
+      --primary: #7c3aed;
+      --primary-light: #a78bfa;
+      --pink: #f9a8d4;
+      --danger: #fb7185;
+      --shadow: 0 24px 60px rgba(102, 88, 160, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+              radial-gradient(circle at 10% 10%, rgba(249, 168, 212, 0.65), transparent 34%),
+              radial-gradient(circle at 90% 15%, rgba(147, 197, 253, 0.75), transparent 34%),
+              linear-gradient(135deg, #fbf7ff 0%, #eef7ff 52%, #fff7fb 100%);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      padding: 34px;
+      border-radius: 30px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(28px);
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--primary), var(--pink));
+      box-shadow: 0 14px 30px rgba(124, 58, 237, 0.25);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: -0.05em;
+      margin-bottom: 8px;
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 650;
+      margin-bottom: 24px;
+    }
+
+    .twitch-button {
+      width: 100%;
+      height: 52px;
+      border: 0;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, #9146ff, #b079ff);
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 16px 34px rgba(145, 70, 255, 0.28);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 24px 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(123, 120, 144, 0.2);
+    }
+
+    .form {
+      display: grid;
+      gap: 15px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .field input {
+      width: 100%;
+      height: 52px;
+      border: 1px solid rgba(150, 140, 180, 0.24);
+      border-radius: 18px;
+      padding: 0 16px;
+      background: rgba(255, 255, 255, 0.76);
+      outline: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .field input:focus {
+      border-color: rgba(124, 58, 237, 0.45);
+      box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.16);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .remember {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .remember input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary);
+    }
+
+    .forgot {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .login-button {
+      width: 100%;
+      height: 54px;
+      border: 0;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--pink));
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 16px 34px rgba(124, 58, 237, 0.24);
+      margin-top: 8px;
+    }
+
+    .login-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      margin-top: 16px;
+      padding: 13px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .message.error {
+      display: block;
+      color: #be123c;
+      background: rgba(251, 113, 133, 0.16);
+    }
+
+    .message.success {
+      display: block;
+      color: #15803d;
+      background: rgba(134, 239, 172, 0.22);
+    }
+
+    .admin-notice {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 26px 22px;
+        border-radius: 24px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .options {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<main class="login-card">
+  <div class="brand">
+    <div class="logo">S</div>
+    <div>
+      <strong>Seiga Studio</strong>
+      <span>Streamer Dashboard</span>
+    </div>
+  </div>
+
+  <h1>로그인</h1>
+  <p class="desc">
+    스트리머 대시보드에 접속하려면 로그인해주세요.
+  </p>
+
+  <button id="twitchLoginButton" class="twitch-button" type="button">
+    Twitch 계정으로 로그인
+  </button>
+
+  <div class="divider">또는 이메일 로그인</div>
+
+  <form id="loginForm" class="form">
+    <div class="field">
+      <label for="email">이메일</label>
+      <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="example@email.com"
+              autocomplete="email"
+              required
+      />
+    </div>
+
+    <div class="field">
+      <label for="password">비밀번호</label>
+      <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              autocomplete="current-password"
+              required
+      />
+    </div>
+
+    <div class="options">
+      <label class="remember">
+        <input id="rememberMe" type="checkbox" />
+        로그인 상태 유지
+      </label>
+
+      <a class="forgot" href="forgot-password.html">비밀번호 찾기</a>
+    </div>
+
+    <button id="loginButton" class="login-button" type="submit">
+      로그인
+    </button>
+  </form>
+
+  <div id="message" class="message"></div>
+
+  <p class="admin-notice">
+    신규 계정은 관리자만 생성할 수 있습니다.
+  </p>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

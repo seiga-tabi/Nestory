@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seiga Studio - 스트리머 등록 문의</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/public-pages.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+  <a class="brand" href="index.html">
+    <div class="logo">S</div>
+    <div class="brand-text"><strong>Seiga Studio</strong><span>Streamer Profile Platform</span></div>
+  </a>
+  <nav class="nav">
+    <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
+    <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
+    <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
+    <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
+  </nav>
+  <div class="header-actions">
+    <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="Language selector">
+      <button type="button" data-lang-option="ko">KR</button>
+      <button type="button" data-lang-option="ja">JA</button>
+    </div>
+    <a class="ghost-btn" href="login.html" data-i18n="nav.login">로그인</a>
+    <a class="primary-btn" href="access-request.html" data-i18n="nav.start">스트리머 시작하기</a>
+  </div>
+</header>
+    
+<section class="hero">
+  <div class="eyebrow">🔐 Access Request</div>
+  <h1>스트리머 계정 등록을 요청하세요</h1>
+  <p>현재 신규 계정은 관리자 승인 후 생성되는 구조입니다. 아래 화면에서 승인 요청을 제출하면 관리자 검토 대기 상태로 저장됩니다.</p>
+</section>
+
+<section class="grid-2">
+  <article class="panel">
+    <div class="panel-title"><div><h2>등록 요청</h2><p>운영자가 확인할 기본 정보를 입력합니다.</p></div><span class="badge">Approval</span></div>
+    <form class="form" data-demo-submit="등록 요청이 관리자 검토 대기 상태로 저장되었습니다.">
+      <div class="two-col"><div class="field"><label for="streamerName">스트리머 이름</label><input id="streamerName" placeholder="채널 표시 이름" /></div><div class="field"><label for="email">이메일</label><input id="email" type="email" placeholder="example@email.com" /></div></div>
+      <div class="field"><label for="twitchUrl">Twitch URL</label><input id="twitchUrl" placeholder="https://twitch.tv/your_channel" /></div>
+      <div class="field"><label for="reason">요청 사유</label><textarea id="reason" placeholder="프로필 카드와 팬 카드 기능을 사용하고 싶습니다."></textarea></div>
+      <div class="submit-row"><button class="primary-btn" type="submit">요청 보내기</button><a class="ghost-btn" href="login.html">로그인으로</a></div>
+    </form>
+  </article>
+  <aside class="panel"><div class="panel-title"><div><h2>승인 정책</h2><p>무분별한 계정 생성을 막기 위한 운영 기준</p></div></div><div class="rank-list"><div class="liquid-card feature-card"><div class="feature-icon">✅</div><h3>관리자 승인</h3><p>등록 요청 확인 후 스트리머 계정을 생성합니다.</p></div><div class="liquid-card feature-card"><div class="feature-icon">🛡️</div><h3>보안 확인</h3><p>Twitch 채널 소유 여부와 연락 가능한 이메일을 확인합니다.</p></div><div class="liquid-card feature-card"><div class="feature-icon">🔗</div><h3>연동 준비</h3><p>승인 후 Twitch OAuth와 공개 프로필을 연결합니다.</p></div></div></aside>
+</section>
+
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/public.js"></script>
+  <script src="js/access-request.js"></script>
+</body>
+</html>
