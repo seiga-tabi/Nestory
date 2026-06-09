@@ -6,12 +6,13 @@
   const api = window.SeigaApi;
   if (!api || !document.querySelector('.settings-layout')) return;
 
-  const me = await api.redirectIfUnauthorized();
+  const me = await api.redirectIfUnauthorized('login.html?next=settings.html');
   if (!me) return;
 
   const $ = (id) => document.getElementById(id);
   let settings = null;
   let twitchStatus = null;
+  let twitchNotice = null;
 
   function t(key, params = {}, fallback = key) {
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
@@ -20,6 +21,62 @@
   function setValue(id, value) {
     const node = $(id);
     if (node) node.value = value || '';
+  }
+
+  function setTwitchNotice(type, key, fallback) {
+    twitchNotice = type ? { type, key, fallback } : null;
+    const node = $('settingsTwitchNotice');
+    if (!node) return;
+    if (!type) {
+      node.hidden = true;
+      node.className = 'settings-notice';
+      node.textContent = '';
+      return;
+    }
+    node.hidden = false;
+    node.className = `settings-notice ${type}`;
+    node.textContent = t(key, {}, fallback);
+  }
+
+  function messageForTwitchError(code) {
+    const messages = {
+      twitch_already_linked: ['settings.twitchAlreadyLinked', '이 Twitch 계정은 다른 사용자에게 이미 연결되어 있습니다.'],
+      twitch_reconnect_failed: ['settings.twitchReconnectFailed', 'Twitch 재연동에 실패했습니다. 다시 시도해주세요.'],
+      twitch_not_configured: ['settings.twitchNotConfigured', 'Twitch 연동 설정이 완료되지 않았습니다. 관리자에게 설정을 요청해주세요.'],
+      approval_required: ['settings.twitchApprovalRequired', '계정 승인 후 Twitch 재연동을 사용할 수 있습니다.'],
+      twitch_session_required: ['settings.twitchSessionRequired', '로그인 세션을 확인할 수 없습니다. 다시 로그인한 뒤 재연동해주세요.'],
+      twitch_user: ['settings.twitchUserFailed', 'Twitch 계정 정보를 불러오지 못했습니다. 다시 시도해주세요.']
+    };
+    return messages[code] || ['settings.twitchUnknownError', 'Twitch 재연동 처리 중 오류가 발생했습니다. 다시 시도해주세요.'];
+  }
+
+  function consumeTwitchQuery() {
+    const params = new URLSearchParams(location.search);
+    const success = params.get('twitch') === 'reconnected';
+    const errorCode = params.get('error');
+
+    if (success) {
+      setTwitchNotice('success', 'settings.twitchReconnectSuccess', 'Twitch 계정을 다시 연결했습니다.');
+      api.showToast(t('settings.twitchReconnectSuccess', {}, 'Twitch 계정을 다시 연결했습니다.'));
+    } else if (errorCode) {
+      const [key, fallback] = messageForTwitchError(errorCode);
+      setTwitchNotice('error', key, fallback);
+      api.showToast(t(key, {}, fallback));
+    }
+
+    if (success || errorCode) {
+      params.delete('twitch');
+      params.delete('error');
+      const nextQuery = params.toString();
+      history.replaceState(null, '', `${location.pathname}${nextQuery ? `?${nextQuery}` : ''}${location.hash}`);
+    }
+  }
+
+  function reconnectTwitchUrl() {
+    const url = new URL('/auth/twitch', location.origin);
+    url.searchParams.set('intent', 'reconnect');
+    url.searchParams.set('returnTo', '/settings.html?twitch=reconnected');
+    return `${url.pathname}${url.search}`;
   }
 
   function updateThemePreview() {
@@ -122,7 +179,11 @@
   $('settingsSubColor')?.addEventListener('input', updateThemePreview);
 
   $('reconnectTwitchButton')?.addEventListener('click', () => {
-    location.href = '/auth/twitch';
+    if (!me.authenticated) {
+      location.href = 'login.html?next=settings.html';
+      return;
+    }
+    location.href = reconnectTwitchUrl();
   });
 
   $('disconnectTwitchButton')?.addEventListener('click', async () => {
@@ -141,7 +202,9 @@
   document.addEventListener('seiga:i18n-change', () => {
     if (settings) renderSettings(settings);
     if (twitchStatus) renderTwitchStatus(twitchStatus);
+    if (twitchNotice) setTwitchNotice(twitchNotice.type, twitchNotice.key, twitchNotice.fallback);
   });
 
+  consumeTwitchQuery();
   load();
 })();

@@ -247,28 +247,98 @@
       font-weight: 700;
     }
 
+    .admin-login {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .admin-login summary {
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .admin-login summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .admin-login summary::after {
+      content: "+";
+      float: right;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .admin-login[open] summary::after {
+      content: "-";
+    }
+
+    .admin-login .form {
+      margin-top: 16px;
+    }
+
+    .admin-login-note {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
     .login-language {
       display: flex;
+      align-items: center;
       justify-content: flex-end;
-      gap: 6px;
-      margin: -8px 0 18px;
+      gap: 4px;
+      padding: 4px;
+      width: max-content;
+      margin: -8px 0 18px auto;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
     }
 
     .login-language button {
-      min-width: 44px;
-      height: 34px;
+      min-width: 36px;
+      height: 32px;
+      padding: 0 10px;
       border: 0;
-      border-radius: 12px;
+      border-radius: 11px;
       color: var(--muted);
-      background: rgba(255, 255, 255, 0.72);
+      background: transparent;
+      box-shadow: none;
       font-size: 12px;
+      line-height: 1;
       font-weight: 900;
       cursor: pointer;
+      transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
 
-    .login-language button.active {
+    .login-language button:hover {
+      color: var(--primary);
+      background: rgba(167, 139, 250, 0.14);
+    }
+
+    .login-language button.active,
+    .login-language button[aria-pressed="true"] {
       color: #fff;
       background: linear-gradient(135deg, var(--primary), var(--pink));
+      box-shadow: 0 10px 20px rgba(124, 58, 237, 0.18);
+    }
+
+    .login-language button:active {
+      transform: translateY(1px);
+    }
+
+    .login-language button:focus-visible {
+      outline: 3px solid rgba(124, 58, 237, 0.24);
+      outline-offset: 2px;
     }
 
     @media (max-width: 480px) {
@@ -299,66 +369,69 @@
     </div>
   </div>
 
-  <div class="login-language" data-i18n-aria-label="language.label" aria-label="언어 선택">
+  <div class="language-switcher login-language" data-i18n-aria-label="language.label" aria-label="언어 선택">
     <button type="button" data-lang-option="ko">KR</button>
     <button type="button" data-lang-option="ja">JA</button>
   </div>
 
-  <h1 data-i18n="auth.loginTitle">로그인</h1>
+  <h1 data-i18n="auth.loginTitle">Twitch로 시작하기</h1>
   <p class="desc" data-i18n="auth.loginDescription">
-    스트리머 대시보드에 접속하려면 로그인해주세요.
+    일반 사용자는 Twitch로 가입/로그인하고 바로 팔로우 목록을 확인할 수 있습니다.
   </p>
 
   <button id="twitchLoginButton" class="twitch-button" type="button" data-i18n="auth.twitchLogin">
-    Twitch 계정으로 로그인
+    Twitch로 가입/로그인
   </button>
 
-  <div class="divider" data-i18n="auth.emailLoginDivider">또는 이메일 로그인</div>
+  <details class="admin-login">
+    <summary data-i18n="auth.adminEmailLogin">관리자/이메일 로그인</summary>
+    <p class="admin-login-note" data-i18n="auth.adminEmailLoginNote">관리자 계정 또는 비밀번호를 발급받은 계정만 사용합니다.</p>
+    <form id="loginForm" class="form">
+      <div class="field">
+        <label for="email" data-i18n="auth.email">이메일</label>
+        <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="example@email.com"
+                autocomplete="email"
+                required
+        />
+      </div>
 
-  <form id="loginForm" class="form">
-    <div class="field">
-      <label for="email" data-i18n="auth.email">이메일</label>
-      <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="example@email.com"
-              autocomplete="email"
-              required
-      />
-    </div>
+      <div class="field">
+        <label for="password" data-i18n="auth.password">비밀번호</label>
+        <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="비밀번호를 입력하세요"
+                data-i18n-placeholder="auth.passwordPlaceholder"
+                autocomplete="current-password"
+                required
+        />
+      </div>
 
-    <div class="field">
-      <label for="password" data-i18n="auth.password">비밀번호</label>
-      <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="비밀번호를 입력하세요"
-              data-i18n-placeholder="auth.passwordPlaceholder"
-              autocomplete="current-password"
-              required
-      />
-    </div>
+      <div class="options">
+        <label class="remember">
+          <input id="rememberMe" type="checkbox" />
+          <span data-i18n="auth.rememberMe">로그인 상태 유지</span>
+        </label>
 
-    <div class="options">
-      <label class="remember">
-        <input id="rememberMe" type="checkbox" />
-        <span data-i18n="auth.rememberMe">로그인 상태 유지</span>
-      </label>
+        <a class="forgot" href="forgot-password.html" data-i18n="auth.forgotPassword">비밀번호 찾기</a>
+      </div>
 
-      <a class="forgot" href="forgot-password.html" data-i18n="auth.forgotPassword">비밀번호 찾기</a>
-    </div>
-
-    <button id="loginButton" class="login-button" type="submit" data-i18n="nav.login">
-      로그인
-    </button>
-  </form>
+      <button id="loginButton" class="login-button" type="submit" data-i18n="nav.login">
+        로그인
+      </button>
+    </form>
+  </details>
 
   <div id="message" class="message"></div>
 
-  <p class="admin-notice" data-i18n="auth.adminNotice">
-    신규 계정은 관리자만 생성할 수 있습니다.
+  <p class="admin-notice">
+    <span data-i18n="auth.adminNotice">일반 사용자는 관리자 승인 없이 Twitch로 시작할 수 있습니다. 스트리머 등록은 대시보드에서 별도로 신청합니다.</span>
+    <a class="forgot" href="register.html" data-i18n="auth.goRegister">가입 안내</a>
   </p>
 </main>
 

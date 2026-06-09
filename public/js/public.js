@@ -31,12 +31,61 @@
     button.addEventListener('click', () => showToast(button.dataset.toast));
   });
 
+  initPublicMobileMenu();
   initAuthAwarePublicNav();
   initPublicStreamerList();
 })();
 
 function publicT(key, params = {}, fallback = key) {
   return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
+}
+
+function initPublicMobileMenu() {
+  const header = document.querySelector('.header');
+  const button = document.querySelector('.mobile-menu');
+  const nav = document.getElementById('publicNavigation');
+  if (!header || !button || !nav) return;
+
+  function updateButtonLabel(isOpen) {
+    const key = isOpen ? 'dashboard.mobileMenuClose' : 'dashboard.mobileMenu';
+    const fallback = isOpen ? '메뉴 닫기' : '메뉴 열기';
+    button.dataset.i18nAriaLabel = key;
+    button.setAttribute('aria-label', publicT(key, {}, fallback));
+  }
+
+  function setOpen(isOpen) {
+    header.classList.toggle('is-menu-open', isOpen);
+    document.body.classList.toggle('public-menu-open', isOpen);
+    button.classList.toggle('is-open', isOpen);
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    button.textContent = isOpen ? '×' : '☰';
+    updateButtonLabel(isOpen);
+  }
+
+  updateButtonLabel(false);
+
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setOpen(!header.classList.contains('is-menu-open'));
+  });
+
+  nav.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setOpen(false);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (header.classList.contains('is-menu-open') && !header.contains(event.target)) {
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+
+  document.addEventListener('seiga:i18n-change', () => {
+    updateButtonLabel(header.classList.contains('is-menu-open'));
+  });
 }
 
 async function initAuthAwarePublicNav() {
@@ -513,6 +562,11 @@ async function initPublicStreamerList() {
     button.classList.toggle('selected', active);
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const label = button.textContent.trim();
+    const stateLabel = active
+      ? publicT('index.filterSelected', {}, '필터 선택됨')
+      : publicT('index.filterCleared', {}, '필터 해제됨');
+    if (label) button.setAttribute('aria-label', `${label} - ${stateLabel}`);
   }
 
   function syncFilterButtonStates() {
@@ -621,6 +675,7 @@ async function initPublicStreamerList() {
   syncFilterButtonStates();
   load();
   document.addEventListener('seiga:i18n-change', () => {
+    syncFilterButtonStates();
     if (allItems.length) {
       applyControls();
     }

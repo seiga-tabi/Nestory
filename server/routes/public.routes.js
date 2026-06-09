@@ -1,6 +1,7 @@
 const express = require('express');
 const { z } = require('zod');
 const { prisma } = require('../db/prisma');
+const { requireAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { fanCardLimiter } = require('../middleware/rateLimit');
 const { asyncHandler } = require('../utils/asyncHandler');
@@ -52,17 +53,40 @@ const accessRequestSchema = z.object({
   params: z.object({})
 });
 
+const streamerRequestSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).max(80).optional(),
+    email: z.string().email().optional(),
+    twitchUrl: z.string().max(300).optional().nullable(),
+    message: z.string().max(1000).optional().nullable()
+  }),
+  query: z.object({}).passthrough(),
+  params: z.object({})
+});
+
 const createAccessRequestHandler = asyncHandler(async (req, res) => {
   const item = await createAccessRequest(req.validated.body);
   res.status(201).json({ item });
 });
 
+const createStreamerRequestHandler = asyncHandler(async (req, res) => {
+  const item = await createAccessRequest(req.validated.body, req.user);
+  res.status(201).json({ item });
+});
+
 router.post('/access-requests', validate(accessRequestSchema), createAccessRequestHandler);
-router.post('/streamer-requests', validate(accessRequestSchema), createAccessRequestHandler);
+router.post('/streamer-requests', requireAuth, validate(streamerRequestSchema), createStreamerRequestHandler);
 
 router.get('/streamers/:slug/stream-status', asyncHandler(async (req, res) => {
   const profile = await prisma.streamerProfile.findFirst({
-    where: { slug: req.params.slug, isPublic: true, user: { status: 'ACTIVE' } },
+    where: {
+      slug: req.params.slug,
+      isPublic: true,
+      user: {
+        status: 'ACTIVE',
+        role: { in: ['STREAMER', 'ADMIN'] }
+      }
+    },
     include: { user: true }
   });
   if (!profile) return sendError(res, 404, '스트리머를 찾을 수 없습니다.', 'STREAMER_NOT_FOUND');
@@ -82,7 +106,14 @@ const fanCardSchema = z.object({
 
 router.post('/streamers/:slug/fan-cards', fanCardLimiter, validate(fanCardSchema), asyncHandler(async (req, res) => {
   const profile = await prisma.streamerProfile.findFirst({
-    where: { slug: req.params.slug, isPublic: true, user: { status: 'ACTIVE' } }
+    where: {
+      slug: req.params.slug,
+      isPublic: true,
+      user: {
+        status: 'ACTIVE',
+        role: { in: ['STREAMER', 'ADMIN'] }
+      }
+    }
   });
   if (!profile) return sendError(res, 404, '스트리머를 찾을 수 없습니다.', 'STREAMER_NOT_FOUND');
   const item = await createFanCard(profile, req.validated.body, req);

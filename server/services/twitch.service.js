@@ -5,6 +5,7 @@ const { createHttpError } = require('../utils/httpError');
 
 const streamCache = new Map();
 const TTL_MS = 60 * 1000;
+const REQUIRED_SCOPES = ['user:read:email', 'user:read:follows'];
 
 function isConfigured() {
   return Boolean(env.TWITCH_CLIENT_ID && env.TWITCH_CLIENT_SECRET && env.TWITCH_REDIRECT_URI);
@@ -16,13 +17,17 @@ function configurationStatus() {
   if (!env.TWITCH_CLIENT_SECRET) missingConfig.push('TWITCH_CLIENT_SECRET');
   if (!env.TWITCH_REDIRECT_URI) missingConfig.push('TWITCH_REDIRECT_URI');
 
-  const publicBaseRedirectUri = new URL('/auth/twitch/callback', env.PUBLIC_BASE_URL).toString();
-  const expectedLocalRedirectUri = `http://localhost:${env.PORT}/auth/twitch/callback`;
+  const callbackPath = '/auth/twitch/callback';
+  const publicBaseRedirectUri = new URL(callbackPath, env.PUBLIC_BASE_URL).toString();
+  const expectedLocalRedirectUri = `http://localhost:${env.PORT}${callbackPath}`;
 
   return {
     configured: missingConfig.length === 0,
     missingConfig,
+    missingEnv: missingConfig,
     redirectUri: env.TWITCH_REDIRECT_URI || null,
+    callbackPath,
+    requiredScopes: REQUIRED_SCOPES,
     expectedLocalRedirectUri,
     publicBaseRedirectUri,
     redirectUriMatchesPublicBaseUrl: env.TWITCH_REDIRECT_URI === publicBaseRedirectUri
@@ -45,7 +50,7 @@ function authorizationUrl(state) {
   url.searchParams.set('client_id', env.TWITCH_CLIENT_ID);
   url.searchParams.set('redirect_uri', env.TWITCH_REDIRECT_URI);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', 'user:read:email');
+  url.searchParams.set('scope', REQUIRED_SCOPES.join(' '));
   url.searchParams.set('state', state);
   return url.toString();
 }
@@ -81,9 +86,21 @@ async function twitchFetch(url, accessToken) {
   }
 
   if (!response.ok) {
+    const twitchMessage = await readTwitchError(response);
+    const isScopeError = [401, 403].includes(response.status)
+      && /scope|authorization|permission|권한/i.test(String(twitchMessage || ''));
+
+    if (isScopeError) {
+      throw createHttpError(403, 'Twitch 팔로우 목록 권한이 필요합니다. Twitch 계정을 다시 연결해주세요.', 'TWITCH_SCOPE_REQUIRED', {
+        needsReconnect: true,
+        requiredScope: 'user:read:follows',
+        reconnectUrl: '/auth/twitch?intent=reconnect&returnTo=/dashboard.html'
+      });
+    }
+
     throw createHttpError(502, 'Twitch API 요청에 실패했습니다.', 'TWITCH_API_ERROR', {
       twitchStatus: response.status,
-      twitchMessage: await readTwitchError(response)
+      twitchMessage
     });
   }
 
@@ -217,6 +234,13 @@ async function getChannelSchedule(twitchUserId, accessToken) {
   return twitchFetch(url, accessToken);
 }
 
+async function getFollowedChannels(twitchUserId, accessToken) {
+  const url = new URL('https://api.twitch.tv/helix/channels/followed');
+  url.searchParams.set('user_id', twitchUserId);
+  url.searchParams.set('first', '100');
+  return twitchFetch(url, accessToken);
+}
+
 async function streamStatusForProfile(profile) {
   const cached = streamCache.get(profile.id);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
@@ -282,6 +306,7 @@ module.exports = {
   getTwitchUser,
   getStreamStatus,
   getChannelSchedule,
+  getFollowedChannels,
   refreshAccessToken,
   ensureValidTwitchToken,
   streamStatusForProfile

@@ -27,6 +27,7 @@
   let serverSnapshot = null;
   let localAvatarUrl = '';
   let backgroundPreviewUrl = '';
+  let pendingBackgroundFile = null;
   let lastDownloadUrl = '';
   let streamStatus = 'AUTO';
 
@@ -44,16 +45,20 @@
 
   function renderStreamStatus() {
     const node = $('previewStatus');
-    if (!node) return;
+    const detailNode = $('detailPreviewStatus');
+    const setStatusText = (value) => {
+      if (node) node.textContent = value;
+      if (detailNode) detailNode.textContent = value;
+    };
     if (streamStatus === 'LIVE') {
-      node.textContent = t('common.live', {}, 'LIVE');
+      setStatusText(t('common.live', {}, 'LIVE'));
       return;
     }
     if (streamStatus === 'OFFLINE') {
-      node.textContent = t('common.offline', {}, 'OFFLINE');
+      setStatusText(t('common.offline', {}, 'OFFLINE'));
       return;
     }
-    node.textContent = t('profileCard.autoStatus', {}, '자동 연동');
+    setStatusText(t('profileCard.autoStatus', {}, '자동 연동'));
   }
 
   function clone(value) {
@@ -114,10 +119,12 @@
 
   function applyCardDesignClass(uiValue) {
     const preview = $('profileCardPreview');
-    if (!preview) return;
+    const detailPreview = $('profileScreenPreview');
     const selected = uiValue || document.querySelector('input[name="cardDesign"]:checked')?.value || 'style-clean';
-    preview.classList.remove('style-clean', 'style-soft', 'style-dark');
-    preview.classList.add(selected);
+    [preview, detailPreview].filter(Boolean).forEach((node) => {
+      node.classList.remove('style-clean', 'style-soft', 'style-dark');
+      node.classList.add(selected);
+    });
   }
 
   function applyDesign(cardDesign) {
@@ -196,6 +203,139 @@
     return languageLabels[text] || text;
   }
 
+  function profileStringValue(value) {
+    if (typeof value === 'string') return safeText(value, '');
+    if (value && typeof value === 'object') {
+      return safeText(value.url || value.src || value.path || '', '');
+    }
+    return '';
+  }
+
+  function firstProfileString(keys) {
+    for (const key of keys) {
+      const value = profileStringValue(currentProfile?.[key] ?? serverSnapshot?.[key]);
+      if (value) return value;
+    }
+    return '';
+  }
+
+  function resolveAvatarUrl() {
+    return localAvatarUrl || firstProfileString(['avatarUrl', 'avatarImage', 'profileImage', 'profileImageUrl', 'imageUrl']);
+  }
+
+  function resolveBackgroundUrl() {
+    return backgroundPreviewUrl || firstProfileString(['backgroundImage', 'backgroundImageUrl', 'coverImage', 'coverImageUrl', 'backgroundUrl', 'coverUrl']);
+  }
+
+  function resolveStoredBackgroundUrl() {
+    return firstProfileString(['backgroundImage', 'backgroundImageUrl', 'coverImage', 'coverImageUrl', 'backgroundUrl', 'coverUrl']);
+  }
+
+  function setText(id, value) {
+    const node = $(id);
+    if (node) node.textContent = value;
+  }
+
+  function renderDetailAvatar(name, avatarUrl = resolveAvatarUrl()) {
+    const image = $('detailPreviewAvatarImage');
+    const avatar = $('detailPreviewAvatar');
+    const text = $('detailPreviewAvatarText');
+    if (!image || !avatar || !text) return;
+
+    if (avatarUrl) {
+      image.crossOrigin = 'anonymous';
+      image.referrerPolicy = 'no-referrer';
+      image.onload = () => {
+        avatar.classList.add('has-image');
+        text.textContent = '';
+      };
+      image.onerror = () => {
+        image.removeAttribute('src');
+        avatar.classList.remove('has-image');
+        text.textContent = Array.from(name || '?')[0] || '?';
+      };
+      image.src = avatarUrl;
+      avatar.classList.add('has-image');
+      text.textContent = '';
+      return;
+    }
+
+    image.removeAttribute('src');
+    avatar.classList.remove('has-image');
+    text.textContent = Array.from(name || '?')[0] || '?';
+  }
+
+  function renderDetailBackground(backgroundUrl = resolveBackgroundUrl()) {
+    const cover = $('detailPreviewCover');
+    const image = $('detailPreviewBackgroundImage');
+    const placeholder = $('detailPreviewBackgroundPlaceholder');
+    if (!cover || !image) return;
+
+    if (backgroundUrl) {
+      image.crossOrigin = 'anonymous';
+      image.referrerPolicy = 'no-referrer';
+      image.onload = () => {
+        cover.classList.add('has-background');
+        if (placeholder) placeholder.hidden = true;
+      };
+      image.onerror = () => {
+        image.removeAttribute('src');
+        cover.classList.remove('has-background');
+        if (placeholder) placeholder.hidden = false;
+      };
+      image.src = backgroundUrl;
+      cover.classList.add('has-background');
+      if (placeholder) placeholder.hidden = true;
+      return;
+    }
+
+    image.removeAttribute('src');
+    cover.classList.remove('has-background');
+    if (placeholder) placeholder.hidden = false;
+  }
+
+  function renderDetailTags(mainContent, language, playStyleTags) {
+    const box = $('detailPreviewTags');
+    if (!box) return;
+    const values = [
+      mainContent || t('profileCard.noContent', {}, '콘텐츠 미등록'),
+      displayLanguage(language) || t('profileCard.noLanguage', {}, '언어 미등록'),
+      ...playStyleTags
+    ].filter(Boolean).slice(0, 5);
+    box.innerHTML = values
+      .map((tag) => `<span class="detail-preview-tag">${api.escapeHtml(tag)}</span>`)
+      .join('');
+  }
+
+  function renderDetailLinks() {
+    const box = $('detailPreviewLinks');
+    if (!box) return;
+    const links = collectLinks();
+    if (!$('showLinks')?.checked || !links.length) {
+      box.innerHTML = `<span class="detail-preview-empty">${api.escapeHtml(t('common.noLinks', {}, '등록된 링크가 없습니다'))}</span>`;
+      return;
+    }
+
+    box.innerHTML = links
+      .slice(0, 3)
+      .map((link) => `<span class="detail-preview-link">${api.escapeHtml(link.label)}</span>`)
+      .join('');
+  }
+
+  function renderDetailScreenPreview({ mainColor, subColor, name, handle, subtitle, mainContent, language, playStyleTags }) {
+    const preview = $('profileScreenPreview');
+    if (!preview) return;
+    preview.style.setProperty('--detail-main', mainColor || '#7c3aed');
+    preview.style.setProperty('--detail-sub', subColor || '#f9a8d4');
+    setText('detailPreviewName', name);
+    setText('detailPreviewHandle', displayHandle(handle));
+    setText('detailPreviewBio', subtitle || t('profileCard.bioPreviewPlaceholder', {}, '소개를 입력하면 이곳에 표시됩니다.'));
+    renderDetailAvatar(name);
+    renderDetailBackground();
+    renderDetailTags(mainContent, language, playStyleTags || []);
+    renderDetailLinks();
+  }
+
   function renderLoading() {
     setFormDisabled(true);
     streamStatus = 'AUTO';
@@ -213,11 +353,31 @@
     $('previewLinks').innerHTML = '';
     $('previewSchedule').innerHTML = '';
     $('previewVisibility').textContent = 'PRIVATE';
+    renderDetailScreenPreview({
+      mainColor: '#7c3aed',
+      subColor: '#f9a8d4',
+      name: t('common.loading', {}, '불러오는 중입니다.'),
+      handle: '',
+      subtitle: t('streamerDetail.heroLoadingSubtitle', {}, '잠시만 기다려주세요.'),
+      mainContent: '',
+      language: '',
+      playStyleTags: []
+    });
   }
 
   function renderError(error) {
     $('previewName').textContent = t('profileCard.loadError', {}, '프로필을 불러오지 못했습니다.');
     $('previewSubtitle').textContent = error?.message || t('profileCard.tryAgain', {}, '잠시 후 다시 시도해주세요.');
+    renderDetailScreenPreview({
+      mainColor: '#7c3aed',
+      subColor: '#f9a8d4',
+      name: t('profileCard.loadError', {}, '프로필을 불러오지 못했습니다.'),
+      handle: '',
+      subtitle: error?.message || t('profileCard.tryAgain', {}, '잠시 후 다시 시도해주세요.'),
+      mainContent: '',
+      language: '',
+      playStyleTags: []
+    });
     api.showToast(error?.message || t('profileCard.loadError', {}, '프로필을 불러오지 못했습니다.'));
   }
 
@@ -245,9 +405,9 @@
     const image = $('previewAvatarImage');
     const avatar = $('previewAvatar');
     const text = $('previewAvatarText');
-    if (!image || !avatar || !text) return;
     const name = safeText($('streamerName')?.value, '');
-    const avatarUrl = localAvatarUrl || currentProfile?.avatarUrl;
+    const avatarUrl = resolveAvatarUrl();
+    if (!image || !avatar || !text) return;
     if (avatarUrl) {
       image.crossOrigin = 'anonymous';
       image.referrerPolicy = 'no-referrer';
@@ -362,14 +522,15 @@
   function renderBackground() {
     const image = $('previewBackgroundImage');
     const area = $('previewVisualArea');
+    const backgroundUrl = resolveBackgroundUrl();
     if (!image || !area) return;
-    if (backgroundPreviewUrl) {
+    if (backgroundUrl) {
       image.onload = () => area.classList.add('has-background');
       image.onerror = () => {
         image.removeAttribute('src');
         area.classList.remove('has-background');
       };
-      image.src = backgroundPreviewUrl;
+      image.src = backgroundUrl;
       area.classList.add('has-background');
     } else {
       image.removeAttribute('src');
@@ -414,6 +575,7 @@
     renderPreviewSchedule();
     renderQr();
     renderStreamStatus();
+    renderDetailScreenPreview({ mainColor, subColor, name, handle, subtitle, mainContent, language, playStyleTags });
   }
 
   async function load() {
@@ -437,6 +599,7 @@
 
   async function save() {
     const previewOnlyPlayStyleTags = $('playStyleTags')?.value || '';
+    const storedBackgroundUrl = resolveStoredBackgroundUrl();
     const body = {
       name: $('streamerName').value.trim(),
       handle: $('handle').value.trim(),
@@ -448,12 +611,20 @@
       subColor: $('subColor').value,
       isPublic: selectedVisibility(),
       socialLinks: collectLinks(),
-      schedule: collectSchedule()
+      schedule: collectSchedule(),
+      ...(storedBackgroundUrl ? {
+        backgroundImage: storedBackgroundUrl,
+        coverImage: storedBackgroundUrl
+      } : {})
     };
     const saved = await api.putJson('/api/profile-card', body);
     serverSnapshot = clone(saved) || {};
     applyProfile(serverSnapshot);
     setValue('playStyleTags', previewOnlyPlayStyleTags);
+    if (pendingBackgroundFile) {
+      api.showToast(t('profileCard.backgroundSaveUnsupported', {}, '현재 서버가 배경 이미지 저장 API를 지원하지 않아 배경 이미지는 저장되지 않았습니다.'));
+      return;
+    }
     api.showToast(t('profileCard.saveDone', {}, '프로필 카드가 저장되었습니다.'));
   }
 
@@ -466,6 +637,7 @@
     revokeObjectUrl(backgroundPreviewUrl);
     localAvatarUrl = '';
     backgroundPreviewUrl = '';
+    pendingBackgroundFile = null;
     if ($('avatarUpload')) $('avatarUpload').value = '';
     if ($('backgroundUpload')) $('backgroundUpload').value = '';
     applyProfile(serverSnapshot);
@@ -819,7 +991,7 @@
       visibility: selectedVisibility() ? 'PUBLIC' : 'PRIVATE',
       profileUrl,
       qrText: compactQrText(profileUrl, slug),
-      stageImageUrl: backgroundPreviewUrl || localAvatarUrl || currentProfile?.avatarUrl || ''
+      stageImageUrl: resolveBackgroundUrl() || resolveAvatarUrl() || ''
     };
   }
 
@@ -1577,6 +1749,7 @@
   $('backgroundUpload')?.addEventListener('change', (event) => {
     const file = event.target.files?.[0];
     revokeObjectUrl(backgroundPreviewUrl);
+    pendingBackgroundFile = file || null;
     backgroundPreviewUrl = file ? URL.createObjectURL(file) : '';
     updatePreview();
   });
@@ -1607,6 +1780,11 @@
   document.addEventListener('seiga:i18n-change', () => {
     delete $('downloadProfilePngButton')?.dataset.defaultText;
     if (currentProfile) updatePreview();
+  });
+  window.addEventListener('beforeunload', () => {
+    revokeObjectUrl(localAvatarUrl);
+    revokeObjectUrl(backgroundPreviewUrl);
+    revokeObjectUrl(lastDownloadUrl);
   });
 
   load();

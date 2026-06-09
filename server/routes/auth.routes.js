@@ -24,6 +24,17 @@ const loginSchema = z.object({
   params: z.object({})
 });
 
+const registerSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
+    displayName: z.string().max(80).optional()
+  }),
+  query: z.object({}).passthrough(),
+  params: z.object({})
+});
+
 const forgotSchema = z.object({
   body: z.object({ email: z.string().email() }),
   query: z.object({}).passthrough(),
@@ -80,6 +91,15 @@ const loginHandler = asyncHandler(async (req, res) => {
 router.post('/login', authLimiter, validate(loginSchema), loginHandler);
 router.post('/', authLimiter, validate(loginSchema), loginHandler);
 
+router.post('/register', authLimiter, validate(registerSchema), asyncHandler(async (req, res) => {
+  const result = await authService.register(req.validated.body);
+  req.session.userId = result.user.id;
+  req.session.role = result.user.role;
+  setSessionPersistence(req, false);
+  await saveSession(req);
+  res.status(201).json(result.response);
+}));
+
 router.post('/logout', asyncHandler(async (req, res) => {
   try {
     await destroySession(req);
@@ -100,7 +120,7 @@ router.get('/me', (req, res) => {
   res.json({
     authenticated: Boolean(req.user),
     user: authService.publicUser(req.user),
-    role: req.user?.role || null,
+    role: authService.publicRole(req.user?.role) || null,
     isAdmin: req.user?.role === 'ADMIN',
     streamerProfile: authService.publicProfile(req.user?.streamerProfile)
   });

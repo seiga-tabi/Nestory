@@ -85,11 +85,15 @@ function parseBooleanFlag(value) {
 function resolveSeedPolicy(source = process.env) {
   const nodeEnv = source.NODE_ENV || 'development';
   const explicitSampleFlag = parseBooleanFlag(source.SEED_SAMPLE_DATA);
+  const explicitAdminBootstrapFlag = parseBooleanFlag(source.SEED_BOOTSTRAP_ADMIN);
+  const explicitAdminResetFlag = parseBooleanFlag(source.ADMIN_RESET_PASSWORD_ON_SEED);
 
   return {
     nodeEnv,
     seedSampleData: explicitSampleFlag,
-    shouldSeedSampleData: explicitSampleFlag ?? nodeEnv !== 'production'
+    shouldSeedSampleData: explicitSampleFlag ?? nodeEnv !== 'production',
+    shouldBootstrapAdmin: explicitAdminBootstrapFlag ?? true,
+    shouldResetAdminPassword: explicitAdminResetFlag ?? false
   };
 }
 
@@ -173,16 +177,28 @@ async function upsertStreamer(sample) {
     });
   }
 
-  await prisma.streamSnapshot.create({
-    data: {
-      profileId: profile.id,
-      isLive: sample.live,
-      title: sample.title,
-      gameName: sample.gameName,
-      viewerCount: sample.viewers,
-      startedAt: sample.live ? new Date(Date.now() - 1000 * 60 * 75) : null
-    }
+  const seedSnapshotKey = `seed-${profile.slug}`;
+  const snapshotData = {
+    profileId: profile.id,
+    twitchStreamId: seedSnapshotKey,
+    isLive: sample.live,
+    title: sample.title,
+    gameName: sample.gameName,
+    viewerCount: sample.viewers,
+    startedAt: sample.live ? new Date(Date.now() - 1000 * 60 * 75) : null
+  };
+  const existingSnapshot = await prisma.streamSnapshot.findFirst({
+    where: { profileId: profile.id, twitchStreamId: seedSnapshotKey },
+    select: { id: true }
   });
+  if (existingSnapshot) {
+    await prisma.streamSnapshot.update({
+      where: { id: existingSnapshot.id },
+      data: snapshotData
+    });
+  } else {
+    await prisma.streamSnapshot.create({ data: snapshotData });
+  }
 
   const fanCount = await prisma.fanCard.count({ where: { profileId: profile.id } });
   if (!fanCount) {
@@ -220,43 +236,84 @@ async function upsertStreamer(sample) {
   for (let i = 0; i < 18; i += 1) {
     const createdAt = new Date(now);
     createdAt.setDate(now.getDate() - (i % 7));
-    await prisma.pageView.create({
-      data: {
+    const pageViewData = {
+      profileId: profile.id,
+      path: `/streamer-detail.html?slug=${profile.slug}`,
+      visitorHash: `seed-${profile.slug}-${i}`,
+      referrer: i % 2 ? 'https://twitch.tv' : null,
+      userAgent: 'seed',
+      createdAt
+    };
+    const existingPageView = await prisma.pageView.findFirst({
+      where: {
         profileId: profile.id,
-        path: `/streamer-detail.html?slug=${profile.slug}`,
-        visitorHash: `seed-${profile.slug}-${i}`,
-        referrer: i % 2 ? 'https://twitch.tv' : null,
-        userAgent: 'seed',
-        createdAt
-      }
+        visitorHash: pageViewData.visitorHash
+      },
+      select: { id: true }
     });
+    if (existingPageView) {
+      await prisma.pageView.update({
+        where: { id: existingPageView.id },
+        data: pageViewData
+      });
+    } else {
+      await prisma.pageView.create({ data: pageViewData });
+    }
   }
 }
 
-async function main() {
+async function bootstrapAdmin(seedPolicy) {
+  if (!seedPolicy.shouldBootstrapAdmin) {
+    console.log('관리자 bootstrap: 비활성화됨');
+    return;
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'change-me-admin-password';
-  const seedPolicy = resolveSeedPolicy();
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const normalizedEmail = adminEmail.toLowerCase();
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, displayName: true }
+  });
 
-  await prisma.user.upsert({
-    where: { email: adminEmail.toLowerCase() },
-    update: {
-      passwordHash,
+  if (existingAdmin) {
+    const data = {
       role: 'ADMIN',
       status: 'ACTIVE',
-      displayName: 'Seiga Admin'
-    },
-    create: {
-      email: adminEmail.toLowerCase(),
-      passwordHash,
+      displayName: existingAdmin.displayName || 'Seiga Admin',
+      passwordSetupRequired: false
+    };
+
+    if (seedPolicy.shouldResetAdminPassword) {
+      data.passwordHash = await bcrypt.hash(adminPassword, 12);
+    }
+
+    await prisma.user.update({
+      where: { id: existingAdmin.id },
+      data
+    });
+    console.log(`관리자 bootstrap: 기존 관리자 보존${seedPolicy.shouldResetAdminPassword ? ', 비밀번호 갱신됨' : ''}`);
+    return;
+  }
+
+  await prisma.user.create({
+    data: {
+      email: normalizedEmail,
+      passwordHash: await bcrypt.hash(adminPassword, 12),
+      passwordSetupRequired: false,
       displayName: 'Seiga Admin',
       role: 'ADMIN',
       status: 'ACTIVE'
     }
   });
+  console.log('관리자 bootstrap: 관리자 생성됨');
+}
 
-  console.log(`Seed sample data: ${seedPolicy.shouldSeedSampleData ? 'enabled' : 'disabled'} (NODE_ENV=${seedPolicy.nodeEnv}, SEED_SAMPLE_DATA=${process.env.SEED_SAMPLE_DATA || 'unset'})`);
+async function main() {
+  const seedPolicy = resolveSeedPolicy();
+  await bootstrapAdmin(seedPolicy);
+
+  console.log(`샘플 seed: ${seedPolicy.shouldSeedSampleData ? '활성화' : '비활성화'} (NODE_ENV=${seedPolicy.nodeEnv}, SEED_SAMPLE_DATA=${process.env.SEED_SAMPLE_DATA || 'unset'})`);
 
   if (seedPolicy.shouldSeedSampleData) {
     for (const sample of samples) {
@@ -290,4 +347,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { resolveSeedPolicy };
+module.exports = { resolveSeedPolicy, bootstrapAdmin };

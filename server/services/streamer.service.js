@@ -89,7 +89,10 @@ async function listPublicStreamers(query = {}) {
 
   const where = {
     isPublic: true,
-    user: { status: 'ACTIVE' }
+    user: {
+      status: 'ACTIVE',
+      role: { in: ['STREAMER', 'ADMIN'] }
+    }
   };
 
   if (q) {
@@ -133,7 +136,14 @@ async function listPublicStreamers(query = {}) {
 
 async function getPublicStreamer(slug) {
   const profile = await prisma.streamerProfile.findFirst({
-    where: { slug, isPublic: true, user: { status: 'ACTIVE' } },
+    where: {
+      slug,
+      isPublic: true,
+      user: {
+        status: 'ACTIVE',
+        role: { in: ['STREAMER', 'ADMIN'] }
+      }
+    },
     include: includePublicProfile
   });
   if (!profile) return null;

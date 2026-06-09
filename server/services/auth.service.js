@@ -2,10 +2,15 @@ const bcrypt = require('bcrypt');
 const { prisma } = require('../db/prisma');
 const { hashToken, randomToken } = require('../utils/crypto');
 const { createHttpError } = require('../utils/httpError');
+const { sanitizeText } = require('../utils/sanitize');
 const { sendMail } = require('./mail.service');
 const { env } = require('../config/env');
 
 const PASSWORD_SETUP_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 3;
+
+function publicRole(role) {
+  return role === 'VIEWER' ? 'USER' : role;
+}
 
 function publicUser(user) {
   if (!user) return null;
@@ -13,8 +18,10 @@ function publicUser(user) {
     id: user.id,
     email: user.email,
     displayName: user.displayName,
-    role: user.role,
+    role: publicRole(user.role),
+    dbRole: user.role,
     isAdmin: user.role === 'ADMIN',
+    isStreamer: ['STREAMER', 'ADMIN'].includes(user.role),
     status: user.status,
     passwordSetupRequired: Boolean(user.passwordSetupRequired),
     twitchLogin: user.twitchLogin || null
@@ -51,7 +58,7 @@ async function login({ email, password }) {
       response: {
         passwordSetupRequired: true,
         user: publicUser(user),
-        role: user.role,
+        role: publicRole(user.role),
         isAdmin: user.role === 'ADMIN'
       }
     };
@@ -64,9 +71,49 @@ async function login({ email, password }) {
     user,
     response: {
       user: publicUser(user),
-      role: user.role,
+      role: publicRole(user.role),
       isAdmin: user.role === 'ADMIN',
       streamerProfile: publicProfile(user.streamerProfile)
+    }
+  };
+}
+
+async function register({ email, password, confirmPassword, displayName }) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (password !== confirmPassword) {
+    throw createHttpError(400, '비밀번호 확인이 일치하지 않습니다.', 'PASSWORD_CONFIRM_MISMATCH');
+  }
+  assertPasswordStrength(password);
+
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true }
+  });
+  if (existing) {
+    throw createHttpError(409, '이미 가입된 이메일입니다.', 'EMAIL_ALREADY_REGISTERED');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const safeDisplayName = sanitizeText(displayName, 80) || normalizedEmail.split('@')[0] || '사용자';
+  const user = await prisma.user.create({
+    data: {
+      email: normalizedEmail,
+      passwordHash,
+      passwordSetupRequired: false,
+      displayName: safeDisplayName,
+      role: 'VIEWER',
+      status: 'ACTIVE'
+    },
+    include: { streamerProfile: true }
+  });
+
+  return {
+    user,
+    response: {
+      user: publicUser(user),
+      role: publicRole(user.role),
+      isAdmin: false,
+      streamerProfile: null
     }
   };
 }
@@ -231,12 +278,14 @@ async function completePasswordSetup({ token, password, confirmPassword }) {
 }
 
 module.exports = {
+  register,
   login,
   forgotPassword,
   resetPassword,
   issuePasswordSetupToken,
   getPasswordSetupStatus,
   completePasswordSetup,
+  publicRole,
   publicUser,
   publicProfile
 };

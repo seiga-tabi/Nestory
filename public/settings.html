@@ -58,6 +58,7 @@
 
     <section class="panel">
       <div class="panel-title"><div><h2 data-i18n="settings.twitchTitle">Twitch 연동</h2><p data-i18n="settings.twitchDescription">방송 상태와 프로필 정보를 불러오기 위한 OAuth 설정입니다.</p></div><span class="badge">OAuth</span></div>
+      <div id="settingsTwitchNotice" class="settings-notice" hidden aria-live="polite"></div>
       <div class="list" id="twitchStatusList"><div class="list-item"><div class="item-content"><strong data-i18n="settings.twitchLoading">Twitch 상태를 불러오는 중입니다.</strong></div></div></div>
       <div class="hero-actions"><button class="ghost-btn" id="reconnectTwitchButton" type="button" data-i18n="settings.reconnectTwitch">Twitch 재연동</button><button class="danger-btn" id="disconnectTwitchButton" type="button" data-i18n="settings.disconnectTwitch">연동 해제</button></div>
     </section>

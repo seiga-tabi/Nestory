@@ -25,6 +25,8 @@ const schema = z.object({
   SESSION_COOKIE_DAYS: z.coerce.number().positive().default(7),
   REMEMBER_ME_DAYS: z.coerce.number().positive().default(30),
   SEED_SAMPLE_DATA: booleanFlag(false),
+  SEED_BOOTSTRAP_ADMIN: booleanFlag(true),
+  ADMIN_RESET_PASSWORD_ON_SEED: booleanFlag(false),
   ADMIN_EMAIL: z.string().email().default('admin@example.com'),
   ADMIN_PASSWORD: z.string().min(8).default('change-me-admin-password'),
   TWITCH_CLIENT_ID: z.preprocess(blankToUndefined, z.string().optional()).default(''),

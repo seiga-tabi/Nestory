@@ -8,6 +8,7 @@
   const endpoint = '/api/admin/streamer-requests';
   const listEl = document.getElementById('streamerRequestList');
   const stateEl = document.getElementById('streamerRequestState');
+  const setupResultEl = document.getElementById('passwordSetupResult');
   const statusBadge = document.getElementById('streamerRequestStatusBadge');
   const refreshButton = document.getElementById('refreshStreamerRequestsButton');
   const counters = {
@@ -22,7 +23,9 @@
     mode: 'loading',
     items: [],
     message: '',
-    actionKey: ''
+    actionKey: '',
+    setupUrl: '',
+    setupUrlMessageKey: ''
   };
 
   function t(key, params = {}, fallback = key) {
@@ -96,6 +99,41 @@
     stateEl.innerHTML = '';
   }
 
+  function renderSetupUrlResult() {
+    if (!setupResultEl) return;
+    const setupUrl = state.setupUrl;
+    const setupUrlMessage = state.setupUrlMessageKey
+      ? t(
+        state.setupUrlMessageKey,
+        {},
+        state.setupUrlMessageKey === 'adminRequests.copySetupLinkDone'
+          ? '복사 완료'
+          : '복사 실패. 링크를 직접 선택해서 복사해주세요.'
+      )
+      : '';
+    if (!setupUrl) {
+      setupResultEl.hidden = true;
+      setupResultEl.innerHTML = '';
+      return;
+    }
+
+    setupResultEl.hidden = false;
+    setupResultEl.innerHTML = `
+      <div class="setup-link-card">
+        <div class="setup-link-content">
+          <strong>${escape(t('adminRequests.setupLinkTitle', {}, '비밀번호 설정 링크가 생성되었습니다.'))}</strong>
+          <p>${escape(t('adminRequests.setupLinkDescription', {}, '승인된 사용자에게 전달할 1회용 링크입니다. 새로고침하면 이 안내는 사라질 수 있습니다.'))}</p>
+          <input class="setup-link-input" type="text" readonly value="${escape(setupUrl)}" aria-label="${escape(t('adminRequests.setupLinkLabel', {}, '비밀번호 설정 링크'))}" />
+          ${setupUrlMessage ? `<span class="setup-link-message">${escape(setupUrlMessage)}</span>` : ''}
+        </div>
+        <div class="setup-link-actions">
+          <button class="primary-btn" type="button" data-copy-setup-url>${escape(t('adminRequests.copySetupLink', {}, '링크 복사'))}</button>
+          <button class="ghost-btn" type="button" data-dismiss-setup-url>${escape(t('common.close', {}, '닫기'))}</button>
+        </div>
+      </div>
+    `;
+  }
+
   function renderSkeleton() {
     listEl.innerHTML = Array.from({ length: 4 }).map(() => `
       <div class="list-item admin-request-item is-loading">
@@ -162,6 +200,7 @@
 
   function renderList() {
     updateSummary();
+    renderSetupUrlResult();
 
     if (state.mode === 'loading') {
       setBadge(t('common.loading', {}, '불러오는 중'));
@@ -178,7 +217,7 @@
       setBadge(t('adminRequests.unauthorizedBadge', {}, '권한 없음'), 'pill warn');
       renderState(
         'unauthorized',
-        t('adminRequests.unauthorizedTitle', {}, '관리자 권한이 필요합니다.'),
+        t('adminRequests.unauthorizedTitle', {}, '권한이 없습니다.'),
         state.message || t('adminRequests.unauthorizedMessage', {}, '이 화면은 관리자만 사용할 수 있습니다.'),
         `<div class="hero-actions"><a class="primary-btn" href="login.html">${escape(t('nav.login', {}, '로그인'))}</a><a class="ghost-btn" href="index.html">${escape(t('nav.publicHome', {}, '공개 홈'))}</a></div>`
       );
@@ -218,6 +257,32 @@
     state.mode = mode;
     state.message = message;
     renderList();
+  }
+
+  async function copySetupUrl() {
+    if (!state.setupUrl) return;
+    const input = setupResultEl?.querySelector('.setup-link-input');
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(state.setupUrl);
+      } else {
+        input?.focus();
+        input?.select();
+        document.execCommand('copy');
+      }
+      state.setupUrlMessageKey = 'adminRequests.copySetupLinkDone';
+      api.showToast(t('adminRequests.copySetupLinkDone', {}, '복사 완료'));
+    } catch (_error) {
+      state.setupUrlMessageKey = 'adminRequests.copySetupLinkFailed';
+      api.showToast(t('adminRequests.copySetupLinkFailed', {}, '복사 실패. 링크를 직접 선택해서 복사해주세요.'));
+    }
+    renderSetupUrlResult();
+  }
+
+  function dismissSetupUrl() {
+    state.setupUrl = '';
+    state.setupUrlMessageKey = '';
+    renderSetupUrlResult();
   }
 
   function isAdminAuthState(me) {
@@ -286,18 +351,18 @@
     try {
       const result = await api.postJson(`${endpoint}/${encodeURIComponent(id)}/${action}`, {});
       if (action === 'approve' && result.passwordSetup?.setupUrl) {
-        api.showToast(t(
-          'adminRequests.approveDoneWithSetupUrl',
-          { url: result.passwordSetup.setupUrl },
-          `승인되었습니다. 비밀번호 설정 링크: ${result.passwordSetup.setupUrl}`
-        ));
+        state.setupUrl = result.passwordSetup.setupUrl;
+        state.setupUrlMessageKey = '';
+        api.showToast(t('adminRequests.approveDoneWithSetupUrl', {}, '승인되었습니다. 비밀번호 설정 링크를 확인해주세요.'));
       } else if (action === 'approve' && result.passwordSetup?.delivery === 'email') {
+        dismissSetupUrl();
         api.showToast(t(
           'adminRequests.approveDoneWithSetupEmail',
           {},
           '승인되었습니다. 비밀번호 설정 안내를 이메일로 발송했습니다.'
         ));
       } else {
+        if (action === 'reject') dismissSetupUrl();
         api.showToast(action === 'approve'
           ? t('adminRequests.approveDone', {}, '승인 처리했습니다.')
           : t('adminRequests.rejectDone', {}, '거절 처리했습니다.'));
@@ -326,6 +391,10 @@
   });
   stateEl.addEventListener('click', (event) => {
     if (event.target.closest('[data-retry-streamer-requests]')) loadRequests();
+  });
+  setupResultEl?.addEventListener('click', (event) => {
+    if (event.target.closest('[data-copy-setup-url]')) copySetupUrl();
+    if (event.target.closest('[data-dismiss-setup-url]')) dismissSetupUrl();
   });
   document.addEventListener('seiga:i18n-change', renderList);
 

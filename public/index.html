@@ -1291,12 +1291,39 @@
         }
 
         @media (max-width: 920px) {
+            .header {
+                flex-wrap: wrap;
+            }
+
             .nav {
                 display: none;
             }
 
+            .header.is-menu-open .nav {
+                order: 3;
+                display: flex;
+                flex: 1 0 100%;
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                padding: 10px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.54);
+                border: 1px solid rgba(255, 255, 255, 0.72);
+            }
+
+            .header.is-menu-open .nav a {
+                width: 100%;
+            }
+
             .mobile-menu {
                 display: block;
+            }
+
+            .mobile-menu.is-open {
+                color: #fff;
+                background: linear-gradient(135deg, var(--primary), var(--pink));
             }
 
             .main-layout {
@@ -1450,7 +1477,7 @@
             </div>
         </a>
 
-        <nav class="nav">
+        <nav id="publicNavigation" class="nav">
             <a class="active" href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
             <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
             <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
@@ -1462,13 +1489,13 @@
                 <button type="button" data-lang-option="ko">KR</button>
                 <button type="button" data-lang-option="ja">JA</button>
             </div>
-            <button class="ghost-btn" type="button" onclick="location.href='login.html'" data-i18n="nav.login">
+            <a class="ghost-btn" href="login.html" data-i18n="nav.login">
                 로그인
-            </button>
-            <button class="primary-btn" type="button" onclick="location.href='login.html'" data-i18n="nav.start">
+            </a>
+            <a class="primary-btn" href="access-request.html" data-i18n="nav.start">
                 스트리머 시작하기
-            </button>
-            <button class="mobile-menu" type="button">☰</button>
+            </a>
+            <button class="mobile-menu" type="button" aria-controls="publicNavigation" aria-expanded="false" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
         </div>
     </header>
 

@@ -50,22 +50,33 @@ function adminAccessRequestDetail(item) {
   };
 }
 
-async function createAccessRequest(body) {
-  const name = sanitizeText(body.name, 80);
-  const email = String(body.email || '').trim().toLowerCase();
-  const twitchUrl = normalizeUrl(body.twitchUrl) || null;
+async function createAccessRequest(body, user = null) {
+  const name = sanitizeText(body.name || user?.displayName, 80);
+  const email = String(user?.email || body.email || '').trim().toLowerCase();
+  const twitchLogin = user?.twitchLogin ? `https://twitch.tv/${user.twitchLogin}` : null;
+  const twitchUrl = normalizeUrl(body.twitchUrl || twitchLogin) || null;
   const message = sanitizeText(body.message, 1000) || null;
 
   if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
     throw createHttpError(400, '이름과 이메일을 확인해주세요.', 'INVALID_ACCESS_REQUEST');
   }
 
+  if (user && ['STREAMER', 'ADMIN'].includes(user.role)) {
+    throw createHttpError(409, '이미 스트리머 권한이 있습니다.', 'ACCESS_REQUEST_ALREADY_APPROVED');
+  }
+
   const existing = await prisma.accessRequest.findFirst({
-    where: { email, status: 'PENDING' },
-    select: { id: true }
+    where: {
+      email,
+      status: { in: ['PENDING', 'APPROVED'] }
+    },
+    select: { id: true, status: true }
   });
-  if (existing) {
+  if (existing?.status === 'PENDING') {
     throw createHttpError(409, '이미 검토 대기 중인 신청이 있습니다.', 'ACCESS_REQUEST_ALREADY_PENDING');
+  }
+  if (existing?.status === 'APPROVED') {
+    throw createHttpError(409, '이미 승인된 신청이 있습니다.', 'ACCESS_REQUEST_ALREADY_APPROVED');
   }
 
   const item = await prisma.accessRequest.create({
@@ -130,10 +141,14 @@ async function approveAccessRequest(id, adminUser) {
     select: {
       id: true,
       passwordHash: true,
-      passwordSetupRequired: true
+      passwordSetupRequired: true,
+      status: true
     }
   });
-  const requiresPasswordSetup = !existingUser?.passwordHash || existingUser.passwordSetupRequired;
+  const requiresPasswordSetup = !existingUser
+    || existingUser.passwordSetupRequired
+    || existingUser.status !== 'ACTIVE'
+    || !existingUser.passwordHash;
 
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.upsert({

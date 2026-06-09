@@ -2,27 +2,59 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { z } = require('zod');
 const { prisma } = require('../db/prisma');
-const { requireStreamer } = require('../middleware/auth');
+const { requireAuth, requireStreamer } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { sendError } = require('../utils/httpError');
 const { sanitizeText } = require('../utils/sanitize');
 const { ensureRawProfileForUser, privateProfile } = require('../services/streamer.service');
+const { publicRole } = require('../services/auth.service');
 
 const router = express.Router();
 
-router.use(requireStreamer);
+router.use(requireAuth);
 
 router.get('/', asyncHandler(async (req, res) => {
-  const profile = await ensureRawProfileForUser(req.user);
+  const canUseStreamerSettings = ['STREAMER', 'ADMIN'].includes(req.user.role);
+  const profile = canUseStreamerSettings
+    ? await ensureRawProfileForUser(req.user)
+    : req.user.streamerProfile;
+  const latestRequest = canUseStreamerSettings ? null : await prisma.accessRequest.findFirst({
+    where: { email: req.user.email },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      reviewedAt: true,
+      approvedAt: true,
+      rejectedAt: true
+    }
+  });
+  const approvalStatus = canUseStreamerSettings
+    ? 'approved'
+    : latestRequest?.status?.toLowerCase() || 'not_requested';
   res.json({
     user: {
       displayName: req.user.displayName,
       email: req.user.email,
-      role: req.user.role,
+      role: publicRole(req.user.role),
+      dbRole: req.user.role,
       twitchLogin: req.user.twitchLogin
     },
-    profile: privateProfile(profile)
+    profile: privateProfile(profile),
+    streamerAccess: {
+      canUseStreamerSettings,
+      approvalStatus,
+      request: latestRequest ? {
+        id: latestRequest.id,
+        status: approvalStatus,
+        createdAt: latestRequest.createdAt,
+        reviewedAt: latestRequest.reviewedAt,
+        approvedAt: latestRequest.approvedAt,
+        rejectedAt: latestRequest.rejectedAt
+      } : null
+    }
   });
 }));
 
@@ -38,7 +70,8 @@ const profileSchema = z.object({
 });
 
 router.put('/profile', validate(profileSchema), asyncHandler(async (req, res) => {
-  const profile = await ensureRawProfileForUser(req.user);
+  const canUseStreamerSettings = ['STREAMER', 'ADMIN'].includes(req.user.role);
+  const profile = canUseStreamerSettings ? await ensureRawProfileForUser(req.user) : null;
   const data = {};
   if (req.validated.body.displayName) data.displayName = sanitizeText(req.validated.body.displayName, 80);
   if (req.validated.body.email) data.email = req.validated.body.email.toLowerCase();
@@ -89,7 +122,7 @@ const privacySchema = z.object({
   params: z.object({})
 });
 
-router.put('/privacy', validate(privacySchema), asyncHandler(async (req, res) => {
+router.put('/privacy', requireStreamer, validate(privacySchema), asyncHandler(async (req, res) => {
   const profile = await ensureRawProfileForUser(req.user);
   await prisma.streamerProfile.update({
     where: { id: profile.id },

@@ -29,12 +29,98 @@
     return text || fallback;
   }
 
+  function profileStringValue(value) {
+    if (typeof value === 'string') return safeText(value, '');
+    if (value && typeof value === 'object') {
+      return safeText(value.url || value.src || value.path || '', '');
+    }
+    return '';
+  }
+
+  function firstProfileString(profile, keys) {
+    for (const key of keys) {
+      const value = profileStringValue(profile?.[key]);
+      if (value) return value;
+    }
+    return '';
+  }
+
+  function normalizeImageUrl(value) {
+    const text = safeText(value, '');
+    if (!text) return '';
+    if (/^(data:image\/|blob:)/i.test(text)) return text;
+    try {
+      return new URL(text, location.origin).href;
+    } catch (_error) {
+      return text;
+    }
+  }
+
+  function coverImageUrl(profile = {}) {
+    return normalizeImageUrl(firstProfileString(profile, [
+      'backgroundImage',
+      'backgroundImageUrl',
+      'coverImage',
+      'coverImageUrl',
+      'backgroundUrl',
+      'coverUrl',
+      'profileBackground'
+    ]));
+  }
+
+  function renderCover(profile = {}, state = 'ready') {
+    const cover = $('detailCover');
+    const image = $('detailCoverImage');
+    const placeholder = $('detailCoverPlaceholder');
+    if (!cover || !image) return;
+
+    cover.classList.toggle('is-loading', state === 'loading');
+    cover.classList.toggle('is-error', state === 'error');
+
+    const imageUrl = state === 'ready' ? coverImageUrl(profile) : '';
+    if (imageUrl) {
+      image.onload = () => {
+        cover.classList.add('has-background');
+        if (placeholder) placeholder.hidden = true;
+      };
+      image.onerror = () => {
+        image.removeAttribute('src');
+        cover.classList.remove('has-background');
+        if (placeholder) placeholder.hidden = false;
+      };
+      image.src = imageUrl;
+      cover.classList.add('has-background');
+      if (placeholder) placeholder.hidden = true;
+      return;
+    }
+
+    image.removeAttribute('src');
+    cover.classList.remove('has-background');
+    if (placeholder) placeholder.hidden = false;
+  }
+
   function avatarMarkup(profile) {
     const initial = api.escapeHtml(Array.from(safeText(profile.name, '?'))[0] || '?');
-    if (profile.avatarUrl) {
-      return `<img src="${api.escapeHtml(profile.avatarUrl)}" alt="" /><span aria-hidden="true">${initial}</span>`;
+    const imageUrl = safeText(profile.avatarUrl || profile.profileImage || '');
+    if (imageUrl) {
+      const alt = api.escapeHtml(t('common.imageAlt', {}, '프로필 이미지'));
+      return `<img src="${api.escapeHtml(imageUrl)}" alt="${alt}" loading="lazy" decoding="async" /><span aria-hidden="true">${initial}</span>`;
     }
     return `<span aria-hidden="true">${initial}</span>`;
+  }
+
+  function renderAvatarNode(id, profile = {}, state = 'ready') {
+    const node = $(id);
+    if (!node) return;
+    const hasImage = Boolean(safeText(profile.avatarUrl || profile.profileImage || ''));
+    node.classList.toggle('has-image', state === 'ready' && hasImage);
+    node.classList.toggle('is-loading', state === 'loading');
+    node.classList.toggle('is-error', state === 'error');
+    node.innerHTML = avatarMarkup(profile);
+  }
+
+  function renderAllAvatars(profile = {}, state = 'ready') {
+    ['detailHeroAvatar', 'detailSideAvatar'].forEach((id) => renderAvatarNode(id, profile, state));
   }
 
   function numberText(value) {
@@ -93,6 +179,8 @@
   }
 
   function renderLoading() {
+    renderCover({}, 'loading');
+    renderAllAvatars({ name: '?' }, 'loading');
     $('detailHeroName').textContent = t('streamerDetail.heroLoadingName', {}, '프로필을 불러오는 중입니다.');
     $('detailHeroSubtitle').textContent = t('streamerDetail.heroLoadingSubtitle', {}, '잠시만 기다려주세요.');
     renderDetailProfileCard({}, { loading: true });
@@ -105,6 +193,8 @@
 
   function renderError(error) {
     const message = error?.message || t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.');
+    renderCover({}, 'error');
+    renderAllAvatars({ name: '?' }, 'error');
     $('detailLiveBadge').innerHTML = '<span class="dot"></span>ERROR';
     $('detailHeroName').textContent = t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.');
     $('detailHeroSubtitle').textContent = message;
@@ -200,11 +290,8 @@
     document.documentElement.style.setProperty('--primary', mainColor);
     document.documentElement.style.setProperty('--pink', subColor);
 
-    ['detailHeroAvatar', 'detailSideAvatar'].forEach((id) => {
-      const node = $(id);
-      if (!node) return;
-      node.innerHTML = avatarMarkup(profile);
-    });
+    renderCover(profile);
+    renderAllAvatars(profile);
 
     $('detailLiveBadge').innerHTML = `<span class="dot"></span>${isLive ? t('streamerDetail.liveNow', {}, '라이브 중') : t('common.offline', {}, 'OFFLINE')}`;
     $('detailHeroName').textContent = name;
@@ -247,10 +334,13 @@
   document.addEventListener('error', (event) => {
     const image = event.target;
     if (!(image instanceof HTMLImageElement)) return;
-    const holder = image.closest('#detailCardAvatar');
+    const holder = image.closest('.avatar, .side-avatar');
     if (!holder) return;
+    const fallback = holder.querySelector('span[aria-hidden="true"]');
     image.remove();
     holder.classList.remove('has-image');
+    holder.classList.remove('is-loading');
+    if (fallback && !fallback.textContent.trim()) fallback.textContent = '?';
   }, true);
 
   renderLoading();

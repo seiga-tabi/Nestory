@@ -18,7 +18,7 @@ This is a Twitch streamer profile card platform.
 - Keep API secrets in .env only.
 - Preserve login/session behavior.
 - Avoid inline scripts because CSP may block them.
-- Keep profile card PNG export working at 1200x675.
+- Keep profile card PNG export working at 900x1350 portrait.
 - All UI must support Korean and Japanese.
 - Japanese text must not overflow or break layout.
 - Mobile width 375px must not have horizontal scroll.
@@ -39,10 +39,11 @@ This is a Twitch streamer profile card platform.
 
 ## Design Rules
 - The profile card must feel like a streamer/game self-introduction card.
-- Use 16:9 layout: 1200x675.
+- Use portrait layout: 900x1350 export target and 280-340px responsive page cards.
+- Treat 16:9 / 1200x675 profile-card layouts as legacy only unless explicitly requested.
 - No text overlap.
 - No cropped important image content.
-- Mobile must either scale the 16:9 card or use a vertical fallback layout.
+- Mobile must render one-column portrait cards without horizontal scroll.
 
 ## Output Format
 Always report:

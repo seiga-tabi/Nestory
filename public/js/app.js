@@ -26,6 +26,7 @@
   });
 
   initShellI18n();
+  initShellMobileMenu();
   initShellActions();
 })();
 
@@ -51,6 +52,52 @@ function ensureLanguageSwitcher(actions) {
 function initShellI18n() {
   document.querySelectorAll('.top-actions').forEach(ensureLanguageSwitcher);
   window.SeigaI18n?.applyTranslations?.();
+}
+
+function initShellMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const button = document.querySelector('.mobile-header .icon-btn');
+  if (!sidebar || !button) return;
+
+  function updateButtonLabel(isOpen) {
+    const key = isOpen ? 'dashboard.mobileMenuClose' : 'dashboard.mobileMenu';
+    const fallback = isOpen ? '메뉴 닫기' : '메뉴 열기';
+    button.dataset.i18nAriaLabel = key;
+    button.setAttribute('aria-label', shellT(key, {}, fallback));
+  }
+
+  function setOpen(isOpen) {
+    document.body.classList.toggle('shell-menu-open', isOpen);
+    button.classList.toggle('is-open', isOpen);
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    button.textContent = isOpen ? '×' : '☰';
+    updateButtonLabel(isOpen);
+  }
+
+  button.setAttribute('aria-expanded', 'false');
+  updateButtonLabel(false);
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setOpen(!document.body.classList.contains('shell-menu-open'));
+  });
+
+  sidebar.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setOpen(false);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!document.body.classList.contains('shell-menu-open')) return;
+    if (sidebar.contains(event.target) || button.contains(event.target)) return;
+    setOpen(false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+
+  document.addEventListener('seiga:i18n-change', () => {
+    updateButtonLabel(document.body.classList.contains('shell-menu-open'));
+  });
 }
 
 function initShellActions() {

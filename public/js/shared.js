@@ -4,6 +4,7 @@
   const guestSelector = '[data-auth-guest]';
   const userSelector = '[data-auth-user]';
   const adminSelector = '[data-auth-admin]';
+  const streamerSelector = '[data-auth-streamer]';
   const controlledSelector = '[data-auth-controlled]';
   const authStorageKeys = [
     'seiga_auth_state',
@@ -32,6 +33,8 @@
       authenticated: Boolean(payload?.authenticated),
       user: payload?.user || null,
       role: payload?.role || payload?.user?.role || null,
+      isAdmin: payload?.isAdmin === true || payload?.user?.isAdmin === true,
+      isStreamer: payload?.user?.isStreamer === true,
       streamerProfile: payload?.streamerProfile || null,
       raw: payload || null
     };
@@ -43,6 +46,25 @@
     const user = state.user || raw.user || {};
     const roles = [state.role, user.role, raw.role].map((role) => String(role || '').toUpperCase());
     return roles.includes('ADMIN') || state.isAdmin === true || user.isAdmin === true || raw.isAdmin === true;
+  }
+
+  function normalizeRole(value) {
+    const role = String(value || '').trim().toUpperCase();
+    if (role === 'VIEWER') return 'USER';
+    return role || 'USER';
+  }
+
+  function isStreamerState(state) {
+    if (!state?.authenticated) return false;
+    const raw = state.raw || {};
+    const user = state.user || raw.user || {};
+    const roles = [state.role, user.role, raw.role, user.dbRole]
+      .map(normalizeRole);
+    return roles.includes('STREAMER')
+      || roles.includes('ADMIN')
+      || state.isStreamer === true
+      || user.isStreamer === true
+      || Boolean(state.streamerProfile);
   }
 
   function clearAuthStorage() {
@@ -143,14 +165,20 @@
     node.dataset.authAdmin = 'true';
   }
 
+  function markStreamerNode(node) {
+    if (!node) return;
+    markAuthNode(node, 'user', 'streamer');
+    node.dataset.authStreamer = 'true';
+  }
+
   function ensureAdminHeaderLink(actions) {
     const link = ensureAuthLink(
       actions,
       '[data-auth-kind="admin"], a[href="admin-streamer-requests.html"]',
       'ghost-btn',
       'admin-streamer-requests.html',
-      'adminRequests.nav',
-      '등록 요청',
+      'nav.adminPage',
+      '관리자 페이지',
       'user',
       'admin'
     );
@@ -165,17 +193,17 @@
       link = document.createElement('a');
       link.href = 'admin-streamer-requests.html';
       link.dataset.nav = 'true';
-      link.innerHTML = `<span class="nav-icon">✓</span><span data-i18n="adminRequests.nav">${escapeHtml(t('adminRequests.nav', {}, '등록 요청'))}</span>`;
+      link.innerHTML = `<span class="nav-icon">✓</span><span data-i18n="adminRequests.manageTitle">${escapeHtml(t('adminRequests.manageTitle', {}, '등록 요청 관리'))}</span>`;
       nav.append(link);
     }
     markAdminNode(link);
     link.href = 'admin-streamer-requests.html';
     const label = link.querySelector('[data-i18n], [data-shell-nav-label]') || link;
-    label.dataset.i18n = 'adminRequests.nav';
+    label.dataset.i18n = 'adminRequests.manageTitle';
     if (label === link) {
-      label.textContent = t('adminRequests.nav', {}, '등록 요청');
+      label.textContent = t('adminRequests.manageTitle', {}, '등록 요청 관리');
     } else {
-      label.textContent = t('adminRequests.nav', {}, '등록 요청');
+      label.textContent = t('adminRequests.manageTitle', {}, '등록 요청 관리');
     }
     return link;
   }
@@ -184,6 +212,16 @@
     root.querySelectorAll('a[href="admin-streamer-requests.html"], a[href="admin-access-requests.html"], [data-auth-admin]').forEach(markAdminNode);
     root.querySelectorAll('.sidebar .nav').forEach(ensureAdminSidebarLink);
     root.querySelectorAll('.header-actions').forEach(ensureAdminHeaderLink);
+  }
+
+  function normalizeStreamerLinks(root = document) {
+    root.querySelectorAll([
+      'a[href="profile-card.html"]',
+      'a[href="fan-cards.html"]',
+      'a[href="analytics.html"]',
+      'a[href="schedule.html"]',
+      '[data-auth-streamer]'
+    ].join(',')).forEach(markStreamerNode);
   }
 
   function normalizeHeaderActions(root = document) {
@@ -227,6 +265,7 @@
       button.dataset.authLogout = 'true';
     });
     normalizeAdminLinks(root);
+    normalizeStreamerLinks(root);
   }
 
   function setVisible(node, visible) {
@@ -237,15 +276,31 @@
   function applyAuthState(state) {
     const authenticated = Boolean(state?.authenticated);
     const admin = isAdminState(state);
-    document.documentElement.classList.remove('auth-loading', 'authenticated', 'unauthenticated', 'admin', 'not-admin');
+    const streamer = isStreamerState(state);
+    const role = normalizeRole(state?.role || state?.user?.role);
+    document.documentElement.classList.remove(
+      'auth-loading',
+      'authenticated',
+      'unauthenticated',
+      'admin',
+      'not-admin',
+      'streamer',
+      'not-streamer',
+      'role-user',
+      'role-streamer',
+      'role-admin'
+    );
     document.documentElement.classList.add('auth-ready', authenticated ? 'authenticated' : 'unauthenticated');
     document.documentElement.classList.add(admin ? 'admin' : 'not-admin');
+    document.documentElement.classList.add(streamer ? 'streamer' : 'not-streamer');
+    if (authenticated) document.documentElement.classList.add(`role-${role.toLowerCase()}`);
 
     document.querySelectorAll(guestSelector).forEach((node) => setVisible(node, !authenticated));
     document.querySelectorAll(userSelector).forEach((node) => setVisible(node, authenticated));
     document.querySelectorAll(adminSelector).forEach((node) => setVisible(node, admin));
+    document.querySelectorAll(streamerSelector).forEach((node) => setVisible(node, streamer));
     document.querySelectorAll(controlledSelector).forEach((node) => {
-      if (!node.matches(guestSelector) && !node.matches(userSelector) && !node.matches(adminSelector)) setVisible(node, true);
+      if (!node.matches(guestSelector) && !node.matches(userSelector) && !node.matches(adminSelector) && !node.matches(streamerSelector)) setVisible(node, true);
     });
   }
 
@@ -491,8 +546,10 @@
     syncAuthUi,
     bindLogoutButtons,
     isAdmin: isAdminState,
+    isStreamer: isStreamerState,
     normalizeAdminLinks,
     normalizeHeaderActions,
+    normalizeStreamerLinks,
     logout
   };
 
@@ -514,6 +571,7 @@
   document.addEventListener('seiga:i18n-change', () => {
     normalizeHeaderActions(document);
     normalizeAdminLinks(document);
+    normalizeStreamerLinks(document);
     if (authState) applyAuthState(authState);
   });
 })();
