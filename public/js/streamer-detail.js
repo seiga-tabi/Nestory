@@ -1,4 +1,8 @@
 (async function () {
+  if (window.SeigaI18nReady) {
+    await window.SeigaI18nReady.catch(() => {});
+  }
+
   const api = window.SeigaApi;
   if (!api || !document.querySelector('.profile-head')) return;
 
@@ -9,8 +13,16 @@
   }
 
   const $ = (id) => document.getElementById(id);
-  const dayLabel = { MON: '월', TUE: '화', WED: '수', THU: '목', FRI: '금', SAT: '토', SUN: '일' };
-  const designToUi = { CLEAN_WHITE: 'style-clean', SOFT_OVERLAY: 'style-soft', DARK_GLASS: 'style-dark' };
+  const languageLabels = { KR: '한국어', JA: '日本語', 'KR/JA': 'KR / JA', 'JA/KR': 'JA / KR' };
+  let currentProfile = null;
+
+  function t(key, params = {}, fallback = key) {
+    return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
+  }
+
+  function localeTag() {
+    return window.SeigaI18n?.localeTag?.() || 'ko-KR';
+  }
 
   function safeText(value, fallback = '') {
     const text = String(value ?? '').trim();
@@ -18,25 +30,62 @@
   }
 
   function avatarMarkup(profile) {
+    const initial = api.escapeHtml(Array.from(safeText(profile.name, '?'))[0] || '?');
     if (profile.avatarUrl) {
-      return `<img src="${api.escapeHtml(profile.avatarUrl)}" alt="" />`;
+      return `<img src="${api.escapeHtml(profile.avatarUrl)}" alt="" /><span aria-hidden="true">${initial}</span>`;
     }
-    return api.escapeHtml(Array.from(safeText(profile.name, '?'))[0] || '?');
-  }
-
-  function applyCardDesign(profile) {
-    const card = $('detailProfileCard');
-    if (!card) return;
-    card.classList.remove('style-clean', 'style-soft', 'style-dark');
-    card.classList.add(designToUi[profile.cardDesign] || 'style-dark');
+    return `<span aria-hidden="true">${initial}</span>`;
   }
 
   function numberText(value) {
-    return Number(value || 0).toLocaleString('ko-KR');
+    return window.SeigaI18n?.number?.(value) || Number(value || 0).toLocaleString('ko-KR');
+  }
+
+  function dayText(dayOfWeek) {
+    return t(`common.day.${dayOfWeek}`, {}, dayOfWeek || '-');
+  }
+
+  function displayLanguage(value) {
+    const text = safeText(value, '');
+    return languageLabels[text] || text;
   }
 
   function activeSchedule(schedule = []) {
     return schedule.filter((item) => item?.isActive !== false && (item?.startTime || item?.title));
+  }
+
+  function renderDetailProfileCard(profile = {}, options = {}) {
+    const slot = $('detailProfileCardSlot');
+    const renderer = window.SeigaProfileCard;
+    if (!slot || !renderer) return;
+
+    const isLive = Boolean(profile?.isLive);
+    const name = safeText(profile?.name, options.loading ? t('common.loading', {}, '불러오는 중입니다.') : t('index.noName', {}, '이름 없는 스트리머'));
+    const handle = safeText(profile?.handle, t('index.noHandle', {}, '핸들 없음'));
+    const bio = options.error
+      ? safeText(options.message, t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.'))
+      : safeText(profile?.subtitle || profile?.description, t('index.noSubtitle', {}, '소개가 등록되지 않았습니다.'));
+    const fanCards = Array.isArray(profile?.fanCards) ? profile.fanCards.length : profile?.fanCardCount;
+
+    slot.innerHTML = renderer.renderProfileCard(profile || {}, {
+      className: `detail-profile-card${options.loading ? ' profile-card--skeleton' : ''}`,
+      slug: profile?.slug || slug,
+      name,
+      handle,
+      bio,
+      imageUrl: profile?.avatarUrl || profile?.profileImage || profile?.coverImage || '',
+      verified: profile?.isPublic !== false,
+      isLive,
+      tags: [profile?.mainContent, displayLanguage(profile?.language)].filter(Boolean),
+      stats: [
+        { icon: '♡', value: options.loading ? '-' : numberText(profile?.viewCount || profile?.viewerCount), label: t('rankings.profileViews', {}, '프로필 방문'), format: false },
+        { icon: '▣', value: options.loading ? '-' : numberText(fanCards), label: t('profileCard.statFanCards', {}, '팬 카드'), format: false },
+        { icon: '●', value: options.error ? 'ERR' : (isLive ? 'LIVE' : 'OFF'), label: t('profileCard.statStatus', {}, '상태'), format: false }
+      ],
+      actions: [
+        { label: t('common.follow', {}, '팔로우'), icon: '+', loginRequired: true }
+      ]
+    });
   }
 
   function firstStreamLink(links = []) {
@@ -44,8 +93,9 @@
   }
 
   function renderLoading() {
-    $('detailHeroName').textContent = '프로필을 불러오는 중입니다.';
-    $('detailHeroSubtitle').textContent = '잠시만 기다려주세요.';
+    $('detailHeroName').textContent = t('streamerDetail.heroLoadingName', {}, '프로필을 불러오는 중입니다.');
+    $('detailHeroSubtitle').textContent = t('streamerDetail.heroLoadingSubtitle', {}, '잠시만 기다려주세요.');
+    renderDetailProfileCard({}, { loading: true });
   }
 
   function renderEmpty(target, message, className = 'fan-item') {
@@ -54,24 +104,27 @@
   }
 
   function renderError(error) {
-    const message = error?.message || '프로필 데이터를 불러오지 못했습니다.';
+    const message = error?.message || t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.');
     $('detailLiveBadge').innerHTML = '<span class="dot"></span>ERROR';
-    $('detailHeroName').textContent = '프로필 데이터를 불러오지 못했습니다.';
+    $('detailHeroName').textContent = t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.');
     $('detailHeroSubtitle').textContent = message;
-    $('detailCardName').textContent = '데이터 없음';
-    $('detailSideName').textContent = '데이터 없음';
-    renderEmpty($('detailFanList'), '프로필 데이터를 불러오지 못했습니다.');
-    renderEmpty($('detailScheduleList'), '방송 일정을 불러오지 못했습니다.', 'schedule-item');
-    renderEmpty($('detailLinkList'), '링크를 불러오지 못했습니다.', 'link-item');
+    renderDetailProfileCard({}, { error: true, message });
+    $('detailSideName').textContent = t('common.noData', {}, '데이터 없음');
+    renderEmpty($('detailFanList'), t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.'));
+    renderEmpty($('detailScheduleList'), t('streamerDetail.scheduleLoadError', {}, '방송 일정을 불러오지 못했습니다.'), 'schedule-item');
+    renderEmpty($('detailLinkList'), t('streamerDetail.linksLoadError', {}, '링크를 불러오지 못했습니다.'), 'link-item');
   }
 
   function renderLinks(profile) {
     const links = profile.links || [];
     const chips = $('detailLinkChips');
     const list = $('detailLinkList');
+    const twitchNode = $('detailTwitchLink');
+    if (twitchNode) twitchNode.hidden = true;
     if (!links.length) {
-      if (chips) chips.innerHTML = '<span class="detail-link-chip">등록된 링크가 없습니다</span>';
-      if (list) list.innerHTML = '<div class="link-item"><div class="item-text"><strong>등록된 링크가 없습니다</strong></div></div>';
+      const emptyText = t('common.noLinks', {}, '등록된 링크가 없습니다.');
+      if (chips) chips.innerHTML = `<span class="detail-link-chip">${api.escapeHtml(emptyText)}</span>`;
+      if (list) list.innerHTML = `<div class="link-item"><div class="item-text"><strong>${api.escapeHtml(emptyText)}</strong></div></div>`;
       return;
     }
 
@@ -90,11 +143,11 @@
     }
 
     const twitch = firstStreamLink(links);
-    if (twitch?.url) {
-      const node = $('detailTwitchLink');
+    if (twitch?.url && twitchNode) {
+      const node = twitchNode;
       node.hidden = false;
       node.href = twitch.url;
-      node.textContent = `${twitch.label || twitch.type || 'Link'} 보기`;
+      node.textContent = t('streamerDetail.linkView', { label: twitch.label || twitch.type || 'Link' }, `${twitch.label || twitch.type || 'Link'} 보기`);
     }
   }
 
@@ -102,15 +155,15 @@
     const list = $('detailFanList');
     if (!list) return;
     if (!cards.length) {
-      renderEmpty(list, '아직 공개 팬 카드가 없습니다.');
+      renderEmpty(list, t('streamerDetail.fanEmpty', {}, '아직 공개 팬 카드가 없습니다.'));
       return;
     }
     list.innerHTML = cards.map((card) => `
       <div class="fan-item">
         <div class="item-icon">${api.escapeHtml(card.emoji || '💌')}</div>
         <div class="item-text">
-          <strong>${api.escapeHtml(card.message || '내용 없는 팬 카드')}</strong>
-          <span>${api.escapeHtml(card.senderName || '익명 팬')} · ${card.createdAt ? new Date(card.createdAt).toLocaleDateString('ko-KR') : '날짜 없음'}</span>
+          <strong>${api.escapeHtml(card.message || t('dashboard.fanCardNoMessage', {}, '내용 없는 팬 카드'))}</strong>
+          <span>${api.escapeHtml(card.senderName || t('dashboard.anonymousFan', {}, '익명 팬'))} · ${card.createdAt ? new Date(card.createdAt).toLocaleDateString(localeTag()) : t('adminAccess.noDate', {}, '날짜 없음')}</span>
         </div>
       </div>
     `).join('');
@@ -121,53 +174,51 @@
     if (!list) return;
     const items = activeSchedule(schedule);
     if (!items.length) {
-      renderEmpty(list, '등록된 방송 일정이 없습니다.', 'schedule-item');
+      renderEmpty(list, t('profileCard.noSchedule', {}, '등록된 방송 일정이 없습니다.'), 'schedule-item');
       return;
     }
     list.innerHTML = items.map((item) => `
       <div class="schedule-item">
-        <div class="item-icon">${api.escapeHtml(dayLabel[item.dayOfWeek] || item.dayOfWeek || '-')}</div>
-        <div class="item-text"><strong>${api.escapeHtml(item.startTime || '미정')}</strong><span>${api.escapeHtml(item.title || '방송 일정')}</span></div>
+        <div class="item-icon">${api.escapeHtml(dayText(item.dayOfWeek))}</div>
+        <div class="item-text"><strong>${api.escapeHtml(item.startTime || t('profileCard.timeUnknown', {}, '미정'))}</strong><span>${api.escapeHtml(item.title || t('streamerDetail.scheduleFallback', {}, '방송 일정'))}</span></div>
       </div>
     `).join('');
   }
 
   function render(profile) {
+    currentProfile = profile;
     const isLive = Boolean(profile.isLive);
-    const name = safeText(profile.name, '이름 없는 스트리머');
-    const handle = safeText(profile.handle, '핸들 없음');
-    const subtitle = safeText(profile.subtitle, '소개가 등록되지 않았습니다.');
-    const language = safeText(profile.language, '언어 미등록');
-    const mainContent = safeText(profile.mainContent, '콘텐츠 미등록');
+    const name = safeText(profile.name, t('index.noName', {}, '이름 없는 스트리머'));
+    const handle = safeText(profile.handle, t('index.noHandle', {}, '핸들 없음'));
+    const subtitle = safeText(profile.subtitle, t('index.noSubtitle', {}, '소개가 등록되지 않았습니다.'));
+    const language = safeText(profile.language, t('profileCard.noLanguage', {}, '언어 미등록'));
+    const languageText = displayLanguage(language);
+    const mainContent = safeText(profile.mainContent, t('profileCard.noContent', {}, '콘텐츠 미등록'));
     const mainColor = profile.mainColor || '#7c3aed';
     const subColor = profile.subColor || '#f9a8d4';
 
     document.documentElement.style.setProperty('--primary', mainColor);
     document.documentElement.style.setProperty('--pink', subColor);
-    $('detailProfileCard')?.style.setProperty('--card-main', mainColor);
-    $('detailProfileCard')?.style.setProperty('--card-sub', subColor);
-    applyCardDesign(profile);
 
-    ['detailHeroAvatar', 'detailCardAvatar', 'detailSideAvatar'].forEach((id) => {
+    ['detailHeroAvatar', 'detailSideAvatar'].forEach((id) => {
       const node = $(id);
-      if (node) node.innerHTML = avatarMarkup(profile);
+      if (!node) return;
+      node.innerHTML = avatarMarkup(profile);
     });
 
-    $('detailLiveBadge').innerHTML = `<span class="dot"></span>${isLive ? 'LIVE NOW' : 'OFFLINE'}`;
+    $('detailLiveBadge').innerHTML = `<span class="dot"></span>${isLive ? t('streamerDetail.liveNow', {}, '라이브 중') : t('common.offline', {}, 'OFFLINE')}`;
     $('detailHeroName').textContent = name;
     $('detailHeroSubtitle').textContent = subtitle;
-    $('detailCardName').textContent = name;
-    $('detailCardHandle').textContent = handle;
-    $('detailCardSubtitle').textContent = subtitle;
+    renderDetailProfileCard(profile);
     $('detailSideName').textContent = name;
-    $('detailSideMeta').innerHTML = `${api.escapeHtml(language)} 방송<br />${api.escapeHtml(mainContent)}`;
+    $('detailSideMeta').innerHTML = `${api.escapeHtml(t('streamerDetail.broadcastingSuffix', { language: languageText }, `${languageText} 방송`))}<br />${api.escapeHtml(mainContent)}`;
 
     $('detailStatStatus').textContent = isLive ? 'LIVE' : 'OFFLINE';
     $('detailStatViewers').textContent = numberText(profile.viewerCount);
     $('detailStatStart').textContent = profile.streamStatus?.startedAt
-      ? new Date(profile.streamStatus.startedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-      : safeText(activeSchedule(profile.schedule)[0]?.startTime, '미정');
-    $('detailStatLanguage').textContent = language;
+      ? new Date(profile.streamStatus.startedAt).toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit' })
+      : safeText(activeSchedule(profile.schedule)[0]?.startTime, t('profileCard.timeUnknown', {}, '미정'));
+    $('detailStatLanguage').textContent = languageText;
 
     const writeHref = `fan-card-write.html?slug=${encodeURIComponent(profile.slug)}`;
     $('detailFanCardLink').href = writeHref;
@@ -189,6 +240,18 @@
   }
 
   document.addEventListener('click', loginToast);
+  document.addEventListener('seiga:i18n-change', () => {
+    if (currentProfile) render(currentProfile);
+    else renderLoading();
+  });
+  document.addEventListener('error', (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    const holder = image.closest('#detailCardAvatar');
+    if (!holder) return;
+    image.remove();
+    holder.classList.remove('has-image');
+  }, true);
 
   renderLoading();
   try {

@@ -30,7 +30,11 @@ function requireAuth(req, res, next) {
 }
 
 function requireStreamer(req, res, next) {
-  if (!req.user || !['STREAMER', 'ADMIN'].includes(req.user.role)) {
+  if (!req.user) {
+    return sendError(res, 401, '로그인이 필요합니다.', 'AUTH_REQUIRED');
+  }
+
+  if (!['STREAMER', 'ADMIN'].includes(req.user.role)) {
     return sendError(res, 403, '스트리머 권한이 필요합니다.', 'STREAMER_REQUIRED');
   }
   return next();

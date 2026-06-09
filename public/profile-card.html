@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 프로필 카드 화면</title>
+  <title data-i18n="profileCard.documentTitle">Seiga Studio - 프로필 카드</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
   <style>
@@ -593,100 +593,100 @@
           <div class="brand-logo">S</div>
           <div>
             <strong>Seiga Studio</strong>
-            <span>Streamer Dashboard</span>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
           </div>
         </a>
         <nav class="nav">
-          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
-<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
-<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
-<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
-<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
-<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
         </nav>
       </div>
       <div class="sidebar-card">
-        <strong>관리자 메모</strong>
-        <p>카드 미리보기는 입력값이 즉시 반영되며 저장 버튼으로 DB에 반영됩니다.</p>
-        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+        <strong data-i18n="dashboard.adminMemoTitle">관리자 메모</strong>
+        <p data-i18n="profileCard.sidebarText">카드 미리보기는 입력값이 즉시 반영되며 저장 버튼으로 DB에 반영됩니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
 
     <main class="main">
       <div class="mobile-header">
         <strong>Seiga Studio</strong>
-        <button class="icon-btn" type="button">☰</button>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
       </div>
       <header class="topbar">
         <div class="page-title">
-          <h1>프로필 카드 화면</h1>
-          <p>스트리머 공개 프로필과 SNS 공유용 카드를 편집하세요.</p>
+          <h1 data-i18n="profileCard.title">프로필 카드</h1>
+          <p data-i18n="profileCard.description">스트리머 공개 프로필과 SNS 공유용 카드를 편집하세요.</p>
         </div>
         <div class="top-actions">
-          <button class="ghost-btn" id="resetProfileButton" type="button">초기화</button><button class="ghost-btn" id="downloadProfilePngButton" type="button">PNG 다운로드</button><button class="primary-btn" id="saveProfileButton" type="button">저장</button>
+          <button class="ghost-btn" id="resetProfileButton" type="button" data-i18n="common.reset">되돌리기</button><button class="ghost-btn" id="downloadProfilePngButton" type="button" data-export-target="#profileCardPreview" data-i18n="profileCard.downloadPng">PNG 다운로드</button><button class="primary-btn" id="saveProfileButton" type="button" data-i18n="common.save">저장</button>
         </div>
       </header>
 
 <section class="workspace">
   <div class="stack">
     <section class="panel">
-      <div class="panel-title"><div><h2>기본 정보</h2><p>프로필 카드 상단과 소개 영역에 표시됩니다.</p></div><span class="badge">Required</span></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.basicTitle">기본 정보</h2><p data-i18n="profileCard.basicDescription">프로필 카드 상단과 소개 영역에 표시됩니다.</p></div><span class="badge">Required</span></div>
       <div class="form-grid">
-        <div class="two-col"><div class="field"><label for="streamerName">스트리머 이름</label><input id="streamerName" type="text" autocomplete="off" /></div><div class="field"><label for="handle">Twitch ID / 핸들</label><input id="handle" type="text" autocomplete="off" /></div></div>
-        <div class="field"><label for="subtitle">소개 / Bio</label><textarea id="subtitle" autocomplete="off" maxlength="180"></textarea></div>
+        <div class="two-col"><div class="field"><label for="streamerName" data-i18n="profileCard.streamerName">스트리머 이름</label><input id="streamerName" type="text" autocomplete="off" /></div><div class="field"><label for="handle" data-i18n="profileCard.handle">Twitch ID / 핸들</label><input id="handle" type="text" autocomplete="off" /></div></div>
+        <div class="field"><label for="subtitle" data-i18n="profileCard.bio">소개 / Bio</label><textarea id="subtitle" autocomplete="off" maxlength="180"></textarea></div>
         <textarea id="intro" hidden></textarea>
         <div class="two-col">
-          <div class="field"><label for="mainContent">주 콘텐츠</label><select id="mainContent"><option value="">선택 안 함</option><option>마인크래프트</option><option>League of Legends</option><option>잡담</option><option>노래 / 음악</option><option>스토리 게임</option></select></div>
-          <div class="field"><label for="language">언어 / Language</label><select id="language"><option value="">선택 안 함</option><option value="KR">한국어</option><option value="JA">日本語</option><option value="KR/JA">KR / JA</option><option value="JA/KR">JA / KR</option></select></div>
+          <div class="field"><label for="mainContent" data-i18n="profileCard.mainContent">주 콘텐츠</label><select id="mainContent"><option value="" data-i18n="common.noneSelected">선택 안 함</option><option data-i18n="index.categoryMinecraft">마인크래프트</option><option>League of Legends</option><option data-i18n="index.categoryChat">잡담</option><option data-i18n="index.categoryMusic">노래 / 음악</option><option data-i18n="profileCard.categoryStoryGame">스토리 게임</option></select></div>
+          <div class="field"><label for="language" data-i18n="profileCard.language">언어 / Language</label><select id="language"><option value="" data-i18n="common.noneSelected">선택 안 함</option><option value="KR" data-i18n="index.languageKo">한국어</option><option value="JA" data-i18n="index.languageJa">日本語</option><option value="KR/JA">KR / JA</option><option value="JA/KR">JA / KR</option></select></div>
         </div>
-        <div class="field"><label for="playStyleTags">플레이 스타일 태그</label><input id="playStyleTags" type="text" autocomplete="off" placeholder="예: 초보 환영, 솔랭, 협동" /></div>
-        <input id="liveStatus" type="hidden" value="자동 연동" />
+        <div class="field"><label for="playStyleTags" data-i18n="profileCard.playStyleTags">플레이 스타일 태그</label><input id="playStyleTags" type="text" autocomplete="off" placeholder="예: 초보 환영, 솔랭, 협동" data-i18n-placeholder="profileCard.playStylePlaceholder" /></div>
+        <input id="liveStatus" type="hidden" value="AUTO" />
       </div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>카드 디자인</h2><p>방송 상태는 Twitch API에서 자동으로 가져오고, 사용자는 카드 디자인만 선택합니다.</p></div><span class="badge">Design</span></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.designTitle">카드 디자인</h2><p data-i18n="profileCard.designDescription">방송 상태는 Twitch API에서 자동으로 가져오고, 사용자는 카드 디자인만 선택합니다.</p></div><span class="badge">Design</span></div>
       <div class="design-choice-grid">
-        <label class="design-choice"><input type="radio" name="cardDesign" value="style-clean" checked /><div class="design-swatch clean"></div><strong>Neon Slate</strong></label>
-        <label class="design-choice"><input type="radio" name="cardDesign" value="style-soft" /><div class="design-swatch soft"></div><strong>Pastel Raid</strong></label>
-        <label class="design-choice"><input type="radio" name="cardDesign" value="style-dark" /><div class="design-swatch dark"></div><strong>Night Boss</strong></label>
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-clean" checked /><div class="design-swatch clean"></div><strong data-i18n="profileCard.designClean">화이트 카드</strong></label>
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-soft" /><div class="design-swatch soft"></div><strong data-i18n="profileCard.designSoft">글래스 카드</strong></label>
+        <label class="design-choice"><input type="radio" name="cardDesign" value="style-dark" /><div class="design-swatch dark"></div><strong data-i18n="profileCard.designDark">오버레이 카드</strong></label>
       </div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>프로필 이미지</h2><p>대표 이미지와 배경 이미지를 미리보기에 바로 반영합니다.</p></div><span class="badge">Upload</span></div>
-      <div class="upload-grid"><label class="upload-box"><input id="avatarUpload" type="file" accept="image/*" /><div><strong>대표 프로필 이미지</strong><span>PNG/JPG 권장<br />인물 또는 캐릭터 이미지 추천</span></div></label><label class="upload-box"><input id="backgroundUpload" type="file" accept="image/*" /><div><strong>배경 이미지</strong><span>PNG/JPG 권장<br />카드 오른쪽 비주얼 영역</span></div></label></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.imageTitle">프로필 이미지</h2><p data-i18n="profileCard.imageDescription">대표 이미지와 배경 이미지를 미리보기에 바로 반영합니다.</p></div><span class="badge">Upload</span></div>
+      <div class="upload-grid"><label class="upload-box"><input id="avatarUpload" type="file" accept="image/*" /><div><strong data-i18n="profileCard.avatarImage">대표 프로필 이미지</strong><span data-i18n="profileCard.avatarImageNote">PNG/JPG 권장<br />인물 또는 캐릭터 이미지 추천</span></div></label><label class="upload-box"><input id="backgroundUpload" type="file" accept="image/*" /><div><strong data-i18n="profileCard.backgroundImage">배경 이미지</strong><span data-i18n="profileCard.backgroundImageNote">PNG/JPG 권장<br />카드 오른쪽 비주얼 영역</span></div></label></div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>컬러 설정</h2><p>카드의 메인 컬러와 서브 컬러를 설정합니다.</p></div><span class="badge">Theme</span></div>
-      <div class="color-row"><label class="color-input"><input id="mainColor" type="color" value="#7c3aed" /><span>메인 컬러</span></label><label class="color-input"><input id="subColor" type="color" value="#f9a8d4" /><span>서브 컬러</span></label></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.colorTitle">컬러 설정</h2><p data-i18n="profileCard.colorDescription">카드의 메인 컬러와 서브 컬러를 설정합니다.</p></div><span class="badge">Theme</span></div>
+      <div class="color-row"><label class="color-input"><input id="mainColor" type="color" value="#7c3aed" /><span data-i18n="profileCard.mainColor">메인 컬러</span></label><label class="color-input"><input id="subColor" type="color" value="#f9a8d4" /><span data-i18n="profileCard.subColor">서브 컬러</span></label></div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>링크</h2><p>비어 있는 링크는 카드에서 자동으로 숨겨집니다.</p></div><span class="badge">Social</span></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.linksTitle">링크</h2><p data-i18n="profileCard.linksDescription">비어 있는 링크는 카드에서 자동으로 숨겨집니다.</p></div><span class="badge">Social</span></div>
       <div class="form-grid"><div class="field"><label for="twitchLink">Twitch</label><input id="twitchLink" type="text" autocomplete="off" /></div><div class="field"><label for="youtubeLink">YouTube</label><input id="youtubeLink" type="text" autocomplete="off" /></div><div class="field"><label for="xLink">X / Twitter</label><input id="xLink" type="text" autocomplete="off" /></div><div class="field"><label for="discordLink">Discord</label><input id="discordLink" type="text" autocomplete="off" /></div></div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>방송 일정</h2><p>요일별 캘린더 형식으로 방송 시간을 관리합니다.</p></div><span class="badge">Calendar</span></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.scheduleTitle">방송 일정</h2><p data-i18n="profileCard.scheduleDescription">요일별 캘린더 형식으로 방송 시간을 관리합니다.</p></div><span class="badge">Calendar</span></div>
       <div class="calendar-editor" id="calendarEditor">
-        <div class="calendar-day"><strong>월</strong><input data-day="월" data-type="time" placeholder="미정" /><input data-day="월" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>화</strong><input data-day="화" data-type="time" placeholder="휴방" /><input data-day="화" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>수</strong><input data-day="수" data-type="time" placeholder="미정" /><input data-day="수" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>목</strong><input data-day="목" data-type="time" placeholder="휴방" /><input data-day="목" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>금</strong><input data-day="금" data-type="time" placeholder="미정" /><input data-day="금" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>토</strong><input data-day="토" data-type="time" placeholder="미정" /><input data-day="토" data-type="content" placeholder="내용" /></div>
-        <div class="calendar-day"><strong>일</strong><input data-day="일" data-type="time" placeholder="휴방" /><input data-day="일" data-type="content" placeholder="내용" /></div>
+        <div class="calendar-day" data-day-key="MON"><strong data-i18n="common.day.MON">월</strong><input data-day="MON" data-type="time" placeholder="미정" data-i18n-placeholder="profileCard.timeUnknown" /><input data-day="MON" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="TUE"><strong data-i18n="common.day.TUE">화</strong><input data-day="TUE" data-type="time" placeholder="휴방" data-i18n-placeholder="profileCard.scheduleOffPlaceholder" /><input data-day="TUE" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="WED"><strong data-i18n="common.day.WED">수</strong><input data-day="WED" data-type="time" placeholder="미정" data-i18n-placeholder="profileCard.timeUnknown" /><input data-day="WED" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="THU"><strong data-i18n="common.day.THU">목</strong><input data-day="THU" data-type="time" placeholder="휴방" data-i18n-placeholder="profileCard.scheduleOffPlaceholder" /><input data-day="THU" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="FRI"><strong data-i18n="common.day.FRI">금</strong><input data-day="FRI" data-type="time" placeholder="미정" data-i18n-placeholder="profileCard.timeUnknown" /><input data-day="FRI" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="SAT"><strong data-i18n="common.day.SAT">토</strong><input data-day="SAT" data-type="time" placeholder="미정" data-i18n-placeholder="profileCard.timeUnknown" /><input data-day="SAT" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
+        <div class="calendar-day" data-day-key="SUN"><strong data-i18n="common.day.SUN">일</strong><input data-day="SUN" data-type="time" placeholder="휴방" data-i18n-placeholder="profileCard.scheduleOffPlaceholder" /><input data-day="SUN" data-type="content" placeholder="내용" data-i18n-placeholder="profileCard.scheduleContentPlaceholder" /></div>
       </div>
       <textarea id="scheduleText" hidden></textarea>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>표시 옵션</h2><p>공개 상태와 카드에 표시할 보조 정보를 설정합니다.</p></div><span class="badge">Display</span></div>
+      <div class="panel-title"><div><h2 data-i18n="profileCard.displayTitle">표시 옵션</h2><p data-i18n="profileCard.displayDescription">공개 상태와 카드에 표시할 보조 정보를 설정합니다.</p></div><span class="badge">Display</span></div>
       <div class="toggle-list">
-        <label class="toggle-row"><div><strong>링크 표시</strong><span>Twitch, YouTube, X, Discord 링크 버튼 표시</span></div><span class="switch"><input id="showLinks" type="checkbox" checked /><span class="switch-slider"></span></span></label>
-        <label class="toggle-row"><div><strong>공개 프로필</strong><span>끄면 미리보기와 저장 상태가 비공개로 표시됩니다.</span></div><span class="switch"><input id="isPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label>
+        <label class="toggle-row"><div><strong data-i18n="profileCard.showLinks">링크 표시</strong><span data-i18n="profileCard.showLinksNote">Twitch, YouTube, X, Discord 링크 버튼 표시</span></div><span class="switch"><input id="showLinks" type="checkbox" checked /><span class="switch-slider"></span></span></label>
+        <label class="toggle-row"><div><strong data-i18n="profileCard.publicProfile">공개 프로필</strong><span data-i18n="profileCard.publicProfileNote">끄면 미리보기와 저장 상태가 비공개로 표시됩니다.</span></div><span class="switch"><input id="isPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label>
       </div>
       <input id="showSchedule" type="checkbox" checked hidden />
       <input id="showQr" type="checkbox" checked hidden />
@@ -694,62 +694,57 @@
   </div>
 
   <section class="profile-preview-panel">
-    <div class="panel-title"><div><h2>카드 미리보기</h2><p>공개 프로필용 16:9 카드 미리보기</p></div><button class="primary-btn" id="refreshPreviewButton" type="button">미리보기 갱신</button></div>
+    <div class="panel-title"><div><h2 data-i18n="profileCard.previewTitle">카드 미리보기</h2><p data-i18n="profileCard.previewDescription" data-ko="공개 프로필용 세로 프로필 카드 미리보기" data-ja="公開プロフィール用の縦型プロフィールカードプレビュー">공개 프로필용 세로 프로필 카드 미리보기</p></div><button class="primary-btn" id="refreshPreviewButton" type="button" data-i18n="profileCard.refreshPreview">미리보기 갱신</button></div>
     <div class="preview-frame">
-      <article id="profileCardPreview" class="profile-card-preview editor-profile-card game-profile-card style-clean">
-        <div class="card-content">
-          <div class="card-left">
-            <div class="card-status-row">
-              <div class="card-status"><span class="status-dot"></span><span id="previewStatus">자동 연동</span></div>
-              <div class="card-status visibility-status private" id="previewVisibility">PRIVATE</div>
-            </div>
+      <article id="profileCardPreview" class="profile-card profile-card--portrait profile-card--editor editor-profile-card style-clean" data-export-target="profile-card" data-export-width="900" data-export-height="1350" aria-label="프로필 카드 미리보기">
+        <div class="profile-card__media" id="previewVisualArea">
+          <img id="previewBackgroundImage" class="profile-card__cover preview-background-image" alt="" />
+          <div id="previewAvatar" class="profile-card__image card-avatar">
+            <img id="previewAvatarImage" alt="프로필 이미지" data-i18n-alt="common.imageAlt" />
+            <div id="previewAvatarText" class="profile-card__placeholder">?</div>
+          </div>
+          <span class="profile-card__status"><span class="status-dot"></span><span id="previewStatus">자동 연동</span></span>
+          <span class="profile-card__visibility visibility-status" id="previewVisibility">PRIVATE</span>
+        </div>
 
-            <div class="stack">
-              <div class="card-profile">
-                <div id="previewAvatar" class="card-avatar">
-                  <img id="previewAvatarImage" alt="프로필 이미지" />
-                  <span id="previewAvatarText">?</span>
-                </div>
-                <div class="card-name-block">
-                  <h3 id="previewName">불러오는 중입니다.</h3>
-                  <p id="previewHandle"></p>
-                </div>
-              </div>
-              <div class="card-intro">
-                <h4 id="previewSubtitle"></h4>
-                <p id="previewIntro"></p>
-              </div>
+        <div class="profile-card__body">
+          <div class="profile-card__header">
+            <div class="profile-card__title">
+              <h3 id="previewName" class="profile-card__name" data-i18n="common.loading">불러오는 중입니다.</h3>
+              <span class="profile-card__badge profile-card__verified" aria-label="verified">✓</span>
             </div>
-
-            <div class="card-tags" id="previewTagRow">
-              <span class="card-tag" id="previewContentTag"></span>
-              <span class="card-tag" id="previewLanguageTag"></span>
-              <span class="card-tags-inline" id="previewPlayStyleTags"></span>
-            </div>
+            <p id="previewHandle" class="profile-card__handle"></p>
           </div>
 
-          <div class="card-right">
-            <div class="visual-area" id="previewVisualArea">
-              <img id="previewBackgroundImage" class="preview-background-image" alt="" />
-              <div class="character-placeholder"></div>
-              <div class="floating-card">
-                <strong>STREAM NOTE</strong>
-                <span id="previewFloatingText"></span>
-              </div>
-            </div>
+          <p id="previewSubtitle" class="profile-card__bio"></p>
+          <p id="previewIntro" class="profile-card__meta"></p>
 
-            <div class="card-bottom">
-              <div class="info-box" id="linkBox">
-                <div class="info-box-title">LINKS</div>
-                <div id="previewLinks" class="link-row"></div>
-              </div>
-              <div class="info-box" id="scheduleBox">
-                <div class="info-box-title">SCHEDULE</div>
-                <div id="previewSchedule" class="schedule-row"></div>
-              </div>
-            </div>
-            <div id="qrBox" hidden></div>
+          <div class="profile-card__tags" id="previewTagRow">
+            <span class="profile-card__tag" id="previewContentTag"></span>
+            <span class="profile-card__tag" id="previewLanguageTag"></span>
+            <span class="profile-card__tags-inline" id="previewPlayStyleTags"></span>
           </div>
+
+          <div class="profile-card__links" id="linkBox">
+            <div id="previewLinks" class="profile-card__link-row link-row"></div>
+          </div>
+
+          <div class="profile-card__schedule" id="scheduleBox">
+            <div id="previewSchedule" class="profile-card__schedule-row schedule-row"></div>
+          </div>
+
+          <div class="profile-card__stats" aria-label="프로필 통계" data-i18n-aria-label="streamerDetail.profileStatsLabel">
+            <span class="profile-card__stat"><span class="profile-card__stat-icon" aria-hidden="true">♡</span><strong id="previewStatFollowers">0</strong><small data-i18n="rankings.profileViews">프로필 방문</small></span>
+            <span class="profile-card__stat"><span class="profile-card__stat-icon" aria-hidden="true">▣</span><strong id="previewStatCards">0</strong><small data-i18n="profileCard.statFanCards">팬 카드</small></span>
+            <span class="profile-card__stat"><span class="profile-card__stat-icon" aria-hidden="true">●</span><strong id="previewStatusStat">AUTO</strong><small data-i18n="profileCard.statStatus">상태</small></span>
+          </div>
+
+          <div class="profile-card__actions">
+            <button class="profile-card__button profile-card__button--primary profile-card__follow" type="button"><span data-i18n="common.follow">팔로우</span><span aria-hidden="true">+</span></button>
+          </div>
+
+          <span id="previewFloatingText" class="profile-card__support-text" hidden></span>
+          <div class="profile-card__qr qr-box" id="qrBox" hidden></div>
         </div>
       </article>
     </div>
@@ -759,6 +754,8 @@
     </main>
   </div>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/app.js"></script>
   <script src="js/profile-card.js"></script>
 </body>

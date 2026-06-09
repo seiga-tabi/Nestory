@@ -1,4 +1,8 @@
 (async function () {
+  if (window.SeigaI18nReady) {
+    await window.SeigaI18nReady.catch(() => {});
+  }
+
   const api = window.SeigaApi;
   if (!api || !document.querySelector('.settings-layout')) return;
 
@@ -8,6 +12,10 @@
   const $ = (id) => document.getElementById(id);
   let settings = null;
   let twitchStatus = null;
+
+  function t(key, params = {}, fallback = key) {
+    return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
+  }
 
   function setValue(id, value) {
     const node = $(id);
@@ -26,8 +34,8 @@
     setValue('settingsDisplayName', '');
     setValue('settingsEmail', '');
     setValue('settingsPublicUrl', '');
-    $('settingsRoleText').textContent = '불러오는 중입니다.';
-    $('twitchStatusList').innerHTML = '<div class="list-item"><div class="item-content"><strong>Twitch 상태를 불러오는 중입니다.</strong></div></div>';
+    $('settingsRoleText').textContent = t('common.loading', {}, '불러오는 중입니다.');
+    $('twitchStatusList').innerHTML = `<div class="list-item"><div class="item-content"><strong>${api.escapeHtml(t('settings.twitchLoading', {}, 'Twitch 상태를 불러오는 중입니다.'))}</strong></div></div>`;
   }
 
   function renderSettings(data) {
@@ -36,7 +44,7 @@
     const user = data.user || {};
     setValue('settingsDisplayName', user.displayName);
     setValue('settingsEmail', user.email);
-    $('settingsRoleText').textContent = user.role || '역할 없음';
+    $('settingsRoleText').textContent = user.role || t('settings.noRole', {}, '역할 없음');
     setValue('settingsPublicUrl', profile.slug ? `${location.origin}/streamer-detail.html?slug=${encodeURIComponent(profile.slug)}` : '');
     $('settingsPublicToggle').checked = Boolean(profile.isPublic);
     $('settingsNotificationToggle').checked = profile.notificationOpt !== false;
@@ -49,24 +57,28 @@
     twitchStatus = status;
     const list = $('twitchStatusList');
     if (!list) return;
-    const connectedText = status.connected ? `${status.twitchLogin} · 권한 저장됨` : '아직 Twitch 계정이 연결되지 않았습니다.';
-    const configText = status.configured ? 'OAuth Client ID/Secret 설정 완료' : 'Twitch 환경변수 설정 필요';
+    const connectedText = status.connected
+      ? t('settings.twitchPermissionSaved', { login: status.twitchLogin }, `${status.twitchLogin} · 권한 저장됨`)
+      : t('settings.twitchNotConnectedDescription', {}, '아직 Twitch 계정이 연결되지 않았습니다.');
+    const configText = status.configured
+      ? t('settings.oauthConfigured', {}, 'OAuth Client ID/Secret 설정 완료')
+      : t('settings.oauthNeedsEnv', {}, 'Twitch 환경변수 설정 필요');
     list.innerHTML = `
       <div class="list-item">
         <div class="item-icon">T</div>
-        <div class="item-content"><strong>${status.connected ? 'Twitch 계정 연결됨' : 'Twitch 계정 미연결'}</strong><span>${api.escapeHtml(connectedText)}</span></div>
+        <div class="item-content"><strong>${api.escapeHtml(status.connected ? t('settings.twitchConnected', {}, 'Twitch 계정 연결됨') : t('settings.twitchNotConnected', {}, 'Twitch 계정 미연결'))}</strong><span>${api.escapeHtml(connectedText)}</span></div>
         <span class="pill ${status.connected ? 'ok' : 'warn'}">${status.connected ? 'ACTIVE' : 'WAIT'}</span>
       </div>
       <div class="list-item">
         <div class="item-icon">OAuth</div>
-        <div class="item-content"><strong>OAuth 설정</strong><span>${api.escapeHtml(configText)}</span></div>
+        <div class="item-content"><strong>${api.escapeHtml(t('settings.oauthTitle', {}, 'OAuth 설정'))}</strong><span>${api.escapeHtml(configText)}</span></div>
         <span class="pill ${status.configured ? 'ok' : 'warn'}">${status.configured ? 'READY' : 'CHECK'}</span>
       </div>
     `;
   }
 
   function renderError(error) {
-    $('twitchStatusList').innerHTML = `<div class="list-item"><div class="item-content"><strong>${api.escapeHtml(error?.message || '설정 데이터를 불러오지 못했습니다.')}</strong></div></div>`;
+    $('twitchStatusList').innerHTML = `<div class="list-item"><div class="item-content"><strong>${api.escapeHtml(error?.message || t('settings.error', {}, '설정 데이터를 불러오지 못했습니다.'))}</strong></div></div>`;
   }
 
   async function load() {
@@ -91,7 +103,7 @@
       notificationOpt: Boolean($('settingsNotificationToggle')?.checked)
     });
     await api.putJson('/api/settings/privacy', { isPublic: Boolean($('settingsPublicToggle')?.checked) });
-    api.showToast('설정이 저장되었습니다.');
+    api.showToast(t('settings.saveDone', {}, '설정이 저장되었습니다.'));
     await load();
   }
 
@@ -103,7 +115,7 @@
     $('settingsMainColor').value = settings?.profile?.mainColor || '#7c3aed';
     $('settingsSubColor').value = settings?.profile?.subColor || '#f9a8d4';
     updateThemePreview();
-    api.showToast('마지막으로 불러온 테마 색상으로 되돌렸습니다.');
+    api.showToast(t('settings.resetThemeDone', {}, '마지막으로 불러온 테마 색상으로 되돌렸습니다.'));
   });
 
   $('settingsMainColor')?.addEventListener('input', updateThemePreview);
@@ -115,17 +127,20 @@
 
   $('disconnectTwitchButton')?.addEventListener('click', async () => {
     if (!twitchStatus?.connected) {
-      api.showToast('연결된 Twitch 계정이 없습니다.');
+      api.showToast(t('settings.noConnectedTwitch', {}, '연결된 Twitch 계정이 없습니다.'));
       return;
     }
     await api.postJson('/api/twitch/disconnect', {});
     renderTwitchStatus(await api.getJson('/api/twitch/status'));
-    api.showToast('Twitch 연동을 해제했습니다.');
+    api.showToast(t('settings.disconnectDone', {}, 'Twitch 연동을 해제했습니다.'));
   });
 
   $('logoutButton')?.addEventListener('click', async () => {
-    await api.postJson('/api/auth/logout', {});
-    location.href = 'login.html';
+    await api.logout('login.html');
+  });
+  document.addEventListener('seiga:i18n-change', () => {
+    if (settings) renderSettings(settings);
+    if (twitchStatus) renderTwitchStatus(twitchStatus);
   });
 
   load();

@@ -2,7 +2,6 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { prisma } = require('../db/prisma');
-const { env } = require('../config/env');
 const { saveSession } = require('../config/session');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { requireStreamer } = require('../middleware/auth');
@@ -15,6 +14,8 @@ const router = express.Router();
 
 router.get('/auth/twitch', (req, res) => {
   if (!twitch.isConfigured()) {
+    const config = twitch.configurationStatus();
+    console.warn(`[twitch] OAuth 설정이 완료되지 않았습니다. 누락: ${config.missingConfig.join(', ') || '없음'}`);
     return res.redirect('/login.html?error=twitch_not_configured');
   }
 
@@ -164,12 +165,12 @@ router.post('/api/twitch/disconnect', requireStreamer, asyncHandler(async (req, 
 }));
 
 router.get('/api/twitch/status', requireStreamer, (req, res) => {
+  const config = twitch.configurationStatus();
   res.json({
-    configured: twitch.isConfigured(),
+    ...config,
     connected: Boolean(req.user.twitchUserId && req.user.twitchLogin),
     twitchLogin: req.user.twitchLogin || null,
-    tokenExpiresAt: req.user.twitchTokenExpiresAt || null,
-    redirectUri: env.TWITCH_REDIRECT_URI || null
+    tokenExpiresAt: req.user.twitchTokenExpiresAt || null
   });
 });
 

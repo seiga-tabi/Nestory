@@ -70,6 +70,10 @@ const passwordSchema = z.object({
 });
 
 router.put('/password', validate(passwordSchema), asyncHandler(async (req, res) => {
+  if (req.user.passwordSetupRequired || !req.user.passwordHash) {
+    return sendError(res, 403, '비밀번호 설정이 필요합니다.', 'PASSWORD_SETUP_REQUIRED');
+  }
+
   const ok = await bcrypt.compare(req.validated.body.currentPassword, req.user.passwordHash);
   if (!ok) return sendError(res, 400, '현재 비밀번호를 확인해주세요.', 'INVALID_CURRENT_PASSWORD');
   await prisma.user.update({

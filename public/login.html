@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Login</title>
+  <title data-i18n="auth.loginDocumentTitle">Seiga Studio - 로그인</title>
 
   <style>
     :root {
@@ -247,6 +247,30 @@
       font-weight: 700;
     }
 
+    .login-language {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin: -8px 0 18px;
+    }
+
+    .login-language button {
+      min-width: 44px;
+      height: 34px;
+      border: 0;
+      border-radius: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .login-language button.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--pink));
+    }
+
     @media (max-width: 480px) {
       .login-card {
         padding: 26px 22px;
@@ -271,24 +295,29 @@
     <div class="logo">S</div>
     <div>
       <strong>Seiga Studio</strong>
-      <span>Streamer Dashboard</span>
+      <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
     </div>
   </div>
 
-  <h1>로그인</h1>
-  <p class="desc">
+  <div class="login-language" data-i18n-aria-label="language.label" aria-label="언어 선택">
+    <button type="button" data-lang-option="ko">KR</button>
+    <button type="button" data-lang-option="ja">JA</button>
+  </div>
+
+  <h1 data-i18n="auth.loginTitle">로그인</h1>
+  <p class="desc" data-i18n="auth.loginDescription">
     스트리머 대시보드에 접속하려면 로그인해주세요.
   </p>
 
-  <button id="twitchLoginButton" class="twitch-button" type="button">
+  <button id="twitchLoginButton" class="twitch-button" type="button" data-i18n="auth.twitchLogin">
     Twitch 계정으로 로그인
   </button>
 
-  <div class="divider">또는 이메일 로그인</div>
+  <div class="divider" data-i18n="auth.emailLoginDivider">또는 이메일 로그인</div>
 
   <form id="loginForm" class="form">
     <div class="field">
-      <label for="email">이메일</label>
+      <label for="email" data-i18n="auth.email">이메일</label>
       <input
               id="email"
               name="email"
@@ -300,12 +329,13 @@
     </div>
 
     <div class="field">
-      <label for="password">비밀번호</label>
+      <label for="password" data-i18n="auth.password">비밀번호</label>
       <input
               id="password"
               name="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
+              data-i18n-placeholder="auth.passwordPlaceholder"
               autocomplete="current-password"
               required
       />
@@ -314,25 +344,27 @@
     <div class="options">
       <label class="remember">
         <input id="rememberMe" type="checkbox" />
-        로그인 상태 유지
+        <span data-i18n="auth.rememberMe">로그인 상태 유지</span>
       </label>
 
-      <a class="forgot" href="forgot-password.html">비밀번호 찾기</a>
+      <a class="forgot" href="forgot-password.html" data-i18n="auth.forgotPassword">비밀번호 찾기</a>
     </div>
 
-    <button id="loginButton" class="login-button" type="submit">
+    <button id="loginButton" class="login-button" type="submit" data-i18n="nav.login">
       로그인
     </button>
   </form>
 
   <div id="message" class="message"></div>
 
-  <p class="admin-notice">
+  <p class="admin-notice" data-i18n="auth.adminNotice">
     신규 계정은 관리자만 생성할 수 있습니다.
   </p>
 </main>
 
 <script src="js/api.js"></script>
+<script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
 <script src="js/auth.js"></script>
 </body>
 </html>

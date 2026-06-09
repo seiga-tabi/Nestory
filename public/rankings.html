@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 인기 랭킹</title>
+  <title data-i18n="rankings.documentTitle">Seiga Studio - 인기 랭킹</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/public-pages.css" />
+  <link rel="stylesheet" href="css/card.css" />
 </head>
 <body>
   <div class="page">
     <header class="header">
   <a class="brand" href="index.html">
     <div class="logo">S</div>
-    <div class="brand-text"><strong>Seiga Studio</strong><span>Streamer Profile Platform</span></div>
+    <div class="brand-text"><strong>Seiga Studio</strong><span data-i18n="public.brandSubtitle">Streamer Profile Platform</span></div>
   </a>
   <nav class="nav">
     <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
@@ -57,6 +58,7 @@
   </div>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/public.js"></script>
   <script src="js/rankings.js"></script>
 </body>

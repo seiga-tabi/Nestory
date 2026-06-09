@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - Streamer Detail</title>
+  <title data-i18n="streamerDetail.documentTitle">Seiga Studio - 스트리머 상세</title>
 
   <style>
     :root {
@@ -149,6 +149,29 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    html:not(.auth-ready) .header-actions a[href="login.html"],
+    html:not(.auth-ready) .header-actions a[href="access-request.html"],
+    html:not(.auth-ready) [data-auth-controlled],
+    html.auth-loading [data-auth-controlled] {
+      visibility: hidden;
+    }
+
+    html.auth-ready.authenticated [data-auth-guest],
+    html.auth-ready.unauthenticated [data-auth-user],
+    html.auth-ready:not(.admin) [data-auth-admin],
+    [data-auth-controlled][hidden] {
+      display: none !important;
+    }
+
+    html.auth-ready.authenticated [data-auth-user],
+    html.auth-ready.unauthenticated [data-auth-guest] {
+      display: inline-flex;
+    }
+
+    html.auth-ready.admin .nav [data-auth-admin] {
+      display: flex;
     }
 
     .language-switcher {
@@ -321,11 +344,14 @@
     .left,
     .right {
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: 22px;
       min-width: 0;
     }
 
     .panel {
+      min-width: 0;
+      max-width: 100%;
       padding: 22px;
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
@@ -637,7 +663,9 @@
     .fan-list,
     .link-list {
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
+      min-width: 0;
     }
 
     .schedule-item,
@@ -646,6 +674,8 @@
       display: flex;
       align-items: center;
       gap: 13px;
+      min-width: 0;
+      max-width: 100%;
       padding: 14px;
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.62);
@@ -778,6 +808,18 @@
       .header {
         top: 10px;
         border-radius: 22px;
+        flex-wrap: wrap;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .header-actions [data-auth-controlled] {
+        flex: 1 1 128px;
+        min-width: 0;
       }
 
       .nav {
@@ -788,7 +830,7 @@
         display: none;
       }
 
-      .header-actions .ghost-btn {
+      .header-actions .ghost-btn:not([data-auth-controlled]) {
         display: none;
       }
 
@@ -868,7 +910,7 @@
       <div class="logo">S</div>
       <div class="brand-text">
         <strong>Seiga Studio</strong>
-        <span>Streamer Profile Platform</span>
+        <span data-i18n="public.brandSubtitle">Streamer Profile Platform</span>
       </div>
     </a>
 
@@ -899,14 +941,14 @@
             <span class="dot"></span>
             LOADING
           </div>
-          <h1 id="detailHeroName">프로필을 불러오는 중입니다.</h1>
-          <p id="detailHeroSubtitle">잠시만 기다려주세요.</p>
+          <h1 id="detailHeroName" data-i18n="streamerDetail.heroLoadingName">프로필을 불러오는 중입니다.</h1>
+          <p id="detailHeroSubtitle" data-i18n="streamerDetail.heroLoadingSubtitle">잠시만 기다려주세요.</p>
         </div>
 
         <div class="hero-actions">
-          <a class="primary-btn" href="#" data-login-required>즐겨찾기</a>
-          <a class="ghost-btn" id="detailFanCardLink" href="fan-card-write.html">팬 카드 보내기</a>
-          <a class="ghost-btn" id="detailTwitchLink" href="#" target="_blank" rel="noopener" hidden>Twitch 보기</a>
+          <a class="primary-btn" href="#" data-login-required data-i18n="streamerDetail.favorite">즐겨찾기</a>
+          <a class="ghost-btn" id="detailFanCardLink" href="fan-card-write.html" data-i18n="streamerDetail.sendFanCard">팬 카드 보내기</a>
+          <a class="ghost-btn" id="detailTwitchLink" href="#" target="_blank" rel="noopener" hidden data-i18n="streamerDetail.twitchView">Twitch 보기</a>
         </div>
       </div>
     </div>
@@ -917,33 +959,18 @@
       <section class="panel">
         <div class="panel-title">
           <div>
-            <h2>프로필 카드</h2>
+            <h2 data-i18n="streamerDetail.profileCardTitle">프로필 카드</h2>
           </div>
           <span>PUBLIC PROFILE CARD</span>
         </div>
 
-        <article class="profile-card-preview game-profile-card style-dark" id="detailProfileCard">
-          <div class="detail-card-photo" id="detailCardAvatar">?</div>
-
-          <div class="detail-card-body">
-            <div class="detail-name-row">
-              <h3 id="detailCardName">불러오는 중입니다.</h3>
-              <span class="detail-verified">✓</span>
-            </div>
-            <p class="detail-handle" id="detailCardHandle"></p>
-            <p class="detail-subtitle" id="detailCardSubtitle"></p>
-
-            <div class="detail-link-row" id="detailLinkChips">
-              <span class="detail-link-chip">링크를 불러오는 중입니다.</span>
-            </div>
-          </div>
-        </article>
+        <div class="detail-profile-card-slot" id="detailProfileCardSlot" aria-live="polite"></div>
       </section>
 
       <section class="panel">
         <div class="panel-title">
           <div>
-            <h2>방송 정보</h2>
+            <h2 data-i18n="streamerDetail.streamInfoTitle">방송 정보</h2>
           </div>
           <span>STREAM INFO</span>
         </div>
@@ -951,19 +978,19 @@
         <div class="stats-grid">
           <div class="stat">
             <strong id="detailStatStatus">-</strong>
-            <span>방송 상태</span>
+            <span data-i18n="streamerDetail.statStatus">방송 상태</span>
           </div>
           <div class="stat">
             <strong id="detailStatViewers">-</strong>
-            <span>현재 시청자</span>
+            <span data-i18n="streamerDetail.statViewers">현재 시청자</span>
           </div>
           <div class="stat">
             <strong id="detailStatStart">-</strong>
-            <span>방송 시작</span>
+            <span data-i18n="streamerDetail.statStart">방송 시작</span>
           </div>
           <div class="stat">
             <strong id="detailStatLanguage">-</strong>
-            <span>방송 언어</span>
+            <span data-i18n="streamerDetail.statLanguage">방송 언어</span>
           </div>
         </div>
       </section>
@@ -971,13 +998,13 @@
       <section class="panel">
         <div class="panel-title">
           <div>
-            <h2>최근 팬 카드</h2>
+            <h2 data-i18n="streamerDetail.recentFanCards">최근 팬 카드</h2>
           </div>
           <span>PUBLIC MESSAGES</span>
         </div>
 
         <div class="fan-list" id="detailFanList" aria-live="polite">
-          <div class="fan-item"><div class="item-text"><strong>팬 카드를 불러오는 중입니다.</strong></div></div>
+          <div class="fan-item"><div class="item-text"><strong data-i18n="streamerDetail.fanLoading">팬 카드를 불러오는 중입니다.</strong></div></div>
         </div>
       </section>
     </div>
@@ -985,38 +1012,38 @@
     <aside class="right">
       <section class="panel side-profile">
         <div class="side-avatar" id="detailSideAvatar">?</div>
-        <h2 id="detailSideName">불러오는 중입니다.</h2>
-        <p id="detailSideMeta">프로필 데이터를 불러오는 중입니다.</p>
+        <h2 id="detailSideName" data-i18n="common.loading">불러오는 중입니다.</h2>
+        <p id="detailSideMeta" data-i18n="streamerDetail.sideLoadingMeta">프로필 데이터를 불러오는 중입니다.</p>
 
         <div class="side-actions">
-          <button class="primary-btn" id="detailSideFanCardButton" type="button">팬 카드 보내기</button>
-          <button class="ghost-btn" type="button" data-login-required>즐겨찾기 추가</button>
+          <button class="primary-btn" id="detailSideFanCardButton" type="button" data-i18n="streamerDetail.sendFanCard">팬 카드 보내기</button>
+          <button class="ghost-btn" type="button" data-login-required data-i18n="streamerDetail.favoriteAdd">즐겨찾기 추가</button>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-title">
           <div>
-            <h2>방송 일정</h2>
+            <h2 data-i18n="streamerDetail.scheduleTitle">방송 일정</h2>
           </div>
           <span>SCHEDULE</span>
         </div>
 
         <div class="schedule-list" id="detailScheduleList" aria-live="polite">
-          <div class="schedule-item"><div class="item-text"><strong>방송 일정을 불러오는 중입니다.</strong></div></div>
+          <div class="schedule-item"><div class="item-text"><strong data-i18n="streamerDetail.scheduleLoading">방송 일정을 불러오는 중입니다.</strong></div></div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-title">
           <div>
-            <h2>링크</h2>
+            <h2 data-i18n="streamerDetail.linksTitle">링크</h2>
           </div>
           <span>SOCIAL</span>
         </div>
 
         <div class="link-list" id="detailLinkList" aria-live="polite">
-          <div class="link-item"><div class="item-text"><strong>링크를 불러오는 중입니다.</strong></div></div>
+          <div class="link-item"><div class="item-text"><strong data-i18n="streamerDetail.linksLoading">링크를 불러오는 중입니다.</strong></div></div>
         </div>
       </section>
     </aside>
@@ -1029,6 +1056,7 @@
 
 <script src="js/api.js"></script>
 <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
 <script src="js/streamer-detail.js"></script>
 </body>
 </html>

@@ -72,6 +72,27 @@ const samples = [
   }
 ];
 
+function parseBooleanFlag(value) {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value === 'boolean') return value;
+
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'n', 'off'].includes(normalized)) return false;
+  return undefined;
+}
+
+function resolveSeedPolicy(source = process.env) {
+  const nodeEnv = source.NODE_ENV || 'development';
+  const explicitSampleFlag = parseBooleanFlag(source.SEED_SAMPLE_DATA);
+
+  return {
+    nodeEnv,
+    seedSampleData: explicitSampleFlag,
+    shouldSeedSampleData: explicitSampleFlag ?? nodeEnv !== 'production'
+  };
+}
+
 async function upsertStreamer(sample) {
   const passwordHash = await bcrypt.hash(sample.password, 12);
   const user = await prisma.user.upsert({
@@ -215,7 +236,7 @@ async function upsertStreamer(sample) {
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'change-me-admin-password';
-  const shouldSeedSampleData = process.env.NODE_ENV !== 'production' || process.env.SEED_SAMPLE_DATA === 'true';
+  const seedPolicy = resolveSeedPolicy();
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
@@ -235,7 +256,9 @@ async function main() {
     }
   });
 
-  if (shouldSeedSampleData) {
+  console.log(`Seed sample data: ${seedPolicy.shouldSeedSampleData ? 'enabled' : 'disabled'} (NODE_ENV=${seedPolicy.nodeEnv}, SEED_SAMPLE_DATA=${process.env.SEED_SAMPLE_DATA || 'unset'})`);
+
+  if (seedPolicy.shouldSeedSampleData) {
     for (const sample of samples) {
       await upsertStreamer(sample);
     }
@@ -254,13 +277,17 @@ async function main() {
   }
 }
 
-main()
-  .then(async () => {
-    console.log('Seed completed');
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+if (require.main === module) {
+  main()
+    .then(async () => {
+      console.log('Seed completed');
+      await prisma.$disconnect();
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}
+
+module.exports = { resolveSeedPolicy };

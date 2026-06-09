@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 팬 카드 작성</title>
+  <title data-i18n="fanCardWrite.documentTitle">Seiga Studio - 팬 카드 작성</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/public-pages.css" />
 </head>
@@ -12,7 +12,7 @@
     <header class="header">
   <a class="brand" href="index.html">
     <div class="logo">S</div>
-    <div class="brand-text"><strong>Seiga Studio</strong><span>Streamer Profile Platform</span></div>
+    <div class="brand-text"><strong>Seiga Studio</strong><span data-i18n="public.brandSubtitle">Streamer Profile Platform</span></div>
   </a>
   <nav class="nav">
     <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
@@ -31,28 +31,28 @@
 </header>
     
 <section class="hero">
-  <div class="eyebrow">💌 Fan Card</div>
-  <h1>스트리머에게 응원 카드를 보내세요</h1>
-  <p>팬 카드 작성 화면은 공개 프로필에서 바로 이어지는 방문자용 화면입니다. 실제 서비스에서는 스팸 방지, 금칙어 필터, 공개/비공개 검토 상태를 서버에서 처리해야 합니다.</p>
+  <div class="eyebrow" data-i18n="fanCardWrite.eyebrow">💌 Fan Card</div>
+  <h1 data-i18n="fanCardWrite.title">스트리머에게 응원 카드를 보내세요</h1>
+  <p data-i18n="fanCardWrite.description">팬 카드 작성 화면은 공개 프로필에서 바로 이어지는 방문자용 화면입니다. 실제 서비스에서는 스팸 방지, 금칙어 필터, 공개/비공개 검토 상태를 서버에서 처리해야 합니다.</p>
 </section>
 
 <section class="grid-2">
   <article class="panel">
-    <div class="panel-title"><div><h2>팬 카드 작성</h2><p>방송에서 읽을 수 있는 짧은 응원 메시지를 작성합니다.</p></div><span class="badge">Public</span></div>
-    <form class="form" data-demo-submit="팬 카드가 검토 대기 상태로 저장되었습니다.">
-      <div id="fanCardWriteState" class="empty-state">공개 스트리머 목록을 불러오는 중입니다.</div>
-      <div class="field"><label for="targetStreamer">대상 스트리머</label><select id="targetStreamer"></select></div>
-      <div class="two-col"><div class="field"><label for="nickname">닉네임</label><input id="nickname" placeholder="익명 팬" /></div><div class="field"><label for="lang">언어</label><select id="lang"><option>한국어</option><option>日本語</option><option>KR / JA</option></select></div></div>
-      <div class="field"><label for="message">응원 메시지</label><textarea id="message" maxlength="300" placeholder="응원 메시지를 입력해주세요."></textarea></div>
-      <div class="field"><label>공개 옵션</label><div class="radio-row"><label class="option-chip"><input name="visibility" type="radio" value="public" checked /> 공개 가능</label><label class="option-chip"><input name="visibility" type="radio" value="private" /> 스트리머만 보기</label></div></div>
-      <div class="submit-row"><button class="primary-btn" type="submit">팬 카드 보내기</button><a class="ghost-btn" href="index.html">목록으로</a></div>
+    <div class="panel-title"><div><h2 data-i18n="fanCardWrite.formTitle">팬 카드 작성</h2><p data-i18n="fanCardWrite.formDescription">방송에서 읽을 수 있는 짧은 응원 메시지를 작성합니다.</p></div><span class="badge">Public</span></div>
+    <form class="form" data-demo-submit="팬 카드가 검토 대기 상태로 저장되었습니다." data-i18n-data-demo-submit="fanCardWrite.demoSubmit">
+      <div id="fanCardWriteState" class="empty-state" data-i18n="fanCardWrite.loadingStreamers">공개 스트리머 목록을 불러오는 중입니다.</div>
+      <div class="field"><label for="targetStreamer" data-i18n="fanCardWrite.targetStreamer">대상 스트리머</label><select id="targetStreamer"></select></div>
+      <div class="two-col"><div class="field"><label for="nickname" data-i18n="fanCardWrite.nickname">닉네임</label><input id="nickname" placeholder="익명 팬" data-i18n-placeholder="dashboard.anonymousFan" /></div><div class="field"><label for="lang" data-i18n="index.language">언어</label><select id="lang"><option data-i18n="index.languageKo">한국어</option><option data-i18n="index.languageJa">日本語</option><option>KR / JA</option></select></div></div>
+      <div class="field"><label for="message" data-i18n="fanCardWrite.message">응원 메시지</label><textarea id="message" maxlength="300" placeholder="응원 메시지를 입력해주세요." data-i18n-placeholder="fanCardWrite.messagePlaceholder"></textarea></div>
+      <div class="field"><label data-i18n="fanCardWrite.visibility">공개 옵션</label><div class="radio-row"><label class="option-chip"><input name="visibility" type="radio" value="public" checked /> <span data-i18n="fanCardWrite.visibilityPublic">공개 가능</span></label><label class="option-chip"><input name="visibility" type="radio" value="private" /> <span data-i18n="fanCardWrite.visibilityPrivate">스트리머만 보기</span></label></div></div>
+      <div class="submit-row"><button class="primary-btn" type="submit" data-i18n="streamerDetail.sendFanCard">팬 카드 보내기</button><a class="ghost-btn" href="index.html" data-i18n="nav.backToList">목록으로</a></div>
     </form>
   </article>
   <aside class="panel">
-    <div class="panel-title"><div><h2>카드 미리보기</h2><p>선택한 스트리머와 입력한 메시지 기준으로 표시됩니다.</p></div></div>
+    <div class="panel-title"><div><h2 data-i18n="fanCardWrite.previewTitle">카드 미리보기</h2><p data-i18n="fanCardWrite.previewDescription">선택한 스트리머와 입력한 메시지 기준으로 표시됩니다.</p></div></div>
     <div class="liquid-card" style="min-height:360px;display:flex;flex-direction:column;justify-content:space-between;">
-      <div><div class="feature-icon">💌</div><h3 id="fanCardPreviewTitle" style="font-size:26px;letter-spacing:-.05em;margin-bottom:10px;">대상 스트리머를 선택하세요.</h3><p id="fanCardPreviewMessage" style="color:var(--muted);line-height:1.7;font-weight:700;">응원 메시지를 입력하면 이곳에 표시됩니다.</p></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;color:var(--muted);font-size:13px;font-weight:800;"><span id="fanCardPreviewSender">익명 팬</span><span id="fanCardPreviewVisibility">공개 가능</span></div>
+      <div><div class="feature-icon">💌</div><h3 id="fanCardPreviewTitle" style="font-size:26px;letter-spacing:-.05em;margin-bottom:10px;" data-i18n="fanCardWrite.selectStreamer">대상 스트리머를 선택하세요.</h3><p id="fanCardPreviewMessage" style="color:var(--muted);line-height:1.7;font-weight:700;" data-i18n="fanCardWrite.previewMessagePlaceholder">응원 메시지를 입력하면 이곳에 표시됩니다.</p></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;color:var(--muted);font-size:13px;font-weight:800;"><span id="fanCardPreviewSender" data-i18n="dashboard.anonymousFan">익명 팬</span><span id="fanCardPreviewVisibility" data-i18n="fanCardWrite.visibilityPublic">공개 가능</span></div>
     </div>
   </aside>
 </section>
@@ -60,6 +60,7 @@
   </div>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/public.js"></script>
   <script src="js/fan-card-write.js"></script>
 </body>

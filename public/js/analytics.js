@@ -1,4 +1,8 @@
 (async function () {
+  if (window.SeigaI18nReady) {
+    await window.SeigaI18nReady.catch(() => {});
+  }
+
   const api = window.SeigaApi;
   if (!api || !document.querySelector('.analytics-layout')) return;
 
@@ -8,8 +12,12 @@
   const $ = (id) => document.getElementById(id);
   let latest = null;
 
+  function t(key, params = {}, fallback = key) {
+    return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
+  }
+
   function numberText(value) {
-    return Number(value || 0).toLocaleString('ko-KR');
+    return window.SeigaI18n?.number?.(value) || Number(value || 0).toLocaleString('ko-KR');
   }
 
   function percent(value) {
@@ -23,40 +31,42 @@
 
   function renderLoading(range) {
     $('analyticsError')?.setAttribute('hidden', '');
-    $('analyticsRangeBadge').textContent = range === '30d' ? '30일' : '7일';
+    $('analyticsRangeBadge').textContent = range === '30d'
+      ? t('analytics.range30d', {}, '30일')
+      : t('analytics.range7d', {}, '7일');
     $('averageViewersValue').textContent = '-';
     $('weeklyViewsValue').textContent = '-';
     $('profileClickRateValue').textContent = '-';
     $('fanCardConversionValue').textContent = '-';
-    listMessage($('analyticsChart'), '차트 데이터를 불러오는 중입니다.');
-    listMessage($('fanCardStatusList'), '팬 카드 통계를 불러오는 중입니다.');
-    listMessage($('streamSnapshotList'), '방송 스냅샷을 불러오는 중입니다.');
-    listMessage($('analyticsNotesList'), '통계 데이터를 불러오는 중입니다.');
+    listMessage($('analyticsChart'), t('analytics.chartLoading', {}, '차트 데이터를 불러오는 중입니다.'));
+    listMessage($('fanCardStatusList'), t('analytics.fanCardStatsLoading', {}, '팬 카드 통계를 불러오는 중입니다.'));
+    listMessage($('streamSnapshotList'), t('analytics.snapshotLoading', {}, '방송 스냅샷을 불러오는 중입니다.'));
+    listMessage($('analyticsNotesList'), t('analytics.loading', {}, '통계 데이터를 불러오는 중입니다.'));
   }
 
   function renderError(error) {
-    const message = error?.message || '통계 데이터를 불러오지 못했습니다.';
+    const message = error?.message || t('analytics.error', {}, '통계 데이터를 불러오지 못했습니다.');
     const box = $('analyticsError');
     if (box) {
       box.hidden = false;
       box.textContent = message;
     }
-    listMessage($('analyticsChart'), '차트 데이터를 불러오지 못했습니다.');
-    listMessage($('fanCardStatusList'), '팬 카드 통계를 불러오지 못했습니다.');
-    listMessage($('streamSnapshotList'), '방송 스냅샷을 불러오지 못했습니다.');
-    listMessage($('analyticsNotesList'), '통계 데이터를 불러오지 못했습니다.');
+    listMessage($('analyticsChart'), t('analytics.chartError', {}, '차트 데이터를 불러오지 못했습니다.'));
+    listMessage($('fanCardStatusList'), t('analytics.fanCardStatsError', {}, '팬 카드 통계를 불러오지 못했습니다.'));
+    listMessage($('streamSnapshotList'), t('analytics.snapshotError', {}, '방송 스냅샷을 불러오지 못했습니다.'));
+    listMessage($('analyticsNotesList'), t('analytics.error', {}, '통계 데이터를 불러오지 못했습니다.'));
   }
 
   function renderBars(items = []) {
     const chart = $('analyticsChart');
     if (!chart) return;
     if (!items.length) {
-      listMessage(chart, '선택한 기간의 방문 데이터가 없습니다.');
+      listMessage(chart, t('analytics.noVisitData', {}, '선택한 기간의 방문 데이터가 없습니다.'));
       return;
     }
     const max = Math.max(...items.map((item) => Number(item.value || 0)), 1);
     chart.innerHTML = items.map((item) => {
-      const label = new Date(item.date).toLocaleDateString('ko-KR', { weekday: 'short' });
+      const label = new Date(item.date).toLocaleDateString(window.SeigaI18n?.localeTag?.() || 'ko-KR', { weekday: 'short' });
       const height = Math.max(8, Math.round((Number(item.value || 0) / max) * 94));
       return `<div class="bar" style="height:${height}%"><span>${api.escapeHtml(label)}</span></div>`;
     }).join('');
@@ -66,7 +76,7 @@
     const target = $('fanCardStatusList');
     if (!target) return;
     if (!items.length) {
-      listMessage(target, '팬 카드 통계 데이터가 없습니다.');
+      listMessage(target, t('analytics.noFanCardStats', {}, '팬 카드 통계 데이터가 없습니다.'));
       return;
     }
     const total = items.reduce((sum, item) => sum + Number(item.count || 0), 0) || 1;
@@ -86,7 +96,7 @@
     if (!target) return;
     const snapshots = streams.snapshots || [];
     if (!snapshots.length) {
-      listMessage(target, '방송 스냅샷 데이터가 없습니다.');
+      listMessage(target, t('analytics.noSnapshots', {}, '방송 스냅샷 데이터가 없습니다.'));
       return;
     }
     const liveCount = snapshots.filter((item) => item.isLive).length;
@@ -94,20 +104,20 @@
       snapshots.reduce((sum, item) => sum + Number(item.viewerCount || 0), 0) / snapshots.length
     );
     target.innerHTML = `
-      <div class="list-item"><div class="item-icon">LIVE</div><div class="item-content"><strong>${numberText(liveCount)}개 라이브 스냅샷</strong><span>선택 기간 기준</span></div></div>
-      <div class="list-item"><div class="item-icon">AVG</div><div class="item-content"><strong>${numberText(averageViewers)}명</strong><span>스냅샷 평균 시청자</span></div></div>
-      <div class="list-item"><div class="item-icon">LOG</div><div class="item-content"><strong>${numberText(snapshots.length)}개 수집</strong><span>전체 스냅샷 수</span></div></div>
+      <div class="list-item"><div class="item-icon">LIVE</div><div class="item-content"><strong>${api.escapeHtml(t('analytics.liveSnapshotCount', { count: numberText(liveCount) }, `${numberText(liveCount)}개 라이브 스냅샷`))}</strong><span>${api.escapeHtml(t('analytics.selectedRangeNote', {}, '선택 기간 기준'))}</span></div></div>
+      <div class="list-item"><div class="item-icon">AVG</div><div class="item-content"><strong>${api.escapeHtml(t('analytics.viewerCount', { count: numberText(averageViewers) }, `${numberText(averageViewers)}명`))}</strong><span>${api.escapeHtml(t('analytics.averageViewersNote', {}, '스냅샷 평균 시청자'))}</span></div></div>
+      <div class="list-item"><div class="item-icon">LOG</div><div class="item-content"><strong>${api.escapeHtml(t('analytics.snapshotCollectedCount', { count: numberText(snapshots.length) }, `${numberText(snapshots.length)}개 수집`))}</strong><span>${api.escapeHtml(t('analytics.totalSnapshotsNote', {}, '전체 스냅샷 수'))}</span></div></div>
     `;
   }
 
   function ruleNotes(summary, views, streams) {
     const notes = [];
     const viewTotal = (views.items || []).reduce((sum, item) => sum + Number(item.value || 0), 0);
-    if (Number(summary.fanCardCount || 0) === 0) notes.push('팬 카드 작성 링크를 공유해보세요.');
-    if (viewTotal === 0) notes.push('공개 프로필 링크를 Twitch/X에 고정해보세요.');
-    if (Number(summary.averageViewers || 0) === 0) notes.push('Twitch 연동 또는 방송 스냅샷 수집 상태를 확인하세요.');
-    if ((streams.snapshots || []).length === 0) notes.push('방송 스냅샷이 수집되는지 확인해보세요.');
-    if (!notes.length) notes.push('현재 수집된 데이터 기준으로 즉시 조치가 필요한 항목은 없습니다.');
+    if (Number(summary.fanCardCount || 0) === 0) notes.push(t('analytics.noteShareFanCardLink', {}, '팬 카드 작성 링크를 공유해보세요.'));
+    if (viewTotal === 0) notes.push(t('analytics.notePinPublicLink', {}, '공개 프로필 링크를 Twitch/X에 고정해보세요.'));
+    if (Number(summary.averageViewers || 0) === 0) notes.push(t('analytics.noteCheckTwitch', {}, 'Twitch 연동 또는 방송 스냅샷 수집 상태를 확인하세요.'));
+    if ((streams.snapshots || []).length === 0) notes.push(t('analytics.noteCheckSnapshots', {}, '방송 스냅샷이 수집되는지 확인해보세요.'));
+    if (!notes.length) notes.push(t('analytics.noteNoAction', {}, '현재 수집된 데이터 기준으로 즉시 조치가 필요한 항목은 없습니다.'));
     return notes;
   }
 
@@ -133,7 +143,7 @@
     $('weeklyViewsValue').textContent = numberText(selectedViews || summary.weeklyViews);
     $('profileClickRateValue').textContent = percent(todayRatio);
     $('fanCardConversionValue').textContent = percent(fanRatio);
-    $('trafficSourcePanel').innerHTML = '<div class="list-item"><div class="item-content"><strong>유입 경로 데이터는 아직 수집되지 않았습니다.</strong></div></div>';
+    $('trafficSourcePanel').innerHTML = `<div class="list-item"><div class="item-content"><strong>${api.escapeHtml(t('analytics.noTrafficSource', {}, '유입 경로 데이터는 아직 수집되지 않았습니다.'))}</strong></div></div>`;
 
     renderBars(views.items || []);
     renderFanCardStats(fanCards.items || []);
@@ -171,11 +181,14 @@
   document.querySelectorAll('[data-analytics-range]').forEach((button) => {
     button.addEventListener('click', () => {
       load(button.dataset.analyticsRange).then((ok) => {
-        if (ok) api.showToast('통계 데이터를 불러왔습니다.');
+        if (ok) api.showToast(t('analytics.loadDone', {}, '통계 데이터를 불러왔습니다.'));
       });
     });
   });
   $('exportAnalyticsButton')?.addEventListener('click', exportReport);
+  document.addEventListener('seiga:i18n-change', () => {
+    if (latest) render(latest);
+  });
 
   load('7d');
 })();

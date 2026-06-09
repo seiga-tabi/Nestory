@@ -26,6 +26,7 @@ services:
       DATABASE_URL: postgresql://seiga:seiga_password@postgres:5432/seiga_db
       PORT: 25570
       PUBLIC_BASE_URL: http://localhost:25570
+      SEED_SAMPLE_DATA: ${SEED_SAMPLE_DATA:-false}
     ports:
       - "25570:25570"
     volumes:

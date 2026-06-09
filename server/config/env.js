@@ -5,6 +5,15 @@ const { z } = require('zod');
 dotenv.config();
 
 const blankToUndefined = (value) => (value === '' ? undefined : value);
+const booleanFlag = (defaultValue) => z.preprocess((value) => {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  if (typeof value === 'boolean') return value;
+
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'n', 'off'].includes(normalized)) return false;
+  return value;
+}, z.boolean());
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -15,6 +24,7 @@ const schema = z.object({
   SESSION_STORE: z.enum(['database', 'memory']).default('database'),
   SESSION_COOKIE_DAYS: z.coerce.number().positive().default(7),
   REMEMBER_ME_DAYS: z.coerce.number().positive().default(30),
+  SEED_SAMPLE_DATA: booleanFlag(false),
   ADMIN_EMAIL: z.string().email().default('admin@example.com'),
   ADMIN_PASSWORD: z.string().min(8).default('change-me-admin-password'),
   TWITCH_CLIENT_ID: z.preprocess(blankToUndefined, z.string().optional()).default(''),

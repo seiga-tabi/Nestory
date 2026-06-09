@@ -55,12 +55,27 @@
   }
 
   async function redirectIfUnauthorized(target = 'login.html') {
-    const me = await request('GET', '/api/auth/me');
+    const me = window.SeigaAuth?.getAuthState
+      ? await window.SeigaAuth.getAuthState({ force: true })
+      : await request('GET', '/api/auth/me');
     if (!me.authenticated) {
       location.href = target;
       return null;
     }
     return me;
+  }
+
+  async function logout(target = 'login.html') {
+    if (window.SeigaAuth?.logout) {
+      await window.SeigaAuth.logout(target);
+      return;
+    }
+    await request('POST', '/api/auth/logout', {});
+    ['seiga_auth_state', 'seiga_user', 'seiga_session', 'authUser', 'currentUser', 'user'].forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    location.href = target;
   }
 
   async function uploadFile(url, fieldName, file) {
@@ -82,6 +97,7 @@
     putJson: (url, body) => request('PUT', url, body),
     patchJson: (url, body) => request('PATCH', url, body),
     deleteJson: (url) => request('DELETE', url),
+    logout,
     uploadFile,
     redirectIfUnauthorized,
     showToast,

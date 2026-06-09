@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 방송 일정 화면</title>
+  <title data-i18n="schedule.documentTitle">Seiga Studio - 방송 일정</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -15,72 +15,74 @@
           <div class="brand-logo">S</div>
           <div>
             <strong>Seiga Studio</strong>
-            <span>Streamer Dashboard</span>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
           </div>
         </a>
         <nav class="nav">
-          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
-<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
-<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
-<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
-<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
-<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
         </nav>
       </div>
       <div class="sidebar-card">
-        <strong>관리자 메모</strong>
-        <p>방송 일정은 한국/일본 시청자가 함께 볼 수 있도록 JST/KST 표시를 함께 제공하면 좋습니다.</p>
-        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+        <strong data-i18n="dashboard.adminMemoTitle">관리자 메모</strong>
+        <p data-i18n="schedule.sidebarText">방송 일정은 한국/일본 시청자가 함께 볼 수 있도록 JST/KST 표시를 함께 제공하면 좋습니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
 
     <main class="main">
       <div class="mobile-header">
         <strong>Seiga Studio</strong>
-        <button class="icon-btn" type="button">☰</button>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
       </div>
       <header class="topbar">
         <div class="page-title">
-          <h1>방송 일정 화면</h1>
-          <p>주간 방송 스케줄과 공개 표시 옵션을 관리하세요.</p>
+          <h1 data-i18n="schedule.title">방송 일정</h1>
+          <p data-i18n="schedule.description">주간 방송 스케줄과 공개 표시 옵션을 관리하세요.</p>
         </div>
         <div class="top-actions">
-          <button class="ghost-btn" id="copyScheduleButton" type="button">일정 복사</button><button class="primary-btn" id="saveScheduleButton" type="button">저장</button>
+          <button class="ghost-btn" id="copyScheduleButton" type="button" data-i18n="schedule.copy">일정 복사</button><button class="primary-btn" id="saveScheduleButton" type="button" data-i18n="common.save">저장</button>
         </div>
       </header>
       
 <section class="schedule-layout">
   <div class="stack">
     <section class="panel">
-      <div class="panel-title"><div><h2>주간 방송 일정</h2><p>공개 프로필과 팬 카드 작성 화면에 표시되는 일정입니다.</p></div><span class="badge">JST</span></div>
+      <div class="panel-title"><div><h2 data-i18n="schedule.weeklyTitle">주간 방송 일정</h2><p data-i18n="schedule.weeklyDescription">공개 프로필과 팬 카드 작성 화면에 표시되는 일정입니다.</p></div><span class="badge">JST</span></div>
       <div class="week-grid" id="scheduleWeekGrid" aria-live="polite">
-        <div class="day-card"><strong>로딩</strong><div class="schedule-event"><b>불러오는 중</b><span>방송 일정을 불러오는 중입니다.</span></div></div>
+        <div class="day-card"><strong data-i18n="common.loading">로딩</strong><div class="schedule-event"><b data-i18n="dashboard.statusLoading">불러오는 중</b><span data-i18n="schedule.loading">방송 일정을 불러오는 중입니다.</span></div></div>
       </div>
     </section>
 
     <section class="panel">
-      <div class="panel-title"><div><h2>일정 공개 옵션</h2><p>방송 일정이 표시되는 위치를 관리합니다.</p></div></div>
-      <div class="toggle-list"><label class="toggle-row"><div><strong>프로필 카드에 표시</strong><span>SNS 공유 카드 하단 일정 노출</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>공개 리스트에 표시</strong><span>비로그인 방문자에게 다음 방송 시간 표시</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>시간대 표시</strong><span>JST/KST 시간대 라벨 표시</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label></div>
+      <div class="panel-title"><div><h2 data-i18n="schedule.visibilityTitle">일정 공개 옵션</h2><p data-i18n="schedule.visibilityDescription">방송 일정이 표시되는 위치를 관리합니다.</p></div></div>
+      <div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="schedule.showOnProfileCard">프로필 카드에 표시</strong><span data-i18n="schedule.showOnProfileCardNote">SNS 공유 카드 하단 일정 노출</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="schedule.showOnPublicList">공개 리스트에 표시</strong><span data-i18n="schedule.showOnPublicListNote">비로그인 방문자에게 다음 방송 시간 표시</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="schedule.showTimezone">시간대 표시</strong><span data-i18n="schedule.showTimezoneNote">JST/KST 시간대 라벨 표시</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label></div>
     </section>
   </div>
 
   <aside class="stack">
     <section class="panel">
-      <div class="panel-title"><div><h2>새 일정 추가</h2><p>저장하면 DB 일정에 반영됩니다.</p></div></div>
+      <div class="panel-title"><div><h2 data-i18n="schedule.addTitle">새 일정 추가</h2><p data-i18n="schedule.addDescription">저장하면 DB 일정에 반영됩니다.</p></div></div>
       <form id="scheduleForm" class="form-grid">
-        <div class="field"><label for="scheduleDay">요일</label><select id="scheduleDay"><option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option><option>토요일</option><option>일요일</option></select></div>
-        <div class="field"><label for="scheduleTime">시작 시간</label><input id="scheduleTime" type="time" /></div>
-        <div class="field"><label for="scheduleTitle">방송 내용</label><input id="scheduleTitle" type="text" placeholder="방송 내용을 입력하세요." /></div>
-        <button class="primary-btn" type="submit">일정 추가</button>
+        <div class="field"><label for="scheduleDay" data-i18n="schedule.day">요일</label><select id="scheduleDay"><option value="MON" data-i18n="schedule.dayOption.MON">월요일</option><option value="TUE" data-i18n="schedule.dayOption.TUE">화요일</option><option value="WED" data-i18n="schedule.dayOption.WED">수요일</option><option value="THU" data-i18n="schedule.dayOption.THU">목요일</option><option value="FRI" data-i18n="schedule.dayOption.FRI">금요일</option><option value="SAT" data-i18n="schedule.dayOption.SAT">토요일</option><option value="SUN" data-i18n="schedule.dayOption.SUN">일요일</option></select></div>
+        <div class="field"><label for="scheduleTime" data-i18n="schedule.startTime">시작 시간</label><input id="scheduleTime" type="time" /></div>
+        <div class="field"><label for="scheduleTitle" data-i18n="schedule.content">방송 내용</label><input id="scheduleTitle" type="text" placeholder="방송 내용을 입력하세요." data-i18n-placeholder="schedule.contentPlaceholder" /></div>
+        <button class="primary-btn" type="submit" data-i18n="schedule.addButton">일정 추가</button>
       </form>
     </section>
-    <section class="panel"><div class="panel-title"><div><h2>다가오는 일정</h2><p>활성화된 방송 일정</p></div></div><div id="upcomingList" class="list" aria-live="polite"><div class="list-item"><div class="item-content"><strong>다가오는 일정을 불러오는 중입니다.</strong></div></div></div></section>
+    <section class="panel"><div class="panel-title"><div><h2 data-i18n="schedule.upcomingTitle">다가오는 일정</h2><p data-i18n="schedule.upcomingDescription">활성화된 방송 일정</p></div></div><div id="upcomingList" class="list" aria-live="polite"><div class="list-item"><div class="item-content"><strong data-i18n="schedule.upcomingLoading">다가오는 일정을 불러오는 중입니다.</strong></div></div></div></section>
   </aside>
 </section>
 
     </main>
   </div>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/app.js"></script>
   <script src="js/schedule.js"></script>
 </body>

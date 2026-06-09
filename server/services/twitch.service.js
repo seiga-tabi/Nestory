@@ -10,6 +10,25 @@ function isConfigured() {
   return Boolean(env.TWITCH_CLIENT_ID && env.TWITCH_CLIENT_SECRET && env.TWITCH_REDIRECT_URI);
 }
 
+function configurationStatus() {
+  const missingConfig = [];
+  if (!env.TWITCH_CLIENT_ID) missingConfig.push('TWITCH_CLIENT_ID');
+  if (!env.TWITCH_CLIENT_SECRET) missingConfig.push('TWITCH_CLIENT_SECRET');
+  if (!env.TWITCH_REDIRECT_URI) missingConfig.push('TWITCH_REDIRECT_URI');
+
+  const publicBaseRedirectUri = new URL('/auth/twitch/callback', env.PUBLIC_BASE_URL).toString();
+  const expectedLocalRedirectUri = `http://localhost:${env.PORT}/auth/twitch/callback`;
+
+  return {
+    configured: missingConfig.length === 0,
+    missingConfig,
+    redirectUri: env.TWITCH_REDIRECT_URI || null,
+    expectedLocalRedirectUri,
+    publicBaseRedirectUri,
+    redirectUriMatchesPublicBaseUrl: env.TWITCH_REDIRECT_URI === publicBaseRedirectUri
+  };
+}
+
 function assertConfigured() {
   if (!isConfigured()) {
     throw createHttpError(
@@ -257,6 +276,7 @@ async function streamStatusForProfile(profile) {
 
 module.exports = {
   isConfigured,
+  configurationStatus,
   authorizationUrl,
   exchangeCode,
   getTwitchUser,

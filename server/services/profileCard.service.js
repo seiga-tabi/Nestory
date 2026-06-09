@@ -3,7 +3,6 @@ const { sanitizeText } = require('../utils/sanitize');
 const {
   normalizeSocialLinks,
   getRawProfileByUser,
-  uniqueProfileSlug,
   ensureRawProfileForUser
 } = require('./streamer.service');
 
@@ -39,7 +38,6 @@ function normalizeSchedule(items = []) {
 async function updateProfileCard(user, body) {
   const profile = await ensureRawProfileForUser(user);
 
-  const nextSlug = await uniqueProfileSlug(body.handle || body.name || profile.slug, profile.id);
   const socialLinks = normalizeSocialLinks(body.socialLinks || []);
   const schedule = normalizeSchedule(body.schedule || []);
 
@@ -47,7 +45,6 @@ async function updateProfileCard(user, body) {
     await tx.streamerProfile.update({
       where: { id: profile.id },
       data: {
-        slug: nextSlug,
         name: sanitizeText(body.name, 80) || profile.name,
         handle: sanitizeText(body.handle, 80) || profile.handle,
         subtitle: sanitizeText(body.subtitle, 180) || profile.subtitle,

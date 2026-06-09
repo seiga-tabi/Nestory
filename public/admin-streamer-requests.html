@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="adminRequests.documentTitle">Seiga Studio - 스트리머 등록 요청 관리</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="fan-cards.html" data-nav><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+          <a href="analytics.html" data-nav><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+          <a href="schedule.html" data-nav><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+          <a href="admin-streamer-requests.html" data-nav data-auth-admin data-auth-controlled data-auth-user><span class="nav-icon">✅</span><span data-i18n="adminRequests.nav">등록 요청</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="adminRequests.sidebarTitle">관리자 승인 대기열</strong>
+        <p data-i18n="adminRequests.sidebarText">신규 스트리머 신청을 검토하고 승인 또는 거절 처리합니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="adminRequests.title">스트리머 등록 요청 관리</h1>
+          <p data-i18n="adminRequests.description">등록 신청 목록을 실제 관리자 API에서 불러와 검토합니다.</p>
+        </div>
+        <div class="top-actions">
+          <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="언어 선택">
+            <button class="ghost-btn" type="button" data-lang-option="ko">KR</button>
+            <button class="ghost-btn" type="button" data-lang-option="ja">JA</button>
+          </div>
+          <button class="ghost-btn" id="refreshStreamerRequestsButton" type="button" data-i18n="adminRequests.refresh">새로고침</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="grid-3" aria-live="polite">
+        <article class="card stat-card" style="--accent: rgba(253, 230, 138, 0.42)">
+          <div class="stat-label" data-i18n="adminRequests.pending">대기 중</div>
+          <div class="stat-value" id="pendingRequestCount">-</div>
+          <div class="stat-change" data-i18n="adminRequests.pendingNote">검토가 필요한 신청</div>
+        </article>
+        <article class="card stat-card" style="--accent: rgba(134, 239, 172, 0.28)">
+          <div class="stat-label" data-i18n="adminRequests.approved">승인됨</div>
+          <div class="stat-value" id="approvedRequestCount">-</div>
+          <div class="stat-change" data-i18n="adminRequests.approvedNote">승인 처리된 신청</div>
+        </article>
+        <article class="card stat-card" style="--accent: rgba(251, 113, 133, 0.18)">
+          <div class="stat-label" data-i18n="adminRequests.rejected">거절됨</div>
+          <div class="stat-value" id="rejectedRequestCount">-</div>
+          <div class="stat-change" data-i18n="adminRequests.rejectedNote">거절 처리된 신청</div>
+        </article>
+      </section>
+
+      <section class="card admin-request-panel">
+        <div class="section-title">
+          <div>
+            <h2 data-i18n="adminRequests.listTitle">등록 요청 목록</h2>
+            <p data-i18n="adminRequests.listDescription">승인하면 스트리머 계정과 공개 프로필이 생성됩니다.</p>
+          </div>
+          <span class="badge" id="streamerRequestStatusBadge" data-i18n="common.loading">불러오는 중</span>
+        </div>
+        <div id="streamerRequestState" class="admin-request-state" aria-live="polite"></div>
+        <div id="streamerRequestList" class="list admin-request-list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin-streamer-requests.js"></script>
+</body>
+</html>

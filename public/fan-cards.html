@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 팬카드 화면</title>
+  <title data-i18n="fanCards.documentTitle">Seiga Studio - 팬 카드 수신함</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -15,67 +15,67 @@
           <div class="brand-logo">S</div>
           <div>
             <strong>Seiga Studio</strong>
-            <span>Streamer Dashboard</span>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
           </div>
         </a>
         <nav class="nav">
-          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
-<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
-<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
-<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
-<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
-<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+<a href="analytics.html" data-nav><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+<a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
         </nav>
       </div>
       <div class="sidebar-card">
-        <strong>관리자 메모</strong>
-        <p>팬 카드는 공개 전 검토 흐름을 두면 스팸과 부적절한 메시지를 줄일 수 있습니다.</p>
-        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+        <strong data-i18n="dashboard.adminMemoTitle">관리자 메모</strong>
+        <p data-i18n="fanCards.sidebarText">팬 카드는 공개 전 검토 흐름을 두면 스팸과 부적절한 메시지를 줄일 수 있습니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
 
     <main class="main">
       <div class="mobile-header">
         <strong>Seiga Studio</strong>
-        <button class="icon-btn" type="button">☰</button>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
       </div>
       <header class="topbar">
         <div class="page-title">
-          <h1>팬카드 화면</h1>
-          <p>시청자가 보낸 응원 카드와 방송에서 읽을 메시지를 관리하세요.</p>
+          <h1 data-i18n="fanCards.title">팬 카드 수신함</h1>
+          <p data-i18n="fanCards.description">시청자가 보낸 응원 카드와 방송에서 읽을 메시지를 관리하세요.</p>
         </div>
         <div class="top-actions">
-          <button class="ghost-btn" id="approvePendingButton" type="button">신규 모두 공개</button><button class="primary-btn" id="copyFanCardLinkButton" type="button">작성 링크 복사</button>
+          <button class="ghost-btn" id="approvePendingButton" type="button" data-i18n="fanCards.approveAllPending">신규 모두 공개</button><button class="primary-btn" id="copyFanCardLinkButton" type="button" data-i18n="fanCards.copyWriteLink">작성 링크 복사</button>
         </div>
       </header>
       
 <section class="grid-4">
-  <article class="card stat-card"><div class="stat-label">전체 팬 카드</div><div class="stat-value" id="fanStatAll">-</div><div class="stat-change">실제 DB 기준</div></article>
-  <article class="card stat-card" style="--accent:rgba(251,113,133,.22)"><div class="stat-label">신규</div><div class="stat-value" id="fanStatPending">-</div><div class="stat-change">PENDING</div></article>
-  <article class="card stat-card" style="--accent:rgba(134,239,172,.28)"><div class="stat-label">공개</div><div class="stat-value" id="fanStatApproved">-</div><div class="stat-change">APPROVED</div></article>
-  <article class="card stat-card" style="--accent:rgba(253,230,138,.42)"><div class="stat-label">숨김</div><div class="stat-value" id="fanStatHidden">-</div><div class="stat-change">HIDDEN</div></article>
+  <article class="card stat-card"><div class="stat-label" data-i18n="fanCards.statAll">전체 팬 카드</div><div class="stat-value" id="fanStatAll">-</div><div class="stat-change" data-i18n="fanCards.dbNote">실제 DB 기준</div></article>
+  <article class="card stat-card" style="--accent:rgba(251,113,133,.22)"><div class="stat-label" data-i18n="fanCards.statPending">신규</div><div class="stat-value" id="fanStatPending">-</div><div class="stat-change">PENDING</div></article>
+  <article class="card stat-card" style="--accent:rgba(134,239,172,.28)"><div class="stat-label" data-i18n="fanCards.statApproved">공개</div><div class="stat-value" id="fanStatApproved">-</div><div class="stat-change">APPROVED</div></article>
+  <article class="card stat-card" style="--accent:rgba(253,230,138,.42)"><div class="stat-label" data-i18n="fanCards.statHidden">숨김</div><div class="stat-value" id="fanStatHidden">-</div><div class="stat-change">HIDDEN</div></article>
 </section>
 
 <section class="fan-board">
   <div class="stack">
     <section class="panel">
-      <div class="panel-title"><div><h2>팬 카드 수신함</h2><p id="fanCount">팬 카드를 불러오는 중입니다.</p></div><div class="filter-tabs"><button class="filter-tab active" data-fan-filter="all">전체</button><button class="filter-tab" data-fan-filter="pending">신규</button><button class="filter-tab" data-fan-filter="approved">공개</button><button class="filter-tab" data-fan-filter="hidden">숨김</button></div></div>
+      <div class="panel-title"><div><h2 data-i18n="fanCards.inboxTitle">팬 카드 수신함</h2><p id="fanCount" data-i18n="fanCards.loading">팬 카드를 불러오는 중입니다.</p></div><div class="filter-tabs"><button class="filter-tab active" data-fan-filter="all" data-i18n="fanCards.filterAll">전체</button><button class="filter-tab" data-fan-filter="pending" data-i18n="fanCards.filterPending">신규</button><button class="filter-tab" data-fan-filter="approved" data-i18n="fanCards.filterApproved">공개</button><button class="filter-tab" data-fan-filter="hidden" data-i18n="fanCards.filterHidden">숨김</button></div></div>
       <div class="list" id="fanCardsList" aria-live="polite">
-        <article class="fan-card"><p class="fan-message">팬 카드 데이터를 불러오는 중입니다.</p></article>
+        <article class="fan-card"><p class="fan-message" data-i18n="fanCards.loadingData">팬 카드 데이터를 불러오는 중입니다.</p></article>
       </div>
     </section>
   </div>
 
   <aside class="stack">
     <section class="panel">
-      <div class="panel-title"><div><h2>방송 읽기 목록</h2><p>공개 승인된 최근 메시지</p></div><span class="badge" id="fanReadQueueBadge">0개</span></div>
+      <div class="panel-title"><div><h2 data-i18n="fanCards.readQueueTitle">방송 읽기 목록</h2><p data-i18n="fanCards.readQueueDescription">공개 승인된 최근 메시지</p></div><span class="badge" id="fanReadQueueBadge">0개</span></div>
       <div class="list" id="fanReadQueue" aria-live="polite">
-        <div class="list-item"><div class="item-content"><strong>읽기 목록을 불러오는 중입니다.</strong></div></div>
+        <div class="list-item"><div class="item-content"><strong data-i18n="fanCards.readQueueLoading">읽기 목록을 불러오는 중입니다.</strong></div></div>
       </div>
     </section>
     <section class="panel">
-      <div class="panel-title"><div><h2>팬 카드 설정</h2><p>비로그인 방문자에게 보이는 작성 옵션</p></div></div>
-      <div class="toggle-list"><label class="toggle-row"><div><strong>익명 카드 허용</strong><span>닉네임 없이 응원 가능</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>공개 전 검토</strong><span>모든 팬 카드를 승인 후 공개</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong>방송 읽기 큐 사용</strong><span>읽을 메시지를 별도 관리</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label></div>
+      <div class="panel-title"><div><h2 data-i18n="fanCards.settingsTitle">팬 카드 설정</h2><p data-i18n="fanCards.settingsDescription">비로그인 방문자에게 보이는 작성 옵션</p></div></div>
+      <div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="fanCards.allowAnonymous">익명 카드 허용</strong><span data-i18n="fanCards.allowAnonymousNote">닉네임 없이 응원 가능</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="fanCards.preReview">공개 전 검토</strong><span data-i18n="fanCards.preReviewNote">모든 팬 카드를 승인 후 공개</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="fanCards.useReadQueue">방송 읽기 큐 사용</strong><span data-i18n="fanCards.useReadQueueNote">읽을 메시지를 별도 관리</span></div><span class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></span></label></div>
     </section>
   </aside>
 </section>
@@ -83,6 +83,8 @@
     </main>
   </div>
   <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/app.js"></script>
   <script src="js/fan-cards.js"></script>
 </body>

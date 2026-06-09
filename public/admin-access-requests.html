@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="adminAccess.documentTitle">Seiga Studio - 스트리머 등록 요청 관리</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app" id="adminAccessRequestsPage">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">⌂</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav><span class="nav-icon">◇</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="fan-cards.html" data-nav><span class="nav-icon">✉</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+          <a href="analytics.html" data-nav><span class="nav-icon">▥</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+          <a href="schedule.html" data-nav><span class="nav-icon">□</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="admin-access-requests.html" data-nav data-auth-admin data-auth-controlled data-auth-user><span class="nav-icon">✓</span><span data-i18n="adminAccess.nav">등록 요청</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="adminAccess.sidebarTitle">관리자 전용</strong>
+        <p data-i18n="adminAccess.sidebarText">스트리머 등록 요청을 검토하고 승인 또는 거절 처리합니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="adminAccess.title">스트리머 등록 요청 관리</h1>
+          <p data-i18n="adminAccess.description">관리자 권한으로 신규 스트리머 신청을 확인하고 승인 상태를 관리합니다.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="refreshAccessRequestsButton" type="button" data-i18n="adminAccess.refresh">새로고침</button>
+        </div>
+      </header>
+
+      <section class="grid-4 admin-request-stats" aria-label="등록 요청 통계" data-i18n-aria-label="adminAccess.statsLabel">
+        <article class="card stat-card">
+          <div class="stat-label" data-i18n="adminAccess.statAll">전체 요청</div>
+          <div class="stat-value" id="requestStatAll">-</div>
+          <div class="stat-change">ALL</div>
+        </article>
+        <article class="card stat-card" style="--accent:rgba(251,113,133,.22)">
+          <div class="stat-label" data-i18n="adminAccess.statPending">검토 대기</div>
+          <div class="stat-value" id="requestStatPending">-</div>
+          <div class="stat-change">PENDING</div>
+        </article>
+        <article class="card stat-card" style="--accent:rgba(134,239,172,.28)">
+          <div class="stat-label" data-i18n="adminAccess.statApproved">승인 완료</div>
+          <div class="stat-value" id="requestStatApproved">-</div>
+          <div class="stat-change">APPROVED</div>
+        </article>
+        <article class="card stat-card" style="--accent:rgba(253,230,138,.42)">
+          <div class="stat-label" data-i18n="adminAccess.statRejected">거절됨</div>
+          <div class="stat-value" id="requestStatRejected">-</div>
+          <div class="stat-change">REJECTED</div>
+        </article>
+      </section>
+
+      <section class="admin-request-board">
+        <section class="panel admin-request-main">
+          <div class="panel-title">
+            <div>
+              <h2 data-i18n="adminAccess.listTitle">등록 요청 목록</h2>
+              <p id="accessRequestCount" data-i18n="adminAccess.loading">등록 요청을 불러오는 중입니다.</p>
+            </div>
+            <div class="filter-tabs request-tabs" role="tablist" aria-label="등록 요청 상태 필터" data-i18n-aria-label="adminAccess.statusFilter">
+              <button class="filter-tab active" type="button" data-request-filter="PENDING" data-i18n="adminAccess.statusPending">검토 대기</button>
+              <button class="filter-tab" type="button" data-request-filter="APPROVED" data-i18n="adminAccess.statusApproved">승인 완료</button>
+              <button class="filter-tab" type="button" data-request-filter="REJECTED" data-i18n="adminAccess.statusRejected">거절됨</button>
+            </div>
+          </div>
+
+          <div class="request-table-head" aria-hidden="true">
+            <span data-i18n="adminAccess.requester">요청자 정보</span>
+            <span data-i18n="adminAccess.twitchId">Twitch ID</span>
+            <span data-i18n="adminAccess.reason">신청 사유</span>
+            <span data-i18n="adminAccess.submittedAt">제출일</span>
+            <span data-i18n="adminAccess.status">상태</span>
+            <span data-i18n="adminAccess.actions">작업</span>
+          </div>
+          <div class="admin-request-list" id="accessRequestList" aria-live="polite">
+            <article class="request-card">
+              <p class="request-empty" data-i18n="adminAccess.loading">등록 요청을 불러오는 중입니다.</p>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel admin-request-detail" id="accessRequestDetail">
+          <div class="panel-title">
+            <div>
+              <h2 data-i18n="adminAccess.detailTitle">상세 보기</h2>
+              <p data-i18n="adminAccess.detailDescription">요청을 선택하면 세부 정보가 표시됩니다.</p>
+            </div>
+            <span class="badge" id="detailStatusBadge">-</span>
+          </div>
+          <div class="detail-empty" id="accessRequestDetailBody" data-i18n="adminAccess.detailEmpty">
+            왼쪽 목록에서 요청을 선택하세요.
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin-access-requests.js"></script>
+</body>
+</html>

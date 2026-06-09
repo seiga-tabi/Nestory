@@ -27,6 +27,21 @@
     return interpolate(messages[key] || fallback || key, params);
   }
 
+  function localeTag() {
+    return locale === 'ja' ? 'ja-JP' : 'ko-KR';
+  }
+
+  function number(value) {
+    return Number(value || 0).toLocaleString(localeTag());
+  }
+
+  function collectNodes(root, selector) {
+    const nodes = [];
+    if (root?.matches?.(selector)) nodes.push(root);
+    root.querySelectorAll?.(selector).forEach((node) => nodes.push(node));
+    return nodes;
+  }
+
   async function getServerLocale(urlLocale) {
     const query = urlLocale ? `?lang=${encodeURIComponent(urlLocale)}` : '';
     const response = await fetch(`/api/i18n/locale${query}`, { credentials: 'include' });
@@ -35,23 +50,29 @@
   }
 
   async function loadMessages(nextLocale) {
-    const response = await fetch(`/locales/${nextLocale}.json`, { credentials: 'same-origin' });
+    const response = await fetch(`/locales/${nextLocale}.json`, { credentials: 'same-origin', cache: 'no-store' });
     if (!response.ok) throw new Error('Locale messages failed');
     messages = await response.json();
   }
 
   function applyTranslations(root = document) {
-    root.querySelectorAll('[data-i18n]').forEach((node) => {
+    collectNodes(root, '[data-i18n]').forEach((node) => {
       node.textContent = t(node.dataset.i18n, {}, node.textContent);
     });
-    root.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
+    collectNodes(root, '[data-i18n-placeholder]').forEach((node) => {
       node.setAttribute('placeholder', t(node.dataset.i18nPlaceholder, {}, node.getAttribute('placeholder') || ''));
     });
-    root.querySelectorAll('[data-i18n-title]').forEach((node) => {
+    collectNodes(root, '[data-i18n-title]').forEach((node) => {
       node.setAttribute('title', t(node.dataset.i18nTitle, {}, node.getAttribute('title') || ''));
     });
-    root.querySelectorAll('[data-i18n-aria-label]').forEach((node) => {
+    collectNodes(root, '[data-i18n-aria-label]').forEach((node) => {
       node.setAttribute('aria-label', t(node.dataset.i18nAriaLabel, {}, node.getAttribute('aria-label') || ''));
+    });
+    collectNodes(root, '[data-i18n-alt]').forEach((node) => {
+      node.setAttribute('alt', t(node.dataset.i18nAlt, {}, node.getAttribute('alt') || ''));
+    });
+    collectNodes(root, '[data-i18n-data-demo-submit]').forEach((node) => {
+      node.dataset.demoSubmit = t(node.dataset.i18nDataDemoSubmit, {}, node.dataset.demoSubmit || '');
     });
     document.documentElement.lang = locale;
     updateSwitcher();
@@ -85,8 +106,10 @@
     return locale;
   }
 
-  function bindSwitcher() {
-    document.querySelectorAll('[data-lang-option]').forEach((button) => {
+  function bindSwitcher(root = document) {
+    collectNodes(root, '[data-lang-option]').forEach((button) => {
+      if (button.dataset.i18nBound === 'true') return;
+      button.dataset.i18nBound = 'true';
       button.addEventListener('click', () => {
         setLocale(button.dataset.langOption);
       });
@@ -117,8 +140,12 @@
 
   window.SeigaI18n = {
     get locale() { return locale; },
+    get storageKey() { return storageKey; },
+    localeTag,
+    number,
     t,
     setLocale,
+    bindSwitcher,
     applyTranslations
   };
   window.SeigaI18nReady = init();

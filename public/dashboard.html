@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seiga Studio - 대시보드 화면</title>
+  <title data-i18n="dashboard.documentTitle">Seiga Studio - 대시보드 화면</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/card.css" />
 </head>
 <body>
   <div class="app">
@@ -15,60 +16,66 @@
           <div class="brand-logo">S</div>
           <div>
             <strong>Seiga Studio</strong>
-            <span>Streamer Dashboard</span>
+            <span data-i18n="dashboard.brandSubtitle">스트리머 대시보드</span>
           </div>
         </a>
         <nav class="nav">
-          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span>대시보드</a>
-<a href="profile-card.html" data-nav><span class="nav-icon">🎴</span>프로필 카드</a>
-<a href="fan-cards.html" data-nav><span class="nav-icon">💌</span>팬 카드</a>
-<a href="analytics.html" data-nav><span class="nav-icon">📊</span>방송 통계</a>
-<a href="schedule.html" data-nav><span class="nav-icon">🗓️</span>방송 일정</a>
-<a href="settings.html" data-nav><span class="nav-icon">⚙️</span>설정</a>
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="fan-cards.html" data-nav><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+          <a href="analytics.html" data-nav><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+          <a href="schedule.html" data-nav><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
         </nav>
       </div>
       <div class="sidebar-card">
-        <strong>관리자 메모</strong>
-        <p>오늘 방송 전 프로필 카드와 팬 카드 상태를 확인해보세요.</p>
-        <button class="primary-btn" type="button" data-session-status>상태 확인</button>
+        <strong data-i18n="dashboard.adminMemoTitle">관리자 메모</strong>
+        <p data-i18n="dashboard.adminMemoText">오늘 방송 전 프로필 카드와 팬 카드 상태를 확인해보세요.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
 
     <main class="main">
       <div class="mobile-header">
         <strong>Seiga Studio</strong>
-        <button class="icon-btn" type="button">☰</button>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
       </div>
       <header class="topbar">
         <div class="page-title">
-          <h1>대시보드 화면</h1>
-          <p>오늘의 방송 상태, 팬 반응, 프로필 카드 현황을 한눈에 확인하세요.</p>
+          <h1 data-i18n="dashboard.title">대시보드 화면</h1>
+          <p data-i18n="dashboard.description">오늘의 방송 상태, 팬 반응, 프로필 카드 현황을 한눈에 확인하세요.</p>
         </div>
         <div class="top-actions">
-          <button class="ghost-btn" id="refreshDashboardButton" type="button">새로고침</button><button class="primary-btn" id="prepareBroadcastButton" type="button">방송 준비</button>
+          <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="언어 선택">
+            <button type="button" data-lang-option="ko">KR</button>
+            <button type="button" data-lang-option="ja">JA</button>
+          </div>
+          <button class="ghost-btn" id="refreshDashboardButton" type="button" data-i18n="dashboard.refresh">새로고침</button>
+          <button class="primary-btn" id="prepareBroadcastButton" type="button" data-i18n="dashboard.prepareBroadcast">방송 준비</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
         </div>
       </header>
       
 <section class="grid-4">
   <article class="card stat-card" style="--accent: rgba(167,139,250,.24)">
-    <div class="stat-label">오늘 방문자</div>
+    <div class="stat-label" data-i18n="dashboard.todayVisitors">오늘 방문자</div>
     <div class="stat-value" id="todayViewsValue">-</div>
-    <div class="stat-change" id="todayViewsNote">데이터를 불러오는 중입니다.</div>
+    <div class="stat-change" id="todayViewsNote" data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</div>
   </article>
   <article class="card stat-card" style="--accent: rgba(249,168,212,.28)">
-    <div class="stat-label">팬 카드 수신</div>
+    <div class="stat-label" data-i18n="dashboard.fanCardReceived">팬 카드 수신</div>
     <div class="stat-value" id="fanCardCountValue">-</div>
-    <div class="stat-change" id="fanCardCountNote">데이터를 불러오는 중입니다.</div>
+    <div class="stat-change" id="fanCardCountNote" data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</div>
   </article>
   <article class="card stat-card" style="--accent: rgba(147,197,253,.32)">
-    <div class="stat-label">프로필 공개</div>
+    <div class="stat-label" data-i18n="dashboard.publicProfile">프로필 공개</div>
     <div class="stat-value" id="publicProfileStatusValue">-</div>
-    <div class="stat-change" id="publicProfileStatusNote">데이터를 불러오는 중입니다.</div>
+    <div class="stat-change" id="publicProfileStatusNote" data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</div>
   </article>
   <article class="card stat-card" style="--accent: rgba(134,239,172,.28)">
-    <div class="stat-label">카드 완성도</div>
+    <div class="stat-label" data-i18n="dashboard.cardCompletion">카드 완성도</div>
     <div class="stat-value" id="cardCompletionValue">-</div>
-    <div class="stat-change" id="cardCompletionNote">데이터를 불러오는 중입니다.</div>
+    <div class="stat-change" id="cardCompletionNote" data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</div>
   </article>
 </section>
 
@@ -76,64 +83,61 @@
   <article class="card hero-card">
     <div>
       <span class="pill" id="dashboardHeroStatus"><span class="dot"></span>LOADING</span>
-      <h2 id="dashboardHeroTitle">대시보드 데이터를 불러오는 중입니다.</h2>
-      <p id="dashboardHeroText">잠시만 기다려주세요.</p>
+      <h2 id="dashboardHeroTitle" data-i18n="dashboard.heroLoadingTitle">대시보드 데이터를 불러오는 중입니다.</h2>
+      <p id="dashboardHeroText" data-i18n="dashboard.heroLoadingText">잠시만 기다려주세요.</p>
       <div class="hero-actions">
-        <a class="primary-btn" href="profile-card.html" style="display:inline-flex; align-items:center; justify-content:center; text-align:center;">프로필 카드 수정</a>
-        <a class="ghost-btn" href="fan-cards.html" style="display:inline-flex; align-items:center; justify-content:center; text-align:center;">팬 카드 확인</a>
-        <button class="ghost-btn" id="downloadDashboardJsonButton" type="button">요약 JSON</button>
+        <a class="primary-btn" href="profile-card.html" style="display:inline-flex; align-items:center; justify-content:center; text-align:center;" data-i18n="dashboard.editProfileCard">프로필 카드 수정</a>
+        <a class="ghost-btn" href="fan-cards.html" style="display:inline-flex; align-items:center; justify-content:center; text-align:center;" data-i18n="dashboard.viewFanCards">팬 카드 확인</a>
+        <button class="ghost-btn" id="downloadDashboardJsonButton" type="button" data-i18n="dashboard.downloadJson">요약 JSON</button>
       </div>
     </div>
-    <div class="stream-preview">
-      <div class="preview-overlay">
-        <strong id="dashboardPreviewTitle">방송 상태</strong>
-        <span id="dashboardPreviewMeta">데이터를 불러오는 중입니다.</span>
-      </div>
-    </div>
+    <div class="dashboard-profile-card-slot" id="dashboardProfileCardSlot" aria-live="polite"></div>
   </article>
 
   <article class="card">
     <div class="section-title">
       <div>
-        <h2>최근 활동</h2>
-        <p>대시보드 API가 반환한 운영 상태입니다.</p>
+        <h2 data-i18n="dashboard.recentActivity">최근 활동</h2>
+        <p data-i18n="dashboard.recentActivityDescription">대시보드 API가 반환한 운영 상태입니다.</p>
       </div>
       <span class="badge" id="recentActivityBadge">LOADING</span>
     </div>
     <div class="list" id="recentActivityList" aria-live="polite">
-      <div class="list-item"><div class="item-content"><strong>최근 활동을 불러오는 중입니다.</strong></div></div>
+      <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.recentActivityLoading">최근 활동을 불러오는 중입니다.</strong></div></div>
     </div>
   </article>
 </section>
 
 <section class="grid-3">
   <article class="card">
-    <div class="section-title"><div><h3>최근 팬 카드</h3><p>수신된 응원 메시지 미리보기</p></div><a class="badge" href="fan-cards.html">전체</a></div>
+    <div class="section-title"><div><h3 data-i18n="dashboard.recentFanCards">최근 팬 카드</h3><p data-i18n="dashboard.recentFanCardsDescription">수신된 응원 메시지 미리보기</p></div><a class="badge" href="fan-cards.html" data-i18n="dashboard.viewAll">전체</a></div>
     <div class="list" id="recentFanCardsList" aria-live="polite">
-      <div class="list-item"><div class="item-content"><strong>팬 카드를 불러오는 중입니다.</strong></div></div>
+      <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.fanCardsLoading">팬 카드를 불러오는 중입니다.</strong></div></div>
     </div>
   </article>
 
   <article class="card">
-    <div class="section-title"><div><h3>방문자 흐름</h3><p>최근 7일 기준</p></div><a class="badge" href="analytics.html">통계</a></div>
+    <div class="section-title"><div><h3 data-i18n="dashboard.visitorFlow">방문자 흐름</h3><p data-i18n="dashboard.visitorFlowDescription">최근 7일 기준</p></div><a class="badge" href="analytics.html" data-i18n="dashboard.analytics">통계</a></div>
     <div class="mini-chart" id="dashboardVisitorFlow">
-      <div class="list-item"><div class="item-content"><strong>방문자 흐름은 통계 화면에서 확인할 수 있습니다.</strong></div></div>
+      <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.visitorFlowHint">방문자 흐름은 통계 화면에서 확인할 수 있습니다.</strong></div></div>
     </div>
   </article>
 
   <article class="card">
-    <div class="section-title"><div><h3>방송 일정</h3><p>이번 주 주요 스케줄</p></div><a class="badge" href="schedule.html">관리</a></div>
+    <div class="section-title"><div><h3 data-i18n="dashboard.schedule">방송 일정</h3><p data-i18n="dashboard.scheduleDescription">이번 주 주요 스케줄</p></div><a class="badge" href="schedule.html" data-i18n="dashboard.manage">관리</a></div>
     <div class="list" id="dashboardScheduleList">
-      <div class="list-item"><div class="item-content"><strong>방송 일정은 일정 화면에서 관리합니다.</strong></div></div>
+      <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.scheduleHint">방송 일정은 일정 화면에서 관리합니다.</strong></div></div>
     </div>
   </article>
 </section>
 
-<div id="dashboardError" class="card" hidden>대시보드 데이터를 불러오지 못했습니다.</div>
+<div id="dashboardError" class="card" hidden data-i18n="dashboard.error">대시보드 데이터를 불러오지 못했습니다.</div>
 
     </main>
   </div>
+  <script src="js/i18n.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/shared.js"></script>
   <script src="js/app.js"></script>
   <script src="js/dashboard.js"></script>
 </body>

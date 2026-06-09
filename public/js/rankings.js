@@ -14,17 +14,15 @@
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
   }
 
-  function avatar(profile) {
-    if (profile.avatarUrl) {
-      return `<img src="${api.escapeHtml(profile.avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />`;
-    }
-    return api.escapeHtml(Array.from(profile.name || '?')[0] || '?');
+  function numberText(value) {
+    return window.SeigaI18n?.number?.(value) || Number(value || 0).toLocaleString('ko-KR');
   }
 
   function renderLoading() {
     emptyState.hidden = true;
     errorState.hidden = true;
     list.hidden = false;
+    list.classList.remove('profile-card-grid', 'profile-card-grid--rankings');
     list.innerHTML = `<div class="liquid-card rank-card"><div class="rank-info"><strong>${t('rankings.loading', {}, '랭킹 데이터를 불러오는 중입니다.')}</strong></div></div>`;
     renderMetricsLoading();
   }
@@ -76,10 +74,10 @@
     const linkTotal = items.reduce((sum, profile) => sum + (profile.links || []).length, 0);
 
     metrics.innerHTML = [
-      metricCard('LIVE', t('rankings.liveStreamers', {}, '라이브 스트리머'), t('rankings.peopleCount', { count: liveCount.toLocaleString('ko-KR') }, `${liveCount.toLocaleString('ko-KR')}명`), t('rankings.liveStreamersNote', {}, '현재 공개 랭킹 응답 기준')),
-      metricCard('💌', t('rankings.publicFanCards', {}, '공개 팬 카드'), t('rankings.cardCount', { count: fanCardTotal.toLocaleString('ko-KR') }, `${fanCardTotal.toLocaleString('ko-KR')}개`), t('rankings.publicFanCardsNote', {}, '승인된 공개 팬 카드 합계')),
-      metricCard('👀', t('rankings.profileViews', {}, '프로필 방문'), t('rankings.viewCount', { count: viewTotal.toLocaleString('ko-KR') }, `${viewTotal.toLocaleString('ko-KR')}회`), t('rankings.profileViewsNote', {}, '공개 프로필 방문 로그 합계')),
-      metricCard('🔗', t('rankings.registeredLinks', {}, '등록 링크'), t('rankings.linkCount', { count: linkTotal.toLocaleString('ko-KR') }, `${linkTotal.toLocaleString('ko-KR')}개`), t('rankings.registeredLinksNote', {}, '공개 프로필에 표시되는 링크 합계'))
+      metricCard('LIVE', t('rankings.liveStreamers', {}, '라이브 스트리머'), t('rankings.peopleCount', { count: numberText(liveCount) }, `${numberText(liveCount)}명`), t('rankings.liveStreamersNote', {}, '현재 공개 랭킹 응답 기준')),
+      metricCard('💌', t('rankings.publicFanCards', {}, '공개 팬 카드'), t('rankings.cardCount', { count: numberText(fanCardTotal) }, `${numberText(fanCardTotal)}개`), t('rankings.publicFanCardsNote', {}, '승인된 공개 팬 카드 합계')),
+      metricCard('👀', t('rankings.profileViews', {}, '프로필 방문'), t('rankings.viewCount', { count: numberText(viewTotal) }, `${numberText(viewTotal)}회`), t('rankings.profileViewsNote', {}, '공개 프로필 방문 로그 합계')),
+      metricCard('🔗', t('rankings.registeredLinks', {}, '등록 링크'), t('rankings.linkCount', { count: numberText(linkTotal) }, `${numberText(linkTotal)}개`), t('rankings.registeredLinksNote', {}, '공개 프로필에 표시되는 링크 합계'))
     ].join('');
   }
 
@@ -89,17 +87,33 @@
       return;
     }
     list.hidden = false;
+    list.classList.add('profile-card-grid', 'profile-card-grid--rankings');
     emptyState.hidden = true;
     errorState.hidden = true;
     lastItems = items;
-    list.innerHTML = items.slice(0, 10).map((profile, index) => `
-      <div class="liquid-card rank-card" data-profile-slug="${api.escapeHtml(profile.slug || '')}">
-        <div class="rank-no">${profile.rank || index + 1}</div>
-        <div class="rank-avatar">${avatar(profile)}</div>
-        <div class="rank-info"><strong>${api.escapeHtml(profile.name || t('index.noName', {}, '이름 없는 스트리머'))}</strong><span>${api.escapeHtml([profile.handle, profile.mainContent, profile.language].filter(Boolean).join(' · ') || t('rankings.noProfileInfo', {}, '프로필 정보 없음'))}</span></div>
-        <span class="live-pill ${profile.isLive ? '' : 'off'}"><span class="dot"></span>${profile.isLive ? t('common.live', {}, 'LIVE') : t('common.offline', {}, 'OFF')}</span>
-      </div>
-    `).join('');
+    list.innerHTML = items.slice(0, 10).map((profile, index) => {
+      const slug = profile.slug || '';
+      const isLive = Boolean(profile.isLive);
+      return window.SeigaProfileCard.renderProfileCard(profile, {
+        className: 'rank-card',
+        rank: profile.rank || index + 1,
+        slug,
+        name: profile.name || t('index.noName', {}, '이름 없는 스트리머'),
+        handle: [profile.handle, profile.mainContent, profile.language].filter(Boolean).join(' · ') || t('rankings.noProfileInfo', {}, '프로필 정보 없음'),
+        bio: profile.subtitle || profile.description || t('index.noSubtitle', {}, '소개가 등록되지 않았습니다.'),
+        imageUrl: profile.avatarUrl,
+        isLive,
+        tags: [profile.mainContent, profile.language].filter(Boolean),
+        stats: [
+          { icon: '♡', value: numberText(profile.viewCount || profile.viewerCount), label: t('rankings.profileViews', {}, '프로필 방문'), format: false },
+          { icon: '▣', value: numberText(profile.fanCardCount), label: t('profileCard.statFanCards', {}, '팬 카드'), format: false },
+          { icon: '●', value: isLive ? 'LIVE' : 'OFF', label: t('profileCard.statStatus', {}, '상태'), format: false }
+        ],
+        actions: [
+          { label: t('index.profileView', {}, '프로필 보기'), icon: '+', detailUrl: slug ? `streamer-detail.html?slug=${encodeURIComponent(slug)}` : '', disabled: !slug }
+        ]
+      });
+    }).join('');
     renderMetrics(items);
   }
 
@@ -109,6 +123,12 @@
       location.href = `streamer-detail.html?slug=${encodeURIComponent(item.dataset.profileSlug)}`;
     }
   });
+
+  list.addEventListener('error', (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    image.remove();
+  }, true);
 
   renderLoading();
   try {

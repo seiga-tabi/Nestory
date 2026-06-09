@@ -56,10 +56,16 @@ enum AccessRequestStatus {
   REJECTED
 }
 
+enum PasswordTokenPurpose {
+  RESET
+  PASSWORD_SETUP
+}
+
 model User {
   id                    String                @id @default(cuid())
   email                 String                @unique
-  passwordHash          String
+  passwordHash          String?
+  passwordSetupRequired Boolean               @default(false)
   displayName           String
   role                  UserRole              @default(VIEWER)
   status                UserStatus            @default(PENDING)
@@ -75,6 +81,7 @@ model User {
 
   @@index([role])
   @@index([status])
+  @@index([passwordSetupRequired])
 }
 
 model StreamerProfile {
@@ -181,29 +188,39 @@ model PageView {
 }
 
 model AccessRequest {
-  id        String              @id @default(cuid())
-  name      String
-  email     String
-  twitchUrl String?
-  message   String?
-  status    AccessRequestStatus @default(PENDING)
-  createdAt DateTime            @default(now())
-  reviewedAt DateTime?
+  id              String              @id @default(cuid())
+  name            String
+  email           String
+  twitchUrl       String?
+  message         String?
+  status          AccessRequestStatus @default(PENDING)
+  createdAt       DateTime            @default(now())
+  reviewedAt      DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+  rejectedAt      DateTime?
+  rejectedById    String?
+  rejectionReason String?
 
   @@index([status, createdAt])
   @@index([email])
+  @@index([approvedById])
+  @@index([rejectedById])
 }
 
 model PasswordResetToken {
-  id        String    @id @default(cuid())
+  id        String               @id @default(cuid())
   userId    String
-  tokenHash String    @unique
+  tokenHash String               @unique
+  purpose   PasswordTokenPurpose @default(RESET)
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime             @default(now())
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, purpose])
+  @@index([purpose, expiresAt])
   @@index([expiresAt])
 }
 

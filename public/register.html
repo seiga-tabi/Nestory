@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="register.documentTitle">Seiga Studio - 회원가입 안내</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/public-pages.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <a class="brand" href="index.html">
+        <div class="logo">S</div>
+        <div class="brand-text"><strong>Seiga Studio</strong><span data-i18n="public.brandSubtitle">스트리머 프로필 플랫폼</span></div>
+      </a>
+      <nav class="nav">
+        <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
+        <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
+        <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
+        <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
+      </nav>
+      <div class="header-actions">
+        <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="언어 선택">
+          <button type="button" data-lang-option="ko">KR</button>
+          <button type="button" data-lang-option="ja">JA</button>
+        </div>
+        <a class="ghost-btn" href="login.html" data-i18n="nav.login">로그인</a>
+        <a class="primary-btn" href="access-request.html" data-i18n="nav.start">스트리머 시작하기</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow" data-i18n="register.eyebrow">Approval Required</div>
+      <h1 data-i18n="register.title">회원가입은 관리자 승인 후 가능합니다.</h1>
+      <p data-i18n="register.description">Nestory는 현재 공개 회원가입을 열어두지 않고, 스트리머 등록 요청을 검토한 뒤 계정을 생성하는 정책으로 운영됩니다.</p>
+      <div class="hero-actions">
+        <a class="primary-btn" href="access-request.html" data-i18n="register.requestAccess">등록 요청하기</a>
+        <a class="ghost-btn" href="login.html" data-i18n="register.goLogin">이미 계정이 있어요</a>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2 data-i18n="register.policyTitle">현재 가입 정책</h2>
+            <p data-i18n="register.policyDescription">무분별한 계정 생성을 막기 위해 관리자 승인 흐름을 사용합니다.</p>
+          </div>
+          <span class="badge">Access</span>
+        </div>
+        <div class="rank-list">
+          <div class="liquid-card feature-card">
+            <div class="feature-icon">1</div>
+            <h3 data-i18n="register.stepRequest">등록 요청 제출</h3>
+            <p data-i18n="register.stepRequestText">스트리머 이름, 이메일, Twitch URL을 등록 요청 화면에서 제출합니다.</p>
+          </div>
+          <div class="liquid-card feature-card">
+            <div class="feature-icon">2</div>
+            <h3 data-i18n="register.stepReview">관리자 검토</h3>
+            <p data-i18n="register.stepReviewText">운영자가 채널 정보와 연락처를 확인한 뒤 승인 여부를 결정합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <div class="panel-title">
+          <div>
+            <h2 data-i18n="register.alternativesTitle">바로 이용할 수 있는 기능</h2>
+            <p data-i18n="register.alternativesDescription">계정이 없어도 공개 스트리머와 팬 카드 작성 화면은 이용할 수 있습니다.</p>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a class="primary-btn" href="index.html" data-i18n="nav.streamers">스트리머</a>
+          <a class="ghost-btn" href="fan-card-write.html" data-i18n="nav.fanCard">팬 카드</a>
+        </div>
+      </aside>
+    </section>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/public.js"></script>
+</body>
+</html>

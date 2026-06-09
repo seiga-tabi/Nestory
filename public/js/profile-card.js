@@ -1,4 +1,8 @@
 (async function () {
+  if (window.SeigaI18nReady) {
+    await window.SeigaI18nReady.catch(() => {});
+  }
+
   const api = window.SeigaApi;
   if (!api || !document.getElementById('profileCardPreview')) return;
 
@@ -16,13 +20,41 @@
     ['X', 'X', 'xLink'],
     ['DISCORD', 'Discord', 'discordLink']
   ];
-  const exportSize = { width: 1200, height: 675 };
+  const exportSize = { width: 900, height: 1350 };
   const exportFont = '-apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Noto Sans JP", "Segoe UI", sans-serif';
   const $ = (id) => document.getElementById(id);
   let currentProfile = null;
   let serverSnapshot = null;
   let localAvatarUrl = '';
   let backgroundPreviewUrl = '';
+  let lastDownloadUrl = '';
+  let streamStatus = 'AUTO';
+
+  function t(key, params = {}, fallback = key) {
+    return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
+  }
+
+  function numberText(value) {
+    return window.SeigaI18n?.number?.(value) || Number(value || 0).toLocaleString('ko-KR');
+  }
+
+  function dayLabel(dayOfWeek) {
+    return t(`common.day.${dayOfWeek}`, {}, dayKo[dayOfWeek] || dayOfWeek || '-');
+  }
+
+  function renderStreamStatus() {
+    const node = $('previewStatus');
+    if (!node) return;
+    if (streamStatus === 'LIVE') {
+      node.textContent = t('common.live', {}, 'LIVE');
+      return;
+    }
+    if (streamStatus === 'OFFLINE') {
+      node.textContent = t('common.offline', {}, 'OFFLINE');
+      return;
+    }
+    node.textContent = t('profileCard.autoStatus', {}, '자동 연동');
+  }
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value || null));
@@ -104,8 +136,8 @@
 
   function scheduleToInputs(schedule = []) {
     document.querySelectorAll('#calendarEditor .calendar-day').forEach((row) => {
-      const day = row.querySelector('strong')?.textContent.trim();
-      const item = schedule.find((entry) => dayKo[entry.dayOfWeek] === day);
+      const day = row.dataset.dayKey || dayEn[row.querySelector('strong')?.textContent.trim()];
+      const item = schedule.find((entry) => entry.dayOfWeek === day);
       row.querySelector('[data-type="time"]').value = item?.startTime || '';
       row.querySelector('[data-type="content"]').value = item?.title || '';
     });
@@ -114,11 +146,11 @@
 
   function collectSchedule() {
     return Array.from(document.querySelectorAll('#calendarEditor .calendar-day')).map((row) => {
-      const day = row.querySelector('strong')?.textContent.trim();
+      const day = row.dataset.dayKey || row.querySelector('strong')?.textContent.trim();
       const time = row.querySelector('[data-type="time"]').value.trim();
       const title = row.querySelector('[data-type="content"]').value.trim();
       return {
-        dayOfWeek: dayEn[day],
+        dayOfWeek: dayEn[day] || day,
         startTime: time || null,
         title: title || null,
         isActive: Boolean(time || title)
@@ -155,7 +187,7 @@
 
   function displayHandle(value) {
     const text = safeText(value, '');
-    if (!text) return 'Twitch ID 미등록';
+    if (!text) return t('profileCard.noTwitchId', {}, 'Twitch ID 미등록');
     return text.startsWith('@') ? text : `@${text}`;
   }
 
@@ -166,22 +198,27 @@
 
   function renderLoading() {
     setFormDisabled(true);
-    $('previewName').textContent = '불러오는 중입니다.';
+    streamStatus = 'AUTO';
+    renderStreamStatus();
+    $('previewName').textContent = t('common.loading', {}, '불러오는 중입니다.');
     $('previewHandle').textContent = '';
     $('previewSubtitle').textContent = '';
     $('previewIntro').textContent = '';
     $('previewContentTag').textContent = '';
     $('previewLanguageTag').textContent = '';
     $('previewPlayStyleTags').innerHTML = '';
+    $('previewStatFollowers').textContent = '0';
+    $('previewStatCards').textContent = '0';
+    if ($('previewStatusStat')) $('previewStatusStat').textContent = 'AUTO';
     $('previewLinks').innerHTML = '';
     $('previewSchedule').innerHTML = '';
     $('previewVisibility').textContent = 'PRIVATE';
   }
 
   function renderError(error) {
-    $('previewName').textContent = '프로필을 불러오지 못했습니다.';
-    $('previewSubtitle').textContent = error?.message || '잠시 후 다시 시도해주세요.';
-    api.showToast(error?.message || '프로필을 불러오지 못했습니다.');
+    $('previewName').textContent = t('profileCard.loadError', {}, '프로필을 불러오지 못했습니다.');
+    $('previewSubtitle').textContent = error?.message || t('profileCard.tryAgain', {}, '잠시 후 다시 시도해주세요.');
+    api.showToast(error?.message || t('profileCard.loadError', {}, '프로필을 불러오지 못했습니다.'));
   }
 
   function applyProfile(profile) {
@@ -238,15 +275,16 @@
     const linkBox = $('linkBox');
     if (!box) return;
     const links = collectLinks();
-    if (!$('showLinks')?.checked) {
+    if (!$('showLinks')?.checked || !links.length) {
       if (linkBox) linkBox.hidden = true;
       box.innerHTML = '';
       return;
     }
     if (linkBox) linkBox.hidden = false;
-    box.innerHTML = links.length
-      ? links.map((link) => `<span class="link-chip">${api.escapeHtml(link.label)}</span>`).join('')
-      : '<span class="link-chip">등록된 링크가 없습니다</span>';
+    box.innerHTML = links
+      .slice(0, 3)
+      .map((link) => `<span class="profile-card__link-chip link-chip">${api.escapeHtml(link.label)}</span>`)
+      .join('');
   }
 
   function renderPreviewSchedule() {
@@ -254,15 +292,16 @@
     const scheduleBox = $('scheduleBox');
     if (!box) return;
     const schedule = collectSchedule().filter((item) => item.isActive);
-    if (!$('showSchedule')?.checked) {
+    if (!$('showSchedule')?.checked || !schedule.length) {
       if (scheduleBox) scheduleBox.hidden = true;
       box.innerHTML = '';
       return;
     }
     if (scheduleBox) scheduleBox.hidden = false;
-    box.innerHTML = schedule.length
-      ? schedule.slice(0, 3).map((item) => `<span class="schedule-chip">${api.escapeHtml(dayKo[item.dayOfWeek] || item.dayOfWeek)} ${api.escapeHtml(item.startTime || '미정')} ${api.escapeHtml(item.title || '')}</span>`).join('')
-      : '<span class="schedule-chip">등록된 방송 일정이 없습니다</span>';
+    box.innerHTML = schedule
+      .slice(0, 2)
+      .map((item) => `<span class="profile-card__schedule-chip schedule-chip">${api.escapeHtml(dayLabel(item.dayOfWeek))} ${api.escapeHtml(item.startTime || t('profileCard.timeUnknown', {}, '미정'))} ${api.escapeHtml(item.title || '')}</span>`)
+      .join('');
   }
 
   function renderPreviewTags(mainContent, language) {
@@ -272,18 +311,43 @@
     const tags = collectPlayStyleTags();
 
     if (contentTag) {
-      contentTag.textContent = mainContent || '콘텐츠 미등록';
+      contentTag.textContent = mainContent || t('profileCard.noContent', {}, '콘텐츠 미등록');
       contentTag.hidden = !mainContent;
     }
     if (languageTag) {
-      languageTag.textContent = displayLanguage(language) || '언어 미등록';
+      languageTag.textContent = displayLanguage(language) || t('profileCard.noLanguage', {}, '언어 미등록');
       languageTag.hidden = !language;
     }
     if (playStyleBox) {
       playStyleBox.innerHTML = tags
-        .map((tag) => `<span class="card-tag">${api.escapeHtml(tag)}</span>`)
+        .slice(0, 2)
+        .map((tag) => `<span class="profile-card__tag">${api.escapeHtml(tag)}</span>`)
         .join('');
     }
+  }
+
+  function publicProfileUrl() {
+    const slug = currentProfile?.slug || serverSnapshot?.slug || '';
+    return slug
+      ? `${location.origin}/streamer-detail.html?slug=${encodeURIComponent(slug)}`
+      : location.href;
+  }
+
+  function renderQr() {
+    const box = $('qrBox');
+    if (!box) return;
+    if ($('showQr')?.checked === false) {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+
+    const slug = currentProfile?.slug || serverSnapshot?.slug || '';
+    const matrix = createQrMatrix(compactQrText(publicProfileUrl(), slug));
+    const labelKo = '프로필 QR';
+    const label = t('profileCard.profileQr', {}, labelKo);
+    box.hidden = false;
+    box.innerHTML = `${qrMatrixToSvg(matrix)}<span data-i18n="profileCard.profileQr">${api.escapeHtml(label)}</span>`;
   }
 
   function renderVisibility() {
@@ -292,6 +356,7 @@
     const isPublic = selectedVisibility();
     visibility.textContent = isPublic ? 'PUBLIC' : 'PRIVATE';
     visibility.classList.toggle('private', !isPublic);
+    if ($('previewStatusStat')) $('previewStatusStat').textContent = isPublic ? 'PUBLIC' : 'PRIVATE';
   }
 
   function renderBackground() {
@@ -312,10 +377,19 @@
     }
   }
 
+  function renderPreviewStats() {
+    const links = collectLinks();
+    const schedule = collectSchedule().filter((item) => item.isActive);
+    const fanCards = Number(currentProfile?.fanCardCount || currentProfile?.cardCount || 0);
+    const views = Number(currentProfile?.viewCount || currentProfile?.viewerCount || 0);
+    if ($('previewStatFollowers')) $('previewStatFollowers').textContent = views ? numberText(views) : numberText(links.length);
+    if ($('previewStatCards')) $('previewStatCards').textContent = fanCards ? numberText(fanCards) : numberText(schedule.length);
+  }
+
   function updatePreview() {
     const mainColor = $('mainColor')?.value || '#7c3aed';
     const subColor = $('subColor')?.value || '#f9a8d4';
-    const name = safeText($('streamerName')?.value, '이름을 입력하세요');
+    const name = safeText($('streamerName')?.value, t('profileCard.namePlaceholder', {}, '이름을 입력하세요'));
     const handle = safeText($('handle')?.value, '');
     const subtitle = safeText($('subtitle')?.value, '');
     const mainContent = safeText($('mainContent')?.value, '');
@@ -328,15 +402,18 @@
     applyCardDesignClass();
     $('previewName').textContent = name;
     $('previewHandle').textContent = displayHandle(handle);
-    $('previewSubtitle').textContent = subtitle || '소개를 입력하면 이곳에 표시됩니다.';
+    $('previewSubtitle').textContent = subtitle || t('profileCard.bioPreviewPlaceholder', {}, '소개를 입력하면 이곳에 표시됩니다.');
     $('previewIntro').textContent = [mainContent, displayLanguage(language), playStyleTags.join(' · ')].filter(Boolean).join(' · ');
-    $('previewFloatingText').textContent = [mainContent, displayLanguage(language), subtitle].filter(Boolean).join(' · ') || '방송 카드 비주얼이 이곳에 표시됩니다.';
+    $('previewFloatingText').textContent = [mainContent, displayLanguage(language), subtitle].filter(Boolean).join(' · ') || t('profileCard.visualPlaceholder', {}, '방송 카드 비주얼이 이곳에 표시됩니다.');
     renderPreviewTags(mainContent, language);
+    renderPreviewStats();
     renderVisibility();
     renderAvatar();
     renderBackground();
     renderPreviewLinks();
     renderPreviewSchedule();
+    renderQr();
+    renderStreamStatus();
   }
 
   async function load() {
@@ -348,7 +425,10 @@
       setFormDisabled(false);
       if (profile.slug) {
         const status = await api.getJson(`/api/public/streamers/${encodeURIComponent(profile.slug)}/stream-status`).catch(() => null);
-        if (status) $('previewStatus').textContent = status.isLive ? 'LIVE' : 'OFFLINE';
+        if (status) {
+          streamStatus = status.isLive ? 'LIVE' : 'OFFLINE';
+          renderStreamStatus();
+        }
       }
     } catch (error) {
       renderError(error);
@@ -374,12 +454,12 @@
     serverSnapshot = clone(saved) || {};
     applyProfile(serverSnapshot);
     setValue('playStyleTags', previewOnlyPlayStyleTags);
-    api.showToast('프로필 카드가 저장되었습니다.');
+    api.showToast(t('profileCard.saveDone', {}, '프로필 카드가 저장되었습니다.'));
   }
 
   function resetToServerSnapshot() {
     if (!serverSnapshot) {
-      api.showToast('되돌릴 서버 데이터가 없습니다.');
+      api.showToast(t('profileCard.noServerSnapshot', {}, '되돌릴 서버 데이터가 없습니다.'));
       return;
     }
     revokeObjectUrl(localAvatarUrl);
@@ -389,7 +469,7 @@
     if ($('avatarUpload')) $('avatarUpload').value = '';
     if ($('backgroundUpload')) $('backgroundUpload').value = '';
     applyProfile(serverSnapshot);
-    api.showToast('마지막으로 불러온 서버 데이터로 되돌렸습니다.');
+    api.showToast(t('profileCard.resetDone', {}, '마지막으로 불러온 서버 데이터로 되돌렸습니다.'));
   }
 
   function setDownloadState(isLoading) {
@@ -398,50 +478,319 @@
     if (!button.dataset.defaultText) button.dataset.defaultText = button.textContent;
     button.disabled = isLoading;
     button.setAttribute('aria-busy', isLoading ? 'true' : 'false');
-    button.textContent = isLoading ? 'PNG 생성 중...' : button.dataset.defaultText;
+    button.textContent = isLoading ? t('profileCard.pngGenerating', {}, 'PNG 생성 중...') : button.dataset.defaultText;
   }
 
-  async function downloadPreviewPng() {
+  async function downloadPreviewPng(button) {
     setDownloadState(true);
     try {
       updatePreview();
+      await waitForPreviewFrame();
       await document.fonts?.ready;
-      const canvas = await renderExportCanvas();
+      const target = resolveExportTarget(button);
+      await waitForExportAssets(target);
+      const canvas = await renderVisibleCardCanvas(target);
       const blob = await canvasToBlob(canvas);
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `profile-card-${Date.now()}.png`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-      api.showToast('1200x675 PNG로 저장했습니다.');
+      triggerPngDownload(blob, buildExportFilename());
+      api.showToast(t('profileCard.pngSaved', {}, '현재 미리보기 카드가 PNG로 저장되었습니다.'));
     } catch (error) {
-      console.error('[profile-card-export]', error);
-      api.showToast(error?.message || 'PNG 내보내기에 실패했습니다. 이미지 권한 또는 네트워크 상태를 확인해주세요.');
+      api.showToast(error?.message || t('profileCard.pngFailed', {}, 'PNG 내보내기에 실패했습니다. 이미지 권한 또는 네트워크 상태를 확인해주세요.'));
     } finally {
       setDownloadState(false);
     }
   }
 
-  async function renderExportCanvas() {
-    const profile = buildExportProfile();
+  function resolveExportTarget(button) {
+    const selector = button?.dataset?.exportTarget;
+    const scopedTarget = button?.closest?.('[data-export-scope]')?.querySelector?.('[data-export-target="profile-card"]');
+    const target = scopedTarget || (selector ? document.querySelector(selector) : $('profileCardPreview'));
+    if (!target) {
+      throw new Error(t('profileCard.exportTargetMissing', {}, 'PNG로 내보낼 현재 프로필 카드를 찾을 수 없습니다.'));
+    }
+    return target;
+  }
+
+  function waitForPreviewFrame() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
+
+  async function waitForExportAssets(target) {
+    const images = Array.from(target.querySelectorAll('img'));
+    await Promise.all(images.map((image) => waitForImageElement(image)));
+  }
+
+  function waitForImageElement(image) {
+    const src = image.currentSrc || image.src;
+    if (!src) return Promise.resolve();
+    if (image.complete) return Promise.resolve();
+    return new Promise((resolve) => {
+      const finish = () => {
+        clearTimeout(timer);
+        image.removeEventListener('load', finish);
+        image.removeEventListener('error', finish);
+        resolve();
+      };
+      const timer = setTimeout(finish, 7000);
+      image.addEventListener('load', finish, { once: true });
+      image.addEventListener('error', finish, { once: true });
+    });
+  }
+
+  async function renderVisibleCardCanvas(target) {
+    const layout = resolveExportLayout(target);
+    if (!layout.exportWidth || !layout.exportHeight || !layout.sourceWidth || !layout.sourceHeight) {
+      throw new Error(t('profileCard.exportSizeMissing', {}, 'PNG로 내보낼 카드 크기를 확인할 수 없습니다.'));
+    }
+
+    const cloneNode = await cloneExportTarget(target, layout.sourceWidth, layout.sourceHeight);
+    const serializedNode = new XMLSerializer().serializeToString(cloneNode);
+    const cssText = collectExportCssText(layout.sourceWidth, layout.sourceHeight);
+    const svgMarkup = [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.exportWidth}" height="${layout.exportHeight}" viewBox="0 0 ${layout.sourceWidth} ${layout.sourceHeight}">`,
+      `<foreignObject x="0" y="0" width="${layout.sourceWidth}" height="${layout.sourceHeight}">`,
+      `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${layout.sourceWidth}px;height:${layout.sourceHeight}px;overflow:hidden;">`,
+      `<style><![CDATA[${toCdata(cssText)}]]></style>`,
+      serializedNode,
+      '</div>',
+      '</foreignObject>',
+      '</svg>'
+    ].join('');
+
+    const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+    const image = await decodeImage(svgUrl);
     const canvas = document.createElement('canvas');
-    canvas.width = exportSize.width;
-    canvas.height = exportSize.height;
+    canvas.width = layout.exportWidth;
+    canvas.height = layout.exportHeight;
     const ctx = canvas.getContext('2d', { alpha: false });
-    if (!ctx) throw new Error('PNG 캔버스를 만들 수 없습니다.');
+    if (!ctx) throw new Error(t('profileCard.canvasFailed', {}, 'PNG 캔버스를 만들 수 없습니다.'));
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-
-    const imageResource = await loadExportImage(profile.stageImageUrl);
-    try {
-      drawExportCard(ctx, profile, imageResource?.image || null);
-    } finally {
-      imageResource?.revoke?.();
-    }
+    ctx.fillStyle = getComputedStyle(target).backgroundColor || '#ffffff';
+    ctx.fillRect(0, 0, layout.exportWidth, layout.exportHeight);
+    ctx.drawImage(image, 0, 0, layout.exportWidth, layout.exportHeight);
     return canvas;
+  }
+
+  function resolveExportLayout(target) {
+    const requestedWidth = Number(target.dataset.exportWidth);
+    const requestedHeight = Number(target.dataset.exportHeight);
+    const exportWidth = requestedWidth > 0 ? Math.round(requestedWidth) : exportSize.width;
+    const exportHeight = requestedHeight > 0 ? Math.round(requestedHeight) : exportSize.height;
+
+    return {
+      sourceWidth: exportWidth,
+      sourceHeight: exportHeight,
+      exportWidth,
+      exportHeight
+    };
+  }
+
+  async function cloneExportTarget(target, width, height) {
+    const cloneNode = target.cloneNode(true);
+    cloneNode.setAttribute('data-export-clone', 'true');
+    cloneNode.style.width = `${width}px`;
+    cloneNode.style.height = `${height}px`;
+    cloneNode.style.maxWidth = 'none';
+    cloneNode.style.minHeight = '0';
+    cloneNode.style.margin = '0';
+    cloneNode.style.transform = 'none';
+    cloneNode.style.transition = 'none';
+    cloneNode.style.animation = 'none';
+    cloneNode.style.pointerEvents = 'none';
+    await inlineCloneImages(target, cloneNode);
+    inlineCloneCanvases(target, cloneNode);
+    return cloneNode;
+  }
+
+  async function inlineCloneImages(source, cloneNode) {
+    const sourceImages = Array.from(source.querySelectorAll('img'));
+    const cloneImages = Array.from(cloneNode.querySelectorAll('img'));
+    await Promise.all(sourceImages.map(async (image, index) => {
+      const cloneImage = cloneImages[index];
+      if (!cloneImage) return;
+      const src = image.currentSrc || image.src;
+      if (!src || image.naturalWidth === 0 && image.complete) {
+        applyCloneImageFallback(cloneImage);
+        return;
+      }
+
+      try {
+        const dataUrl = await imageSourceToDataUrl(src);
+        if (!dataUrl) {
+          applyCloneImageFallback(cloneImage);
+          return;
+        }
+        cloneImage.setAttribute('src', dataUrl);
+        cloneImage.removeAttribute('srcset');
+        cloneImage.removeAttribute('crossorigin');
+      } catch (_error) {
+        applyCloneImageFallback(cloneImage);
+      }
+    }));
+  }
+
+  function inlineCloneCanvases(source, cloneNode) {
+    const sourceCanvases = Array.from(source.querySelectorAll('canvas'));
+    const cloneCanvases = Array.from(cloneNode.querySelectorAll('canvas'));
+    sourceCanvases.forEach((canvas, index) => {
+      const cloneCanvas = cloneCanvases[index];
+      if (!cloneCanvas) return;
+      try {
+        const image = document.createElement('img');
+        image.alt = canvas.getAttribute('aria-label') || '';
+        image.src = canvas.toDataURL('image/png');
+        cloneCanvas.replaceWith(image);
+      } catch (_error) {
+        cloneCanvas.remove();
+      }
+    });
+  }
+
+  async function imageSourceToDataUrl(src) {
+    const value = String(src || '').trim();
+    if (!value || /^data:image\/svg\+xml/i.test(value)) return '';
+    if (/^data:image\//i.test(value)) return value;
+
+    const url = new URL(value, location.href);
+    if (!['http:', 'https:', 'blob:'].includes(url.protocol)) return '';
+    const sameOrigin = url.origin === location.origin || url.protocol === 'blob:';
+    const response = await fetch(url.href, url.protocol === 'blob:' ? {} : {
+      mode: 'cors',
+      credentials: sameOrigin ? 'include' : 'omit',
+      referrerPolicy: 'no-referrer',
+      cache: 'force-cache'
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.startsWith('image/')) return '';
+    return blobToDataUrl(await response.blob());
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error(t('profileCard.imageInlineFailed', {}, '이미지를 PNG에 포함하지 못했습니다.')));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function applyCloneImageFallback(image) {
+    image.removeAttribute('src');
+    image.removeAttribute('srcset');
+    image.style.display = 'none';
+    image.closest('.card-avatar, .profile-card__image, .simple-card-image')?.classList.remove('has-image');
+    if (image.id === 'previewBackgroundImage') {
+      image.closest('.visual-area, .profile-card__media')?.classList.remove('has-background');
+    }
+  }
+
+  function collectExportCssText(width, height) {
+    const cssText = Array.from(document.styleSheets).map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules).map((rule) => rule.cssText).join('\n');
+      } catch (_error) {
+        return '';
+      }
+    }).filter(Boolean).join('\n');
+
+    return `${cssText}
+[data-export-clone="true"] {
+  width: ${width}px !important;
+  height: ${height}px !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+[data-export-clone="true"],
+[data-export-clone="true"] * {
+  animation: none !important;
+  transition: none !important;
+  box-sizing: border-box !important;
+}
+[data-export-clone="true"].editor-profile-card.game-profile-card .card-content {
+  grid-template-columns: minmax(0, .42fr) minmax(0, .58fr) !important;
+  grid-template-rows: 1fr !important;
+  padding: 26px !important;
+  gap: 22px !important;
+}
+[data-export-clone="true"].editor-profile-card.game-profile-card .card-bottom {
+  grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) 92px !important;
+}
+[data-export-clone="true"].profile-card--portrait {
+  width: ${width}px !important;
+  height: ${height}px !important;
+  max-width: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  border-radius: 36px !important;
+  padding: 10px !important;
+}
+[data-export-clone="true"].profile-card--portrait .profile-card__media {
+  border-radius: 30px !important;
+}
+[data-export-clone="true"].profile-card--portrait .profile-card__body {
+  padding: 26px 24px 20px !important;
+}
+[data-export-clone="true"].profile-card--portrait .profile-card__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+[data-export-clone="true"].profile-card--portrait .profile-card__actions {
+  flex-direction: row !important;
+}
+[data-export-clone="true"].profile-card--portrait .profile-card__stat {
+  padding: 8px 7px !important;
+}`;
+  }
+
+  function toCdata(value) {
+    return String(value || '').replaceAll(']]>', ']]]]><![CDATA[>');
+  }
+
+  function triggerPngDownload(blob, filename) {
+    if (lastDownloadUrl) URL.revokeObjectURL(lastDownloadUrl);
+    const url = URL.createObjectURL(blob);
+    lastDownloadUrl = url;
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => {
+      if (lastDownloadUrl === url) {
+        URL.revokeObjectURL(url);
+        lastDownloadUrl = '';
+      }
+    }, 30000);
+  }
+
+  function buildExportFilename() {
+    const rawName = safeText($('handle')?.value, '') || safeText($('streamerName')?.value, '') || currentProfile?.slug || 'profile-card';
+    const name = safeFilePart(rawName.replace(/^@/, ''));
+    return `profile-card-${name}-${new Date().toISOString().slice(0, 10)}.png`;
+  }
+
+  function safeFilePart(value) {
+    return String(value || 'profile-card')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9가-힣ぁ-んァ-ン一-龥_-]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'profile-card';
+  }
+
+  async function renderExportCanvas() {
+    const target = $('profileCardPreview');
+    if (!target) throw new Error(t('profileCard.exportTargetMissing', {}, 'PNG로 내보낼 현재 프로필 카드를 찾을 수 없습니다.'));
+    await waitForExportAssets(target);
+    return renderVisibleCardCanvas(target);
   }
 
   function buildExportProfile() {
@@ -454,9 +803,9 @@
     const tags = collectPlayStyleTags();
     const schedule = collectSchedule().filter((item) => item.isActive);
     return {
-      name: safeText($('streamerName')?.value, '프로필 카드'),
+      name: safeText($('streamerName')?.value, t('profileCard.defaultName', {}, '프로필 카드')),
       handle: displayHandle($('handle')?.value),
-      subtitle: safeText($('subtitle')?.value, '소개를 입력하세요'),
+      subtitle: safeText($('subtitle')?.value, t('profileCard.defaultBio', {}, '소개를 입력하세요')),
       intro: [mainContent, language, tags.join(' · ')].filter(Boolean).join(' · '),
       mainContent,
       language,
@@ -479,10 +828,10 @@
       try {
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
-          else reject(new Error('PNG 파일을 만들 수 없습니다.'));
+          else reject(new Error(t('profileCard.pngBlobFailed', {}, 'PNG 파일을 만들 수 없습니다.')));
         }, 'image/png');
       } catch (_error) {
-        reject(new Error('PNG 변환에 실패했습니다. 외부 이미지 권한을 확인해주세요.'));
+        reject(new Error(t('profileCard.pngConvertFailed', {}, 'PNG 변환에 실패했습니다. 외부 이미지 권한을 확인해주세요.')));
       }
     });
   }
@@ -526,7 +875,7 @@
       const image = new Image();
       image.decoding = 'async';
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('이미지를 불러오지 못했습니다.'));
+      image.onerror = () => reject(new Error(t('profileCard.imageLoadFailed', {}, '이미지를 불러오지 못했습니다.')));
       image.src = src;
     });
   }
@@ -615,7 +964,7 @@
     drawSingleLine(ctx, profile.handle, 234, 250, 398, 25, 16, 850, theme.mutedColor);
 
     drawWrappedText(ctx, profile.subtitle, 92, 338, 540, 40, 3, 30, 18, 850, theme.textColor);
-    drawWrappedText(ctx, profile.intro || '방송 카드 비주얼이 이곳에 표시됩니다.', 92, 468, 540, 31, 2, 23, 15, 850, profile.mainColor);
+    drawWrappedText(ctx, profile.intro || t('profileCard.visualPlaceholder', {}, '방송 카드 비주얼이 이곳에 표시됩니다.'), 92, 468, 540, 31, 2, 23, 15, 850, profile.mainColor);
 
     const tags = [profile.mainContent, profile.language, ...profile.tags].filter(Boolean).slice(0, 4);
     drawTagRow(ctx, tags.length ? tags : ['STREAMER', 'KR / JA'], 92, 548, 540, profile, theme);
@@ -636,8 +985,8 @@
 
     fillRoundRect(ctx, box.x + 30, box.y + box.height - 82, box.width - 60, 58, 20, theme.isClean ? 'rgba(255,255,255,.76)' : 'rgba(15,17,27,.64)');
     strokeRoundRect(ctx, box.x + 30, box.y + box.height - 82, box.width - 60, 58, 20, theme.isClean ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.16)', 1);
-    drawSingleLine(ctx, profile.mainContent || 'STREAM NOTE', box.x + 52, box.y + box.height - 49, box.width - 104, 18, 12, 950, theme.textColor);
-    drawSingleLine(ctx, [profile.language, profile.status].filter(Boolean).join(' · ') || 'AUTO PROFILE', box.x + 52, box.y + box.height - 26, box.width - 104, 14, 10, 850, theme.mutedColor);
+    drawSingleLine(ctx, profile.mainContent || t('profileCard.streamNote', {}, 'STREAM NOTE'), box.x + 52, box.y + box.height - 49, box.width - 104, 18, 12, 950, theme.textColor);
+    drawSingleLine(ctx, [profile.language, profile.status].filter(Boolean).join(' · ') || t('profileCard.autoProfile', {}, 'AUTO PROFILE'), box.x + 52, box.y + box.height - 26, box.width - 104, 14, 10, 850, theme.mutedColor);
   }
 
   function drawBottomExportPanel(ctx, profile, theme) {
@@ -646,12 +995,12 @@
     fillRoundRect(ctx, 948, 414, 162, 188, 26, theme.isClean ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.88)');
 
     drawSingleLine(ctx, 'LINKS', 700, 450, 180, 18, 13, 950, theme.mutedColor);
-    drawWrappedText(ctx, profile.links.map((link) => link.label).join(' · ') || '등록된 링크가 없습니다', 700, 484, 200, 26, 2, 20, 13, 850, theme.textColor);
+    drawWrappedText(ctx, profile.links.map((link) => link.label).join(' · ') || t('common.noLinks', {}, '등록된 링크가 없습니다'), 700, 484, 200, 26, 2, 20, 13, 850, theme.textColor);
 
     drawSingleLine(ctx, 'SCHEDULE', 700, 574, 120, 13, 10, 950, theme.mutedColor);
     const scheduleText = profile.schedule.length
-      ? profile.schedule.map((item) => `${dayKo[item.dayOfWeek] || item.dayOfWeek} ${item.startTime || '미정'} ${item.title || ''}`).join(' / ')
-      : '일정 없음';
+      ? profile.schedule.map((item) => `${dayLabel(item.dayOfWeek)} ${item.startTime || t('profileCard.timeUnknown', {}, '미정')} ${item.title || ''}`).join(' / ')
+      : t('profileCard.scheduleNoneShort', {}, '일정 없음');
     drawSingleLine(ctx, scheduleText, 700, 596, 198, 16, 11, 850, theme.textColor);
 
     drawQrMatrix(ctx, createQrMatrix(profile.qrText), 958, 426, 142, '#111827', '#ffffff');
@@ -1127,6 +1476,19 @@
     });
   }
 
+  function qrMatrixToSvg(matrix) {
+    const quiet = 4;
+    const cells = matrix.length + quiet * 2;
+    const darkCells = [];
+    matrix.forEach((row, rowIndex) => {
+      row.forEach((dark, colIndex) => {
+        if (!dark) return;
+        darkCells.push(`<rect x="${colIndex + quiet}" y="${rowIndex + quiet}" width="1" height="1" />`);
+      });
+    });
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cells} ${cells}" role="img" aria-label="프로필 QR 코드"><rect width="${cells}" height="${cells}" fill="#fff" /><g fill="#111827">${darkCells.join('')}</g></svg>`;
+  }
+
   function normalizeHexColor(value, fallback) {
     const text = String(value || '').trim();
     if (/^#[0-9a-f]{6}$/i.test(text)) return text;
@@ -1206,7 +1568,7 @@
       currentProfile = { ...(currentProfile || {}), avatarUrl: result.avatarUrl };
       serverSnapshot = { ...(serverSnapshot || {}), avatarUrl: result.avatarUrl };
       updatePreview();
-      api.showToast('대표 이미지가 업로드되었습니다.');
+      api.showToast(t('profileCard.avatarUploadDone', {}, '대표 이미지가 업로드되었습니다.'));
     } catch (error) {
       api.showToast(error.message);
     }
@@ -1238,10 +1600,14 @@
   });
   $('downloadProfilePngButton')?.addEventListener('click', (event) => {
     event.preventDefault();
-    downloadPreviewPng();
+    downloadPreviewPng(event.currentTarget);
   });
   $('refreshPreviewButton')?.addEventListener('click', updatePreview);
   $('resetProfileButton')?.addEventListener('click', resetToServerSnapshot);
+  document.addEventListener('seiga:i18n-change', () => {
+    delete $('downloadProfilePngButton')?.dataset.defaultText;
+    if (currentProfile) updatePreview();
+  });
 
   load();
 })();

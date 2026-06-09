@@ -11,6 +11,7 @@ const { listPublicStreamers, getPublicStreamer } = require('../services/streamer
 const { streamStatusForProfile } = require('../services/twitch.service');
 const { createFanCard } = require('../services/fanCard.service');
 const { rankings } = require('../services/ranking.service');
+const { createAccessRequest } = require('../services/accessRequest.service');
 
 const router = express.Router();
 
@@ -40,24 +41,24 @@ router.get('/rankings', asyncHandler(async (_req, res) => {
   res.json({ items: await rankings() });
 }));
 
-router.post('/access-requests', asyncHandler(async (req, res) => {
-  const name = sanitizeText(req.body.name, 80);
-  const email = String(req.body.email || '').trim().toLowerCase();
-  if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
-    return sendError(res, 400, '이름과 이메일을 확인해주세요.', 'INVALID_ACCESS_REQUEST');
-  }
+const accessRequestSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).max(80),
+    email: z.string().email(),
+    twitchUrl: z.string().max(300).optional().nullable(),
+    message: z.string().max(1000).optional().nullable()
+  }),
+  query: z.object({}).passthrough(),
+  params: z.object({})
+});
 
-  const item = await prisma.accessRequest.create({
-    data: {
-      name,
-      email,
-      twitchUrl: sanitizeText(req.body.twitchUrl, 300) || null,
-      message: sanitizeText(req.body.message, 1000) || null
-    }
-  });
-
+const createAccessRequestHandler = asyncHandler(async (req, res) => {
+  const item = await createAccessRequest(req.validated.body);
   res.status(201).json({ item });
-}));
+});
+
+router.post('/access-requests', validate(accessRequestSchema), createAccessRequestHandler);
+router.post('/streamer-requests', validate(accessRequestSchema), createAccessRequestHandler);
 
 router.get('/streamers/:slug/stream-status', asyncHandler(async (req, res) => {
   const profile = await prisma.streamerProfile.findFirst({

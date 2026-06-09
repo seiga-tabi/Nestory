@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Seiga Studio - Streamer List</title>
+    <title data-i18n="index.documentTitle">Seiga Studio - 스트리머 리스트</title>
 
     <style>
         :root {
@@ -150,6 +150,31 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        html:not(.auth-ready) .header-actions a[href="login.html"],
+        html:not(.auth-ready) .header-actions a[href="access-request.html"],
+        html:not(.auth-ready) .header-actions button[onclick*="login.html"],
+        html:not(.auth-ready) .header-actions button[onclick*="access-request.html"],
+        html:not(.auth-ready) [data-auth-controlled],
+        html.auth-loading [data-auth-controlled] {
+            visibility: hidden;
+        }
+
+        html.auth-ready.authenticated [data-auth-guest],
+        html.auth-ready.unauthenticated [data-auth-user],
+        html.auth-ready:not(.admin) [data-auth-admin],
+        [data-auth-controlled][hidden] {
+            display: none !important;
+        }
+
+        html.auth-ready.authenticated [data-auth-user],
+        html.auth-ready.unauthenticated [data-auth-guest] {
+            display: inline-flex;
+        }
+
+        html.auth-ready.admin .nav [data-auth-admin] {
+            display: flex;
         }
 
         .language-switcher {
@@ -566,11 +591,17 @@
 
         .streamer-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
             gap: 16px;
+            align-items: stretch;
         }
 
-        .streamer-card {
+        .streamer-grid.is-short {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+            justify-content: start;
+        }
+
+        .streamer-card:not(.profile-card) {
             position: relative;
             min-width: 0;
             padding: 16px;
@@ -583,12 +614,12 @@
             transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
 
-        .streamer-card:hover {
+        .streamer-card:not(.profile-card):hover {
             transform: translateY(-4px);
             box-shadow: 0 24px 54px rgba(102, 88, 160, 0.18);
         }
 
-        .cover {
+        .streamer-card:not(.profile-card) .cover {
             position: relative;
             height: 128px;
             border-radius: 21px;
@@ -601,7 +632,7 @@
             margin-bottom: 44px;
         }
 
-        .status-badge {
+        .streamer-card:not(.profile-card) .status-badge {
             position: absolute;
             top: 12px;
             left: 12px;
@@ -617,11 +648,11 @@
             backdrop-filter: blur(16px);
         }
 
-        .status-badge.off {
+        .streamer-card:not(.profile-card) .status-badge.off {
             background: rgba(71, 85, 105, 0.72);
         }
 
-        .viewer-badge {
+        .streamer-card:not(.profile-card) .viewer-badge {
             position: absolute;
             top: 12px;
             right: 12px;
@@ -634,7 +665,7 @@
             font-weight: 900;
         }
 
-        .profile-avatar {
+        .streamer-card:not(.profile-card) .profile-avatar {
             position: absolute;
             left: 28px;
             top: 108px;
@@ -652,7 +683,7 @@
             z-index: 2;
         }
 
-        .favorite-btn {
+        .streamer-card:not(.profile-card) .favorite-btn {
             position: absolute;
             right: 20px;
             top: 152px;
@@ -667,11 +698,11 @@
             box-shadow: 0 12px 24px rgba(102, 88, 160, 0.12);
         }
 
-        .card-body {
+        .streamer-card:not(.profile-card) .card-body {
             min-width: 0;
         }
 
-        .streamer-name {
+        .streamer-card:not(.profile-card) .streamer-name {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -679,7 +710,7 @@
             margin-bottom: 7px;
         }
 
-        .streamer-name h3 {
+        .streamer-card:not(.profile-card) .streamer-name h3 {
             min-width: 0;
             font-size: 19px;
             letter-spacing: -0.04em;
@@ -688,7 +719,7 @@
             text-overflow: ellipsis;
         }
 
-        .verified {
+        .streamer-card:not(.profile-card) .verified {
             flex: 0 0 auto;
             width: 18px;
             height: 18px;
@@ -701,7 +732,7 @@
             font-weight: 950;
         }
 
-        .streamer-desc {
+        .streamer-card:not(.profile-card) .streamer-desc {
             min-height: 42px;
             color: var(--muted);
             font-size: 13px;
@@ -714,14 +745,14 @@
             overflow: hidden;
         }
 
-        .tag-row {
+        .streamer-card:not(.profile-card) .tag-row {
             display: flex;
             flex-wrap: wrap;
             gap: 7px;
             margin-bottom: 14px;
         }
 
-        .tag {
+        .streamer-card:not(.profile-card) .tag {
             padding: 6px 9px;
             border-radius: 999px;
             color: var(--primary);
@@ -730,42 +761,42 @@
             font-weight: 900;
         }
 
-        .meta-row {
+        .streamer-card:not(.profile-card) .meta-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             margin-bottom: 14px;
         }
 
-        .meta {
+        .streamer-card:not(.profile-card) .meta {
             padding: 10px 8px;
             border-radius: 16px;
             text-align: center;
             background: rgba(255, 255, 255, 0.62);
         }
 
-        .meta strong {
+        .streamer-card:not(.profile-card) .meta strong {
             display: block;
             font-size: 14px;
             letter-spacing: -0.03em;
             margin-bottom: 3px;
         }
 
-        .meta span {
+        .streamer-card:not(.profile-card) .meta span {
             display: block;
             color: var(--muted);
             font-size: 10px;
             font-weight: 850;
         }
 
-        .card-actions {
+        .streamer-card:not(.profile-card) .card-actions {
             display: grid;
             grid-template-columns: 1fr auto;
             gap: 9px;
         }
 
-        .view-btn,
-        .mini-btn {
+        .streamer-card:not(.profile-card) .view-btn,
+        .streamer-card:not(.profile-card) .mini-btn {
             height: 42px;
             border: 0;
             border-radius: 15px;
@@ -774,26 +805,192 @@
             cursor: pointer;
         }
 
-        .view-btn {
+        .streamer-card:not(.profile-card) .view-btn {
             color: #fff;
             background: linear-gradient(135deg, var(--primary), var(--pink));
         }
 
-        .mini-btn {
+        .streamer-card:not(.profile-card) .mini-btn {
             width: 46px;
             color: var(--primary);
             background: rgba(255, 255, 255, 0.72);
         }
 
         .empty-state {
-            display: none;
-            padding: 42px 18px;
+            display: grid;
+            min-height: 300px;
+            padding: 0;
             border: 1px solid var(--border);
             border-radius: var(--radius-xl);
             background: var(--glass);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 18px 42px rgba(102, 88, 160, 0.12);
+            place-items: center;
             text-align: center;
+            overflow: hidden;
+        }
+
+        .empty-state[hidden] {
+            display: none;
+        }
+
+        .empty-state.error {
+            border-color: rgba(251, 113, 133, 0.28);
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .empty-state--popular {
+            min-height: 272px;
+            margin-top: 2px;
+        }
+
+        .index-state-card {
+            width: 100%;
+            min-height: inherit;
+            padding: clamp(26px, 5vw, 44px) 22px;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            gap: 12px;
+            background:
+                    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.78), transparent 34%),
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.32));
+        }
+
+        .index-state-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 22px;
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            background: rgba(167, 139, 250, 0.16);
+            font-size: 15px;
+            font-weight: 950;
+            letter-spacing: 0;
+        }
+
+        .index-state-card strong {
+            max-width: 560px;
+            color: var(--text);
+            font-size: clamp(18px, 2.4vw, 24px);
+            line-height: 1.24;
+            letter-spacing: -0.035em;
+        }
+
+        .index-state-card p {
+            max-width: 620px;
             color: var(--muted);
-            font-weight: 800;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 760;
+            word-break: keep-all;
+            overflow-wrap: anywhere;
+        }
+
+        .index-state-actions {
+            margin-top: 6px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-side .index-state-card {
+            padding: 28px 18px;
+            gap: 10px;
+        }
+
+        .hero-side .index-state-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
+            font-size: 12px;
+        }
+
+        .hero-side .index-state-card strong {
+            font-size: 17px;
+            line-height: 1.32;
+        }
+
+        .hero-side .index-state-card p {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .skeleton-block {
+            position: relative;
+            display: block;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(167, 139, 250, 0.14);
+        }
+
+        .skeleton-block::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.76), transparent);
+            animation: skeleton-shimmer 1.35s infinite;
+        }
+
+        .streamer-card--skeleton {
+            pointer-events: none;
+        }
+
+        .streamer-card--skeleton .cover {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px;
+        }
+
+        .skeleton-pill {
+            width: 78px;
+            height: 28px;
+        }
+
+        .skeleton-title {
+            width: 64%;
+            height: 24px;
+            margin-bottom: 14px;
+        }
+
+        .skeleton-line {
+            width: 100%;
+            height: 15px;
+            margin-bottom: 10px;
+        }
+
+        .skeleton-line.short {
+            width: 72%;
+        }
+
+        .skeleton-button {
+            width: 100%;
+            height: 42px;
+        }
+
+        .skeleton-chip {
+            width: 74px;
+            height: 30px;
+        }
+
+        .ranking-item--skeleton {
+            min-height: 78px;
+            pointer-events: none;
+        }
+
+        .ranking-item--skeleton .rank-no,
+        .ranking-item--skeleton .rank-avatar {
+            border: 0;
+            background: rgba(167, 139, 250, 0.14);
+        }
+
+        @keyframes skeleton-shimmer {
+            to {
+                transform: translateX(100%);
+            }
         }
 
         .login-toast {
@@ -823,14 +1020,19 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Streamer list cards aligned with the simple liquid-glass profile-card design */
+        /* 구형 streamer-card 스타일은 로딩 스켈레톤 전용이다. 실제 프로필 카드는 css/card.css의 .profile-card--portrait에서만 관리한다. */
         .streamer-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
             justify-content: stretch;
             gap: 18px;
         }
 
-        .streamer-card {
+        .streamer-grid.is-short {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+            justify-content: start;
+        }
+
+        .streamer-card:not(.profile-card) {
             position: relative;
             isolation: isolate;
             height: 590px;
@@ -851,7 +1053,7 @@
             overflow: hidden;
         }
 
-        .streamer-card::before {
+        .streamer-card:not(.profile-card)::before {
             content: "";
             position: absolute;
             inset: 0;
@@ -864,7 +1066,7 @@
             pointer-events: none;
         }
 
-        .streamer-card::after {
+        .streamer-card:not(.profile-card)::after {
             content: "";
             position: absolute;
             inset: 1px;
@@ -875,7 +1077,7 @@
             pointer-events: none;
         }
 
-        .streamer-card:hover {
+        .streamer-card:not(.profile-card):hover {
             transform: translateY(-5px);
             box-shadow:
                     0 34px 80px rgba(80, 76, 110, 0.22),
@@ -883,7 +1085,7 @@
                     inset 0 -1px 0 rgba(255, 255, 255, 0.22);
         }
 
-        .streamer-card .cover {
+        .streamer-card:not(.profile-card) .cover {
             position: relative;
             z-index: 1;
             height: 330px;
@@ -901,7 +1103,7 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.64);
         }
 
-        .streamer-card .cover::after {
+        .streamer-card:not(.profile-card) .cover::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -911,7 +1113,7 @@
             pointer-events: none;
         }
 
-        .streamer-card .status-badge {
+        .streamer-card:not(.profile-card) .status-badge {
             top: 14px;
             left: 14px;
             z-index: 2;
@@ -925,19 +1127,19 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
 
-        .streamer-card .status-badge.off {
+        .streamer-card:not(.profile-card) .status-badge.off {
             background: rgba(20, 20, 30, 0.34);
         }
 
-        .streamer-card .viewer-badge {
+        .streamer-card:not(.profile-card) .viewer-badge {
             display: none;
         }
 
-        .streamer-card .profile-avatar {
+        .streamer-card:not(.profile-card) .profile-avatar {
             display: none;
         }
 
-        .streamer-card .favorite-btn {
+        .streamer-card:not(.profile-card) .favorite-btn {
             right: 22px;
             top: 286px;
             z-index: 3;
@@ -954,7 +1156,7 @@
             -webkit-backdrop-filter: blur(16px) saturate(1.15);
         }
 
-        .streamer-card .card-body {
+        .streamer-card:not(.profile-card) .card-body {
             position: relative;
             z-index: 2;
             flex: 1;
@@ -972,18 +1174,18 @@
             -webkit-backdrop-filter: blur(18px) saturate(1.15);
         }
 
-        .streamer-card .streamer-name {
+        .streamer-card:not(.profile-card) .streamer-name {
             padding-right: 0;
             margin-bottom: 6px;
         }
 
-        .streamer-card .streamer-name h3 {
+        .streamer-card:not(.profile-card) .streamer-name h3 {
             font-size: 24px;
             line-height: 1.08;
             letter-spacing: -0.055em;
         }
 
-        .streamer-card .verified {
+        .streamer-card:not(.profile-card) .verified {
             width: 24px;
             height: 24px;
             font-size: 13px;
@@ -993,7 +1195,7 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.44);
         }
 
-        .streamer-card .streamer-handle {
+        .streamer-card:not(.profile-card) .streamer-handle {
             color: #8a8798;
             font-size: 13px;
             line-height: 1.2;
@@ -1001,7 +1203,7 @@
             margin: 0 0 13px;
         }
 
-        .streamer-card .streamer-desc {
+        .streamer-card:not(.profile-card) .streamer-desc {
             min-height: 0;
             margin-bottom: 0;
             color: #30303d;
@@ -1012,22 +1214,22 @@
             -webkit-line-clamp: 2;
         }
 
-        .streamer-card .tag-row {
+        .streamer-card:not(.profile-card) .tag-row {
             display: none;
         }
 
-        .streamer-card .tag {
+        .streamer-card:not(.profile-card) .tag {
             color: #15151f;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.30));
             border: 1px solid rgba(255, 255, 255, 0.54);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
         }
 
-        .streamer-card .meta-row {
+        .streamer-card:not(.profile-card) .meta-row {
             display: none;
         }
 
-        .streamer-card .card-actions {
+        .streamer-card:not(.profile-card) .card-actions {
             margin-top: auto;
             padding-top: 18px;
             display: grid;
@@ -1035,8 +1237,8 @@
             gap: 9px;
         }
 
-        .streamer-card .view-btn,
-        .streamer-card .mini-btn {
+        .streamer-card:not(.profile-card) .view-btn,
+        .streamer-card:not(.profile-card) .mini-btn {
             min-height: 42px;
             border-radius: 999px;
             display: inline-flex;
@@ -1048,7 +1250,7 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.38);
         }
 
-        .streamer-card .view-btn {
+        .streamer-card:not(.profile-card) .view-btn {
             color: #15151f;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.38));
             border: 1px solid rgba(255, 255, 255, 0.64);
@@ -1056,7 +1258,7 @@
             -webkit-backdrop-filter: blur(16px) saturate(1.15);
         }
 
-        .streamer-card .mini-btn {
+        .streamer-card:not(.profile-card) .mini-btn {
             width: auto;
             color: var(--primary);
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34));
@@ -1128,13 +1330,25 @@
             .header {
                 top: 10px;
                 border-radius: 22px;
+                flex-wrap: wrap;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .header-actions [data-auth-controlled] {
+                flex: 1 1 128px;
+                min-width: 0;
             }
 
             .brand-text span {
                 display: none;
             }
 
-            .header-actions .ghost-btn {
+            .header-actions .ghost-btn:not([data-auth-controlled]) {
                 display: none;
             }
 
@@ -1167,16 +1381,16 @@
                 grid-template-columns: 1fr;
             }
 
-            .streamer-card {
+            .streamer-card:not(.profile-card) {
                 height: 610px;
             }
 
-            .streamer-card .cover {
+            .streamer-card:not(.profile-card) .cover {
                 height: 330px;
                 flex-basis: 330px;
             }
 
-            .streamer-card .card-actions {
+            .streamer-card:not(.profile-card) .card-actions {
                 grid-template-columns: 1fr;
             }
         }
@@ -1217,11 +1431,12 @@
                 width: max-content;
             }
 
-            .meta-row {
+            .streamer-card:not(.profile-card) .meta-row {
                 grid-template-columns: 1fr;
             }
         }
     </style>
+    <link rel="stylesheet" href="css/card.css" />
 </head>
 
 <body>
@@ -1231,7 +1446,7 @@
             <div class="logo">S</div>
             <div class="brand-text">
                 <strong>Seiga Studio</strong>
-                <span>Streamer Profile Platform</span>
+                <span data-i18n="public.brandSubtitle">Streamer Profile Platform</span>
             </div>
         </a>
 
@@ -1282,7 +1497,33 @@
             </div>
 
             <div id="popularStreamersList" aria-live="polite">
-                <div class="empty-state" data-i18n="index.popularLoading">인기 스트리머 데이터를 불러오는 중입니다.</div>
+                <article class="ranking-item ranking-item--skeleton" aria-hidden="true">
+                    <span class="skeleton-block rank-no"></span>
+                    <span class="skeleton-block rank-avatar"></span>
+                    <span class="rank-info">
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                    </span>
+                    <span class="skeleton-block skeleton-chip"></span>
+                </article>
+                <article class="ranking-item ranking-item--skeleton" aria-hidden="true">
+                    <span class="skeleton-block rank-no"></span>
+                    <span class="skeleton-block rank-avatar"></span>
+                    <span class="rank-info">
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                    </span>
+                    <span class="skeleton-block skeleton-chip"></span>
+                </article>
+                <article class="ranking-item ranking-item--skeleton" aria-hidden="true">
+                    <span class="skeleton-block rank-no"></span>
+                    <span class="skeleton-block rank-avatar"></span>
+                    <span class="rank-info">
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                    </span>
+                    <span class="skeleton-block skeleton-chip"></span>
+                </article>
             </div>
         </aside>
     </section>
@@ -1296,24 +1537,24 @@
 
             <div class="filter-group" data-filter-group="status">
                 <label data-i18n="index.status">방송 상태</label>
-                <button class="filter-btn active" data-filter-group="status" data-filter="all" data-i18n="index.all">전체</button>
-                <button class="filter-btn" data-filter-group="status" data-filter="live" data-i18n="index.live">라이브 중</button>
-                <button class="filter-btn" data-filter-group="status" data-filter="offline" data-i18n="index.offline">오프라인</button>
+                <button type="button" class="filter-btn active" data-filter-group="status" data-filter="all" aria-pressed="true" data-i18n="index.all">전체</button>
+                <button type="button" class="filter-btn" data-filter-group="status" data-filter="live" aria-pressed="false" data-i18n="index.live">라이브 중</button>
+                <button type="button" class="filter-btn" data-filter-group="status" data-filter="offline" aria-pressed="false" data-i18n="index.offline">오프라인</button>
             </div>
 
             <div class="filter-group" data-filter-group="category">
                 <label data-i18n="index.category">카테고리</label>
-                <button class="filter-btn" data-filter-group="category" data-filter="마인크래프트" data-i18n="index.categoryMinecraft">마인크래프트</button>
-                <button class="filter-btn" data-filter-group="category" data-filter="League of Legends" data-i18n="index.categoryLol">League of Legends</button>
-                <button class="filter-btn" data-filter-group="category" data-filter="잡담" data-i18n="index.categoryChat">잡담</button>
-                <button class="filter-btn" data-filter-group="category" data-filter="음악" data-i18n="index.categoryMusic">노래 / 음악</button>
+                <button type="button" class="filter-btn" data-filter-group="category" data-filter="마인크래프트" aria-pressed="false" data-i18n="index.categoryMinecraft">마인크래프트</button>
+                <button type="button" class="filter-btn" data-filter-group="category" data-filter="League of Legends" aria-pressed="false" data-i18n="index.categoryLol">League of Legends</button>
+                <button type="button" class="filter-btn" data-filter-group="category" data-filter="잡담" aria-pressed="false" data-i18n="index.categoryChat">잡담</button>
+                <button type="button" class="filter-btn" data-filter-group="category" data-filter="음악" aria-pressed="false" data-i18n="index.categoryMusic">노래 / 음악</button>
             </div>
 
             <div class="filter-group" data-filter-group="language">
                 <label data-i18n="index.language">언어</label>
-                <button class="filter-btn" data-filter-group="language" data-filter="KR" data-i18n="index.languageKo">한국어</button>
-                <button class="filter-btn" data-filter-group="language" data-filter="JA" data-i18n="index.languageJa">日本語</button>
-                <button class="filter-btn" data-filter-group="language" data-filter="KR/JA" data-i18n="index.languageBilingual">KR / JA</button>
+                <button type="button" class="filter-btn" data-filter-group="language" data-filter="KR" aria-pressed="false" data-i18n="index.languageKo">한국어</button>
+                <button type="button" class="filter-btn" data-filter-group="language" data-filter="JA" aria-pressed="false" data-i18n="index.languageJa">日本語</button>
+                <button type="button" class="filter-btn" data-filter-group="language" data-filter="KR/JA" aria-pressed="false" data-i18n="index.languageBilingual">KR / JA</button>
             </div>
         </aside>
 
@@ -1331,19 +1572,70 @@
                 </select>
             </div>
 
-            <div id="streamerGrid" class="streamer-grid" aria-live="polite">
-                <article class="streamer-card">
+            <div id="streamerGrid" class="streamer-grid is-loading" aria-live="polite">
+                <article class="streamer-card streamer-card--skeleton" aria-hidden="true">
+                    <div class="cover">
+                        <span class="skeleton-block skeleton-pill"></span>
+                    </div>
                     <div class="card-body">
-                        <p class="streamer-desc" data-i18n="common.loadingStreamers">스트리머 데이터를 불러오는 중입니다.</p>
+                        <span class="skeleton-block skeleton-title"></span>
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                        <div class="card-actions">
+                            <span class="skeleton-block skeleton-button"></span>
+                            <span class="skeleton-block skeleton-button"></span>
+                        </div>
+                    </div>
+                </article>
+                <article class="streamer-card streamer-card--skeleton" aria-hidden="true">
+                    <div class="cover">
+                        <span class="skeleton-block skeleton-pill"></span>
+                    </div>
+                    <div class="card-body">
+                        <span class="skeleton-block skeleton-title"></span>
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                        <div class="card-actions">
+                            <span class="skeleton-block skeleton-button"></span>
+                            <span class="skeleton-block skeleton-button"></span>
+                        </div>
+                    </div>
+                </article>
+                <article class="streamer-card streamer-card--skeleton" aria-hidden="true">
+                    <div class="cover">
+                        <span class="skeleton-block skeleton-pill"></span>
+                    </div>
+                    <div class="card-body">
+                        <span class="skeleton-block skeleton-title"></span>
+                        <span class="skeleton-block skeleton-line"></span>
+                        <span class="skeleton-block skeleton-line short"></span>
+                        <div class="card-actions">
+                            <span class="skeleton-block skeleton-button"></span>
+                            <span class="skeleton-block skeleton-button"></span>
+                        </div>
                     </div>
                 </article>
             </div>
 
-            <div id="emptyState" class="empty-state" hidden data-i18n="index.empty">
-                등록된 스트리머가 없습니다.
+            <div id="emptyState" class="empty-state empty-state--list" hidden>
+                <div class="index-state-card index-state-card--empty">
+                    <div class="index-state-icon" aria-hidden="true">S</div>
+                    <strong data-i18n="index.emptyTitle">등록된 스트리머가 아직 없습니다.</strong>
+                    <p data-i18n="index.emptyDescription">첫 번째 스트리머 프로필을 등록해 보세요. 관리자 승인 대기 중인 스트리머가 있을 수 있습니다.</p>
+                    <div class="index-state-actions">
+                        <a class="primary-btn" href="access-request.html" data-i18n="index.emptyAction">스트리머 등록 문의</a>
+                    </div>
+                </div>
             </div>
-            <div id="errorState" class="empty-state error" hidden data-i18n="index.error">
-                스트리머 데이터를 불러오지 못했습니다.
+            <div id="errorState" class="empty-state error" hidden>
+                <div class="index-state-card index-state-card--error">
+                    <div class="index-state-icon" aria-hidden="true">!</div>
+                    <strong data-i18n="index.errorTitle">스트리머 데이터를 불러오지 못했습니다.</strong>
+                    <p data-i18n="index.errorDescription">API 응답을 확인한 뒤 다시 시도해주세요.</p>
+                    <div class="index-state-actions">
+                        <button class="primary-btn" type="button" data-retry-streamers data-i18n="index.errorAction">다시 시도</button>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -1355,6 +1647,7 @@
 
 <script src="js/api.js"></script>
 <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
 <script src="js/public.js"></script>
 </body>
 </html>

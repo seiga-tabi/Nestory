@@ -21,7 +21,7 @@ async function sendMail({ to, subject, text }) {
   const from = env.SMTP_FROM || env.SMTP_USER || 'no-reply@seiga.local';
 
   if (!smtp) {
-    console.log(`[mail:dev] to=${to} subject=${subject}\n${text}`);
+    console.log(`[mail:dev] to=${to} subject=${subject} body=생략됨`);
     return;
   }
 
