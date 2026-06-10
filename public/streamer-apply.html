@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="streamerApply.documentTitle">Seiga Studio - 스트리머 등록 신청</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="viewer-stats.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">Nestory 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="viewer-stats.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">📈</span><span data-i18n="nav.viewerStats">내 통계</span></a>
+          <a href="favorites.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">♡</span><span data-i18n="nav.favorites">즐겨찾기</span></a>
+          <a href="streamer-apply.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">✦</span><span data-i18n="nav.streamerApply">스트리머 등록 신청</span></a>
+          <a href="dashboard.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
+          <a href="admin-streamer-requests.html" data-nav data-auth-admin data-auth-controlled data-auth-user><span class="nav-icon">✓</span><span data-i18n="adminRequests.manageTitle">등록 요청 관리</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="streamerApply.sidebarTitle">신청 흐름</strong>
+        <p data-i18n="streamerApply.sidebarText">일반 USER 기능은 그대로 사용하고, 스트리머 공개 등록만 관리자 검토를 거칩니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main viewer-page viewer-page--apply">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="streamerApply.title">스트리머 등록 신청</h1>
+          <p data-i18n="streamerApply.description">승인 후 프로필 카드, 오버레이, 팬 카드 관리 기능이 표시됩니다.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="refreshStreamerApplyButton" type="button" data-i18n="dashboard.refresh">새로고침</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="settings-layout streamer-apply-layout">
+        <div class="stack">
+          <section class="panel streamer-apply-status-panel">
+            <div class="panel-title">
+              <div>
+                <h2 data-i18n="streamerApply.statusTitle">신청 상태</h2>
+                <p data-i18n="streamerApply.statusDescription">현재 계정의 스트리머 등록 신청 상태입니다.</p>
+              </div>
+              <span class="badge" id="streamerApplyStatusBadge" data-i18n="common.loading">불러오는 중</span>
+            </div>
+            <div id="streamerApplyStatus" class="request-status" aria-live="polite"></div>
+          </section>
+
+          <section class="panel streamer-apply-form-panel" id="streamerApplyFormPanel">
+            <div class="panel-title">
+              <div>
+                <h2 data-i18n="streamerApply.formTitle">신청 정보</h2>
+                <p data-i18n="streamerApply.formDescription">방송 활동명과 콘텐츠를 적어 관리자 검토로 보냅니다.</p>
+              </div>
+            </div>
+            <form id="streamerApplyForm" class="form-grid streamer-request-form" novalidate>
+              <div class="two-col">
+                <div class="field">
+                  <label for="applyName" data-i18n="dashboard.requestName">활동명</label>
+                  <input id="applyName" name="applyName" type="text" maxlength="80" autocomplete="name" required />
+                </div>
+                <div class="field">
+                  <label for="applyTwitchId" data-i18n="dashboard.requestTwitchId">Twitch ID</label>
+                  <input id="applyTwitchId" name="applyTwitchId" type="text" maxlength="80" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label data-i18n="streamerApply.connectedTwitch">연결된 Twitch 계정</label>
+                <div id="applyTwitchAccount" class="ghost-btn static-field apply-account-card" data-i18n="streamerApply.twitchUnknown">Twitch 연결 정보를 확인 중입니다.</div>
+              </div>
+              <div class="field">
+                <label for="applyMainContent" data-i18n="dashboard.requestMainContent">주 콘텐츠</label>
+                <input id="applyMainContent" name="applyMainContent" type="text" maxlength="120" data-i18n-placeholder="dashboard.requestMainContentPlaceholder" placeholder="예: 게임, 잡담, 음악" />
+              </div>
+              <div class="field">
+                <label for="applyBio" data-i18n="dashboard.requestBio">자기소개</label>
+                <textarea id="applyBio" name="applyBio" maxlength="500" data-i18n-placeholder="dashboard.requestBioPlaceholder" placeholder="방송 스타일과 채널 소개를 적어주세요."></textarea>
+              </div>
+              <div class="field">
+                <label for="applyReason" data-i18n="dashboard.requestReason">신청 사유</label>
+                <textarea id="applyReason" name="applyReason" maxlength="500" data-i18n-placeholder="dashboard.requestReasonPlaceholder" placeholder="스트리머 등록이 필요한 이유를 적어주세요."></textarea>
+              </div>
+              <div class="submit-row">
+                <button class="primary-btn" id="submitStreamerApplyButton" type="submit" data-i18n="dashboard.submitStreamerRequest">등록 신청 제출</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="panel streamer-apply-benefits-panel">
+            <div class="panel-title">
+              <div>
+                <h2 data-i18n="streamerApply.afterApprovalTitle">승인 후 사용 가능</h2>
+                <p data-i18n="streamerApply.afterApprovalDescription">승인되면 관리 대시보드와 공개 프로필 기능이 열립니다.</p>
+              </div>
+            </div>
+            <div class="list">
+              <div class="list-item"><div class="item-icon">🎴</div><div class="item-content"><strong data-i18n="dashboard.nav.profileCard">프로필 카드</strong><span data-i18n="streamerApply.profileCardText">공개 프로필과 공유용 카드 관리</span></div></div>
+              <div class="list-item"><div class="item-icon">🖥</div><div class="item-content"><strong data-i18n="dashboard.nav.overlays">오버레이</strong><span data-i18n="streamerApply.overlayText">OBS 브라우저 소스용 커스텀 오버레이</span></div></div>
+              <div class="list-item"><div class="item-icon">💌</div><div class="item-content"><strong data-i18n="dashboard.nav.fanCards">팬 카드</strong><span data-i18n="streamerApply.fanCardText">수신 메시지와 방송 읽기 큐 관리</span></div></div>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/streamer-apply.js"></script>
+</body>
+</html>

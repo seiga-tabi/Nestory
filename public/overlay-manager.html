@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="overlay.documentTitle">Seiga Studio - 오버레이 관리</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">Nestory 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="fan-cards.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+          <a href="analytics.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+          <a href="schedule.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="overlay.sidebarTitle">OBS 오버레이</strong>
+        <p data-i18n="overlay.sidebarText">카드에서 OBS URL을 복사하거나 편집 화면으로 이동할 수 있습니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="overlay.title">오버레이 관리</h1>
+          <p data-i18n="overlay.description">OBS/Streamlabs에서 사용할 커스텀 오버레이를 관리하세요.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="refreshOverlaysButton" type="button" data-i18n="overlay.refresh">새로고침</button>
+          <a class="primary-btn" id="createOverlayButton" href="overlay-editor.html" data-i18n="overlay.create">새 오버레이 만들기</a>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="overlay-access-state panel" id="overlayAccessState" hidden aria-live="polite"></section>
+
+      <section class="panel overlay-list-board" id="overlayManagerLayout">
+        <div class="panel-title">
+          <div>
+            <h2 id="overlaySavedListTitle" data-i18n="overlay.myOverlays">내 오버레이</h2>
+            <p id="overlayListDescription" data-i18n="overlay.streamerListDescription">본인이 만든 오버레이만 표시됩니다.</p>
+          </div>
+          <span class="badge" id="overlayCountBadge">0</span>
+        </div>
+        <div id="overlayListState" class="request-status" aria-live="polite"></div>
+        <div class="overlay-card-grid" id="overlayCardList" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/overlay-manager.js"></script>
+</body>
+</html>

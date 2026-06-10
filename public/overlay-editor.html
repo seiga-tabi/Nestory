@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="overlay.editorDocumentTitle">Seiga Studio - 오버레이 편집</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="dashboard.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">Nestory 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="fan-cards.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
+          <a href="analytics.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
+          <a href="schedule.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="overlay.sidebarTitle">OBS 오버레이</strong>
+        <p data-i18n="overlay.sidebarText">브라우저 소스 URL은 생성 또는 token 재발급 직후 복사할 수 있습니다.</p>
+        <a class="ghost-btn" href="overlay-manager.html" data-i18n="overlay.backToManager">오버레이 목록으로</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="overlay.editorPageTitle">오버레이 편집</h1>
+          <p data-i18n="overlay.editorPageDescription">HTML/CSS/JS 코드와 테스트 알림으로 OBS 오버레이를 확인합니다.</p>
+        </div>
+        <div class="top-actions">
+          <a class="ghost-btn" href="overlay-manager.html" data-i18n="overlay.backToManager">오버레이 목록으로</a>
+          <button class="primary-btn" id="saveOverlayButton" type="submit" form="overlayEditorForm" data-i18n="overlay.save">저장</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="overlay-access-state panel" id="overlayAccessState" hidden aria-live="polite"></section>
+
+      <section class="panel overlay-type-picker" id="overlayTypePicker" hidden aria-live="polite">
+        <div class="panel-title">
+          <div>
+            <span class="section-kicker" data-i18n="overlay.typeStep">1단계</span>
+            <h2 data-i18n="overlay.typePickerTitle">어떤 오버레이를 만들까요?</h2>
+            <p data-i18n="overlay.typePickerDescription">목적을 먼저 선택하면 해당 타입에 맞는 설정과 기본 HTML/CSS 템플릿을 준비합니다.</p>
+          </div>
+        </div>
+        <div class="overlay-type-grid">
+          <button class="overlay-type-card" type="button" data-overlay-type-choice="CHAT">
+            <span class="overlay-type-icon">💬</span>
+            <strong data-i18n="overlay.typeChat">채팅</strong>
+            <span data-i18n="overlay.typeChatDescription">채팅창과 샘플 메시지를 표시합니다.</span>
+            <small data-i18n="overlay.typeChatUse">추천: 실시간 채팅 위젯</small>
+          </button>
+          <button class="overlay-type-card" type="button" data-overlay-type-choice="DONATION">
+            <span class="overlay-type-icon">✨</span>
+            <strong data-i18n="overlay.typeDonation">후원</strong>
+            <span data-i18n="overlay.typeDonationDescription">후원/응원 알림을 이미지와 함께 표시합니다.</span>
+            <small data-i18n="overlay.typeDonationUse">추천: 포인트/후원 이벤트</small>
+          </button>
+          <button class="overlay-type-card" type="button" data-overlay-type-choice="FOLLOW">
+            <span class="overlay-type-icon">➕</span>
+            <strong data-i18n="overlay.typeFollow">팔로우</strong>
+            <span data-i18n="overlay.typeFollowDescription">새 팔로워 알림을 표시합니다.</span>
+            <small data-i18n="overlay.typeFollowUse">추천: 신규 팔로워 환영</small>
+          </button>
+          <button class="overlay-type-card" type="button" data-overlay-type-choice="FAN_CARD">
+            <span class="overlay-type-icon">💌</span>
+            <strong data-i18n="overlay.typeFanCard">팬카드</strong>
+            <span data-i18n="overlay.typeFanCardDescription">팬카드 도착 알림을 표시합니다.</span>
+            <small data-i18n="overlay.typeFanCardUse">추천: 팬 메시지 알림</small>
+          </button>
+          <button class="overlay-type-card" type="button" data-overlay-type-choice="CUSTOM">
+            <span class="overlay-type-icon">⌘</span>
+            <strong data-i18n="overlay.typeCustom">커스텀</strong>
+            <span data-i18n="overlay.typeCustomDescription">HTML/CSS/JS 코드 중심으로 자유롭게 제작합니다.</span>
+            <small data-i18n="overlay.typeCustomUse">추천: 직접 디자인한 위젯</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="overlay-editor-layout" id="overlayEditorLayout" hidden>
+        <form class="panel overlay-editor-panel" id="overlayEditorForm">
+          <div class="panel-title">
+            <div>
+              <h2 data-i18n="overlay.editorSettingsTitle">기본 설정</h2>
+              <p data-i18n="overlay.editorSettingsDescription">코드 입력을 중심으로 저장하고, 기존 오버레이는 상세 API에서 코드를 복원합니다.</p>
+            </div>
+            <div class="overlay-editor-badges">
+              <span class="badge" id="overlayTypeBadge" data-i18n="overlay.typeCustom">커스텀</span>
+              <span class="badge" id="overlayEditorModeBadge" data-i18n="overlay.newShort">신규</span>
+            </div>
+          </div>
+
+          <div class="overlay-setting-card">
+            <label>
+              <span data-i18n="overlay.titleField">제목</span>
+              <input id="overlayTitle" name="title" type="text" maxlength="80" data-i18n-placeholder="overlay.namePlaceholder" placeholder="방송 알림 오버레이" required />
+            </label>
+            <label>
+              <span data-i18n="overlay.descriptionField">설명</span>
+              <textarea id="overlayDescription" name="description" rows="3" maxlength="500" data-i18n-placeholder="overlay.descriptionPlaceholder" placeholder="OBS에서 사용할 알림 오버레이 설명"></textarea>
+            </label>
+            <div class="grid-2">
+              <label>
+                <span data-i18n="overlay.mode">모드</span>
+                <select id="overlayMode" name="mode" class="overlay-native-select">
+                  <option value="CUSTOM_HTML_CSS" data-i18n="overlay.modeCustomHtmlCss">HTML/CSS</option>
+                  <option value="CUSTOM_ADVANCED" data-i18n="overlay.modeCustomAdvanced">고급</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="overlay.status">상태</span>
+                <select id="overlayStatus" name="status" class="overlay-native-select">
+                  <option value="DRAFT" data-i18n="overlay.statusDraft">초안</option>
+                  <option value="ACTIVE" data-i18n="overlay.statusActive">활성</option>
+                  <option value="DISABLED" data-i18n="overlay.statusDisabled">비활성</option>
+                </select>
+              </label>
+            </div>
+            <div class="grid-2">
+              <label class="overlay-resolution-field">
+                <span data-i18n="overlay.obsWidth">Width</span>
+                <input id="overlayWidth" name="width" type="number" min="320" max="7680" value="1920" inputmode="numeric" />
+              </label>
+              <label class="overlay-resolution-field">
+                <span data-i18n="overlay.obsHeight">Height</span>
+                <input id="overlayHeight" name="height" type="number" min="180" max="4320" value="1080" inputmode="numeric" />
+              </label>
+            </div>
+          </div>
+
+          <div class="overlay-setting-card" id="overlayTypeControls">
+            <div class="field-head">
+              <strong data-i18n="overlay.typeSettingsTitle">타입별 설정</strong>
+              <span data-i18n="overlay.typeSettingsDescription">선택한 오버레이 목적에 맞는 값을 조정합니다. HTML/CSS는 아래 코드 영역에서 계속 편집할 수 있습니다.</span>
+            </div>
+            <div class="overlay-type-switch-row">
+              <button class="ghost-btn" id="changeOverlayTypeButton" type="button" data-i18n="overlay.changeType">타입 다시 선택</button>
+              <span class="form-hint" id="overlayTypeHelp" data-i18n="overlay.typeHelp">타입은 configJson.overlayType으로 저장됩니다.</span>
+            </div>
+
+            <div class="overlay-type-panel" data-overlay-type-panel="CHAT">
+              <div class="grid-2">
+                <label><span data-i18n="overlay.chatWidth">채팅창 너비</span><input id="chatWidth" type="number" min="260" max="1200" value="560" inputmode="numeric" /></label>
+                <label><span data-i18n="overlay.chatHeight">채팅창 높이</span><input id="chatHeight" type="number" min="180" max="1000" value="640" inputmode="numeric" /></label>
+                <label><span data-i18n="overlay.chatMaxMessages">메시지 표시 개수</span><input id="chatMaxMessages" type="number" min="1" max="20" value="8" inputmode="numeric" /></label>
+                <label><span data-i18n="overlay.fontSize">폰트 크기</span><input id="chatFontSize" type="number" min="12" max="64" value="28" inputmode="numeric" /></label>
+                <label><span data-i18n="overlay.chatNameColor">닉네임 색상</span><input id="chatNameColor" type="color" value="#f9a8d4" /></label>
+                <label><span data-i18n="overlay.chatMessageColor">메시지 색상</span><input id="chatMessageColor" type="color" value="#ffffff" /></label>
+              </div>
+              <label class="compact-field"><span data-i18n="overlay.chatBackgroundOpacity">배경 투명도</span><input id="chatBackgroundOpacity" type="range" min="0" max="100" value="46" /><span class="field-value" id="chatBackgroundOpacityValue">46%</span></label>
+              <label><span data-i18n="overlay.chatSampleMessage">샘플 채팅 메시지</span><input id="chatSampleMessage" type="text" maxlength="120" value="오늘 방송 분위기 너무 좋아요!" /></label>
+            </div>
+
+            <div class="overlay-type-panel" data-overlay-type-panel="DONATION" hidden>
+              <label><span data-i18n="overlay.donationTitleField">알림 제목</span><input id="donationTitle" type="text" maxlength="80" value="응원 메시지가 도착했습니다" /></label>
+              <div class="overlay-option-grid">
+                <label class="overlay-option-card"><span data-i18n="overlay.donationShowName">후원자 이름 표시</span><input id="donationShowName" type="checkbox" checked /></label>
+                <label class="overlay-option-card"><span data-i18n="overlay.donationShowAmount">금액 표시</span><input id="donationShowAmount" type="checkbox" checked /></label>
+                <label class="overlay-option-card"><span data-i18n="overlay.donationShowMessage">메시지 표시</span><input id="donationShowMessage" type="checkbox" checked /></label>
+              </div>
+              <div class="grid-2">
+                <label><span data-i18n="overlay.animation">애니메이션</span><select id="donationAnimation" class="overlay-native-select"><option value="pop">Pop</option><option value="fade">Fade</option><option value="slide">Slide</option><option value="pulse">Pulse</option></select></label>
+                <label><span data-i18n="overlay.durationSeconds">지속 시간(초)</span><input id="donationDuration" type="number" min="2" max="30" value="6" inputmode="numeric" /></label>
+              </div>
+            </div>
+
+            <div class="overlay-type-panel" data-overlay-type-panel="FOLLOW" hidden>
+              <label><span data-i18n="overlay.followText">팔로우 알림 문구</span><input id="followText" type="text" maxlength="100" value="새 팔로워가 찾아왔습니다" /></label>
+              <label class="overlay-option-card"><span data-i18n="overlay.followShowName">닉네임 표시</span><input id="followShowName" type="checkbox" checked /></label>
+              <label><span data-i18n="overlay.animation">애니메이션</span><select id="followAnimation" class="overlay-native-select"><option value="slide">Slide</option><option value="pop">Pop</option><option value="fade">Fade</option><option value="pulse">Pulse</option></select></label>
+            </div>
+
+            <div class="overlay-type-panel" data-overlay-type-panel="FAN_CARD" hidden>
+              <label><span data-i18n="overlay.fanCardText">팬카드 도착 알림 문구</span><input id="fanCardText" type="text" maxlength="100" value="새 팬카드가 도착했습니다" /></label>
+              <label><span data-i18n="overlay.fanCardAuthor">작성자 이름</span><input id="fanCardAuthor" type="text" maxlength="80" value="Seiga Viewer" /></label>
+              <label><span data-i18n="overlay.fanCardMessage">메시지 일부 표시</span><input id="fanCardMessage" type="text" maxlength="140" value="방송 항상 즐겁게 보고 있어요!" /></label>
+              <label><span data-i18n="overlay.animation">애니메이션</span><select id="fanCardAnimation" class="overlay-native-select"><option value="fade">Fade</option><option value="pop">Pop</option><option value="slide">Slide</option><option value="pulse">Pulse</option></select></label>
+            </div>
+
+            <div class="overlay-type-panel" data-overlay-type-panel="CUSTOM" hidden>
+              <div class="empty-state empty-state--compact">
+                <strong data-i18n="overlay.customTypeTitle">커스텀 코드 오버레이</strong>
+                <p data-i18n="overlay.customTypeDescription">HTML/CSS 입력을 중심으로 제작합니다. JavaScript는 allowCustomJs 정책에 따라 sandbox에서만 실행됩니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="overlay-setting-card" id="builderControls" hidden>
+            <div class="field-head">
+              <strong data-i18n="overlay.builderSettings">빌더 설정</strong>
+              <span data-i18n="overlay.builderSettingsHint">코드 없이 알림 위젯을 구성합니다.</span>
+            </div>
+            <label>
+              <span data-i18n="overlay.theme">테마</span>
+              <select id="overlayTheme" class="overlay-native-select">
+                <option value="pastelGlass" data-i18n="overlay.themePastelGlass">Pastel Glass</option>
+                <option value="minimalDark" data-i18n="overlay.themeMinimalDark">Minimal Dark</option>
+                <option value="cutePop" data-i18n="overlay.themeCutePop">Cute Pop</option>
+              </select>
+            </label>
+            <div class="overlay-preset-row" aria-label="테마 프리셋" data-i18n-aria-label="overlay.themePresets">
+              <button class="overlay-preset-chip" type="button" data-overlay-select="overlayTheme" data-overlay-value="pastelGlass" data-i18n="overlay.themePastelGlass">Pastel Glass</button>
+              <button class="overlay-preset-chip" type="button" data-overlay-select="overlayTheme" data-overlay-value="minimalDark" data-i18n="overlay.themeMinimalDark">Minimal Dark</button>
+              <button class="overlay-preset-chip" type="button" data-overlay-select="overlayTheme" data-overlay-value="cutePop" data-i18n="overlay.themeCutePop">Cute Pop</button>
+            </div>
+            <fieldset class="overlay-fieldset">
+              <legend data-i18n="overlay.widgets">표시 위젯</legend>
+              <label class="overlay-option-card">
+                <span data-i18n="overlay.widgetMessage">응원 메시지 알림</span>
+                <input id="widgetMessage" type="checkbox" checked />
+              </label>
+              <label class="overlay-option-card">
+                <span data-i18n="overlay.widgetFanCard">팬카드 알림</span>
+                <input id="widgetFanCard" type="checkbox" checked />
+              </label>
+              <label class="overlay-option-card">
+                <span data-i18n="overlay.widgetFollow">팔로우 알림</span>
+                <input id="widgetFollow" type="checkbox" checked />
+              </label>
+            </fieldset>
+            <div class="overlay-control-grid">
+              <label class="compact-field">
+                <span data-i18n="overlay.color">색상</span>
+                <input id="overlayColor" type="color" value="#a78bfa" />
+              </label>
+              <label class="compact-field">
+                <span data-i18n="overlay.fontSize">폰트 크기</span>
+                <input id="overlayFontSize" type="range" min="18" max="64" value="28" />
+                <span class="field-value" id="overlayFontSizeValue">28px</span>
+              </label>
+              <label class="compact-field">
+                <span data-i18n="overlay.round">라운드</span>
+                <input id="overlayRadius" type="range" min="0" max="64" value="28" />
+                <span class="field-value" id="overlayRadiusValue">28px</span>
+              </label>
+              <label>
+                <span data-i18n="overlay.animation">애니메이션</span>
+                <select id="overlayAnimation" class="overlay-native-select">
+                  <option value="none" data-i18n="overlay.animationNone">없음</option>
+                  <option value="fade">Fade</option>
+                  <option value="slide">Slide</option>
+                  <option value="pop">Pop</option>
+                  <option value="pulse">Pulse</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="overlay-setting-card" id="customCodeControls">
+            <div class="field-head">
+              <strong data-i18n="overlay.customCodeTitle">커스텀 HTML/CSS/JS</strong>
+              <span class="badge overlay-advanced-badge" data-i18n="overlay.mode.advanced">고급 모드</span>
+              <span data-i18n="overlay.customCodeHint">코드는 sandbox iframe 안에서만 미리보기됩니다.</span>
+            </div>
+            <div class="overlay-template-row" aria-label="오버레이 템플릿" data-i18n-aria-label="overlay.templates">
+              <button class="overlay-template-button" id="applyChatTemplateButton" type="button">
+                <span class="overlay-template-copy">
+                  <strong data-i18n="overlay.chatTemplate">채팅창 템플릿</strong>
+                  <span data-i18n="overlay.chatTemplateHint">샘플 메시지가 포함된 투명 채팅창 HTML/CSS를 생성합니다.</span>
+                </span>
+                <span class="overlay-chat-template-preview" aria-hidden="true">
+                  <span class="chat-preview-line">
+                    <strong data-i18n="overlay.chatSampleUser1">SeigaFan</strong>
+                    <span data-i18n="overlay.chatSampleMessage1">오늘 방송 분위기 너무 좋아요!</span>
+                  </span>
+                  <span class="chat-preview-line is-highlight">
+                    <strong data-i18n="overlay.chatSampleUser2">NekoViewer</strong>
+                    <span data-i18n="overlay.chatSampleMessage2">새 오버레이 귀엽다!</span>
+                  </span>
+                </span>
+              </button>
+            </div>
+            <div class="overlay-asset-card">
+              <label class="upload-box overlay-asset-upload">
+                <input id="overlayAlertAsset" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                <div>
+                  <strong data-i18n="overlay.alertAsset">알림 이미지/GIF</strong>
+                  <span data-i18n="overlay.alertAssetHint">알림 오버레이에 사용할 PNG/JPG/WebP/GIF 이미지를 업로드할 수 있습니다.</span>
+                  <small class="overlay-asset-format" data-i18n="overlay.alertAssetFormats">PNG/JPG/WebP/GIF</small>
+                </div>
+              </label>
+              <div class="overlay-asset-preview" id="overlayAlertAssetPreview">
+                <span data-i18n="overlay.alertAssetEmpty">등록된 알림 이미지가 없습니다.</span>
+              </div>
+              <p class="form-hint" id="overlayAlertAssetStatus" data-i18n="overlay.alertAssetTodo">지원 형식: PNG, JPG, WebP, GIF. 파일 크기 제한은 서버 정책을 따릅니다.</p>
+            </div>
+            <div class="overlay-code-grid">
+              <label class="overlay-code-card">
+                <span class="overlay-code-head">
+                  <strong data-i18n="overlay.htmlCode">HTML</strong>
+                  <span data-i18n="overlay.htmlCodeHint">오버레이에 표시될 마크업을 입력합니다.</span>
+                </span>
+                <textarea class="overlay-code-field" id="overlayHtmlCode" name="htmlCode" rows="10" spellcheck="false" data-i18n-placeholder="overlay.htmlCodePlaceholder" placeholder="<div class=&quot;alert&quot;>Hello OBS</div>"></textarea>
+              </label>
+              <label class="overlay-code-card">
+                <span class="overlay-code-head">
+                  <strong data-i18n="overlay.cssCode">CSS</strong>
+                  <span data-i18n="overlay.cssCodeHint">색상, 위치, 투명도, 글자 크기를 조정합니다.</span>
+                </span>
+                <textarea class="overlay-code-field" id="overlayCssCode" name="cssCode" rows="10" spellcheck="false" data-i18n-placeholder="overlay.cssCodePlaceholder" placeholder=".alert { color: white; }"></textarea>
+              </label>
+            </div>
+            <label class="overlay-option-card overlay-js-toggle" id="allowCustomJsRow">
+              <span data-i18n="overlay.allowCustomJs">커스텀 JavaScript 허용</span>
+              <input id="allowCustomJs" type="checkbox" />
+            </label>
+            <label class="overlay-code-card overlay-code-card--disabled">
+              <span class="overlay-code-head">
+                <strong data-i18n="overlay.jsCode">JavaScript</strong>
+                <span data-i18n="overlay.jsCodeHint">고급 모드에서 허용된 경우에만 sandbox 안에서 실행됩니다.</span>
+              </span>
+              <textarea class="overlay-code-field" id="overlayJsCode" name="jsCode" rows="6" spellcheck="false" disabled data-i18n-placeholder="overlay.jsLockedPlaceholder" placeholder="고급 모드 준비 중"></textarea>
+            </label>
+            <p class="form-hint" id="overlayJsPolicy" data-i18n="overlay.jsPolicy">v1에서는 일반 스트리머의 JavaScript 실행을 지원하지 않습니다.</p>
+          </div>
+        </form>
+
+        <aside class="overlay-preview-column">
+          <section class="panel overlay-preview-panel">
+            <div class="panel-title">
+              <div>
+                <span class="section-kicker" data-i18n="overlay.previewStudio">Preview Studio</span>
+                <h2 data-i18n="overlay.previewTitle">오버레이 미리보기</h2>
+                <p data-i18n="overlay.previewDescription">OBS 기준 1920x1080 구성을 축소해서 표시합니다.</p>
+              </div>
+              <div class="overlay-preview-actions">
+                <button class="ghost-btn" id="testOverlayAlertButton" type="button" data-i18n="overlay.testAlert">Test 알림</button>
+                <button class="ghost-btn" id="refreshOverlayPreviewButton" type="button" data-i18n="overlay.refreshPreview">미리보기 새로고침</button>
+              </div>
+            </div>
+            <div class="overlay-preview-toolbar">
+              <div class="overlay-preview-toolbar-copy">
+                <span data-i18n="overlay.transparentCanvas">투명 캔버스</span>
+                <small data-i18n="overlay.previewPositionHint">Test 알림은 캔버스 좌하단 기준으로 표시됩니다.</small>
+              </div>
+              <strong id="previewSizeBadge">1920 x 1080</strong>
+            </div>
+            <div class="overlay-preview-canvas overlay-preview-frame-wrap">
+              <iframe id="overlayPreviewFrame" class="overlay-preview-frame" title="오버레이 미리보기" data-i18n-title="overlay.previewFrameTitle" sandbox></iframe>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <div>
+                <h2 data-i18n="overlay.obsTitle">OBS 브라우저 소스</h2>
+                <p data-i18n="overlay.obsDescription">OBS Browser Source에 아래 값을 입력합니다.</p>
+              </div>
+            </div>
+            <div class="obs-info-grid">
+              <div class="stat-card"><span data-i18n="overlay.obsWidth">Width</span><strong id="obsWidthValue">1920</strong></div>
+              <div class="stat-card"><span data-i18n="overlay.obsHeight">Height</span><strong id="obsHeightValue">1080</strong></div>
+            </div>
+            <label>
+              <span data-i18n="overlay.obsUrl">OBS 브라우저 소스 URL</span>
+              <input id="overlayObsUrl" type="text" readonly data-i18n-placeholder="overlay.obsUrlHidden" placeholder="token 재발급 후 URL이 표시됩니다." />
+            </label>
+            <div class="overlay-submit-row">
+              <button class="ghost-btn" id="copyObsUrlButton" type="button" data-i18n="overlay.copyObsUrl">OBS URL 복사</button>
+              <button class="ghost-btn" id="regenerateTokenButton" type="button" data-i18n="overlay.regenerateToken">token 재발급</button>
+            </div>
+            <p class="form-hint overlay-obs-state" id="overlayObsState" data-i18n="overlay.obsDraftHint">오버레이를 ACTIVE로 변경한 뒤 OBS URL을 사용할 수 있습니다.</p>
+            <p class="form-hint" data-i18n="overlay.tokenNote">기존 오버레이의 token은 목록 조회에서 내려오지 않습니다. 생성 또는 재발급 직후 새 URL을 복사하세요.</p>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/overlay-editor.js"></script>
+</body>
+</html>

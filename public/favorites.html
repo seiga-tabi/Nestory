@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="favorites.documentTitle">Seiga Studio - 즐겨찾기</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="viewer-stats.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">Nestory 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="viewer-stats.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">📈</span><span data-i18n="nav.viewerStats">내 통계</span></a>
+          <a href="favorites.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">♡</span><span data-i18n="nav.favorites">즐겨찾기</span></a>
+          <a href="streamer-apply.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">✦</span><span data-i18n="nav.streamerApply">스트리머 등록 신청</span></a>
+          <a href="dashboard.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
+          <a href="admin-streamer-requests.html" data-nav data-auth-admin data-auth-controlled data-auth-user><span class="nav-icon">✓</span><span data-i18n="adminRequests.manageTitle">등록 요청 관리</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="favorites.sidebarTitle">즐겨찾기</strong>
+        <p data-i18n="favorites.sidebarText">공개 프로필에서 저장한 스트리머를 빠르게 다시 열 수 있습니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main viewer-page viewer-page--favorites">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="favorites.title">즐겨찾기 스트리머</h1>
+          <p data-i18n="favorites.description">내가 자주 보는 방송인을 한 곳에서 확인하세요.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="refreshFavoritesButton" type="button" data-i18n="dashboard.refresh">새로고침</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="card dashboard-favorites-panel viewer-section viewer-favorites-board">
+        <div class="section-title">
+          <div>
+            <h2 data-i18n="favorites.listTitle">내 즐겨찾기</h2>
+            <p data-i18n="favorites.listDescription">즐겨찾기 해제는 이 화면에서 바로 반영됩니다.</p>
+          </div>
+          <span class="badge" id="favoritesCountBadge">0</span>
+        </div>
+        <div id="favoritesState" class="request-status" aria-live="polite"></div>
+        <div class="dashboard-favorite-grid viewer-favorite-grid" id="favoritesList" aria-live="polite">
+          <div class="list-item"><div class="item-content"><strong data-i18n="favorites.loading">즐겨찾기 목록을 불러오는 중입니다.</strong></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/favorites.js"></script>
+</body>
+</html>

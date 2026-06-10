@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="viewerStats.documentTitle">Seiga Studio - 내 채팅 통계</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <a class="brand" href="viewer-stats.html">
+          <div class="brand-logo">S</div>
+          <div>
+            <strong>Seiga Studio</strong>
+            <span data-i18n="dashboard.brandSubtitle">Nestory 대시보드</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a href="viewer-stats.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">📈</span><span data-i18n="nav.viewerStats">내 통계</span></a>
+          <a href="favorites.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">♡</span><span data-i18n="nav.favorites">즐겨찾기</span></a>
+          <a href="streamer-apply.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">✦</span><span data-i18n="nav.streamerApply">스트리머 등록 신청</span></a>
+          <a href="dashboard.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
+          <a href="admin-streamer-requests.html" data-nav data-auth-admin data-auth-controlled data-auth-user><span class="nav-icon">✓</span><span data-i18n="adminRequests.manageTitle">등록 요청 관리</span></a>
+          <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
+        </nav>
+      </div>
+      <div class="sidebar-card">
+        <strong data-i18n="viewerStats.sidebarTitle">시청자 통계</strong>
+        <p data-i18n="viewerStats.sidebarText">Nestory가 수집한 이후의 채팅 활동만 표시합니다.</p>
+        <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
+      </div>
+    </aside>
+
+    <main class="main viewer-page viewer-page--stats">
+      <div class="mobile-header">
+        <strong>Seiga Studio</strong>
+        <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+      <header class="topbar">
+        <div class="page-title">
+          <h1 data-i18n="viewerStats.title">내 채팅 통계</h1>
+          <p data-i18n="viewerStats.description">내가 어느 방송에서 얼마나 채팅했는지 확인합니다.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="refreshViewerStatsButton" type="button" data-i18n="dashboard.refresh">새로고침</button>
+          <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
+        </div>
+      </header>
+
+      <section class="panel viewer-note-panel viewer-range-note">
+        <strong data-i18n="viewerStats.collectionNoteTitle">수집 범위 안내</strong>
+        <span data-i18n="viewerStats.collectionNote">이 통계는 Nestory가 수집을 시작한 이후의 데이터만 표시됩니다.</span>
+      </section>
+
+      <section class="grid-4 viewer-stats-summary viewer-summary-grid">
+        <article class="card stat-card"><div class="stat-label" data-i18n="viewerStats.totalMessages">총 채팅 수</div><div class="stat-value" id="viewerTotalMessages">-</div><div class="stat-change" data-i18n="viewerStats.collectionBased">수집 이후 기준</div></article>
+        <article class="card stat-card"><div class="stat-label" data-i18n="viewerStats.activeChannels">채팅한 방송 수</div><div class="stat-value" id="viewerActiveChannels">-</div><div class="stat-change" data-i18n="viewerStats.collectionBased">수집 이후 기준</div></article>
+        <article class="card stat-card"><div class="stat-label" data-i18n="viewerStats.topChannel">가장 많이 채팅한 방송</div><div class="stat-value stat-value--text" id="viewerTopChannel">-</div><div class="stat-change" id="viewerTopChannelNote">-</div></article>
+        <article class="card stat-card"><div class="stat-label" data-i18n="viewerStats.recentChannel">최근 채팅한 방송</div><div class="stat-value stat-value--text" id="viewerRecentChannel">-</div><div class="stat-change" id="viewerRecentChannelNote">-</div></article>
+      </section>
+
+      <section class="card viewer-channel-panel">
+        <div class="section-title">
+          <div>
+            <h2 data-i18n="viewerStats.channelListTitle">채널별 통계</h2>
+            <p data-i18n="viewerStats.channelListDescription">스트리머별 메시지 수와 마지막 채팅 시각입니다.</p>
+          </div>
+          <span class="badge" id="viewerChannelCountBadge">0</span>
+        </div>
+        <div id="viewerStatsState" class="request-status" aria-live="polite"></div>
+        <div class="list viewer-channel-list" id="viewerChannelList" aria-live="polite">
+          <div class="list-item"><div class="item-content"><strong data-i18n="viewerStats.loading">채팅 통계를 불러오는 중입니다.</strong></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/viewer-stats.js"></script>
+</body>
+</html>
