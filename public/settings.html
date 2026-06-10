@@ -29,7 +29,7 @@
       </div>
       <div class="sidebar-card">
         <strong data-i18n="dashboard.adminMemoTitle">관리자 메모</strong>
-        <p data-i18n="settings.sidebarText">관리자 승인 가입과 팬 카드 사전 검토 옵션은 실제 서비스 운영 시 필수에 가깝습니다.</p>
+        <p data-i18n="settings.sidebarText">스트리머 등록 승인과 팬 카드 사전 검토 옵션을 운영 정책에 맞게 확인합니다.</p>
         <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
@@ -63,9 +63,14 @@
       <div class="hero-actions"><button class="ghost-btn" id="reconnectTwitchButton" type="button" data-i18n="settings.reconnectTwitch">Twitch 재연동</button><button class="danger-btn" id="disconnectTwitchButton" type="button" data-i18n="settings.disconnectTwitch">연동 해제</button></div>
     </section>
 
-    <section class="panel">
-      <div class="panel-title"><div><h2 data-i18n="settings.securityTitle">공개/보안 설정</h2><p data-i18n="settings.securityDescription">가입 제한, 공개 범위, 팬 카드 검토 정책을 설정합니다.</p></div></div>
-      <div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="profileCard.publicProfile">프로필 공개</strong><span data-i18n="settings.publicProfileNote">비로그인 방문자도 프로필 열람 가능</span></div><span class="switch"><input id="settingsPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="settings.adminApprovalJoin">관리자 승인 가입</strong><span data-i18n="settings.adminApprovalJoinNote">신규 스트리머 계정은 관리자만 생성</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="fanCards.preReview">팬 카드 사전 검토</strong><span data-i18n="settings.fanCardPreReviewNote">공개 전 운영자 승인 필요</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="auth.rememberMe">로그인 상태 유지</strong><span data-i18n="settings.keepLoginNote">브라우저 세션 유지 기간 연장</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label></div>
+    <section class="panel settings-security-panel">
+      <div class="panel-title"><div><h2 data-i18n="settings.securityTitle">공개/보안 설정</h2><p data-i18n="settings.securityGeneralDescription">공개 범위와 기본 개인 설정을 간결하게 관리합니다.</p></div></div>
+      <div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="profileCard.publicProfile">프로필 공개</strong><span data-i18n="settings.publicProfileNote">비로그인 방문자도 프로필 열람 가능</span></div><span class="switch"><input id="settingsPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label></div>
+    </section>
+
+    <section class="panel settings-admin-panel" data-admin-setting hidden>
+      <div class="panel-title"><div><h2 data-i18n="settings.adminOnlyTitle">관리자 전용 설정</h2><p data-i18n="settings.adminOnlyDescription">운영 정책과 승인 흐름처럼 관리자 권한이 필요한 설정입니다.</p></div><span class="badge admin-only-badge" data-i18n="settings.adminOnlyBadge">Admin only</span></div>
+      <div class="toggle-list"><label class="toggle-row toggle-row--admin"><div><strong data-i18n="settings.adminApprovalJoin">스트리머 등록 승인</strong><span data-i18n="settings.adminApprovalJoinNote">스트리머 전용 기능은 신청 승인 후 표시</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label><label class="toggle-row toggle-row--admin"><div><strong data-i18n="fanCards.preReview">팬 카드 사전 검토</strong><span data-i18n="settings.fanCardPreReviewNote">공개 전 운영자 승인 필요</span></div><span class="switch"><input type="checkbox" disabled checked /><span class="switch-slider"></span></span></label></div>
     </section>
   </div>
 
@@ -76,9 +81,9 @@
       <div class="color-row" style="margin-top:14px"><label class="color-input"><input id="settingsMainColor" type="color" value="#7c3aed" /><span data-i18n="profileCard.mainColor">메인 컬러</span></label><label class="color-input"><input id="settingsSubColor" type="color" value="#f9a8d4" /><span data-i18n="profileCard.subColor">서브 컬러</span></label></div>
     </section>
 
-    <section class="panel"><div class="panel-title"><div><h2 data-i18n="settings.notificationTitle">알림 설정</h2><p data-i18n="settings.notificationDescription">대시보드에서 받을 알림 유형</p></div></div><div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="settings.newFanCardNotification">새 팬 카드 알림</strong><span data-i18n="settings.newFanCardNotificationNote">수신 즉시 대시보드 표시</span></div><span class="switch"><input id="settingsNotificationToggle" type="checkbox" /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="settings.broadcastReminder">방송 시작 리마인더</strong><span data-i18n="settings.broadcastReminderNote">예정 시간 30분 전 알림</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label><label class="toggle-row"><div><strong data-i18n="settings.weeklyReport">통계 리포트</strong><span data-i18n="settings.weeklyReportNote">주간 성장 요약 표시</span></div><span class="switch"><input type="checkbox" disabled /><span class="switch-slider"></span></span></label></div></section>
+    <section class="panel"><div class="panel-title"><div><h2 data-i18n="settings.notificationTitle">알림 설정</h2><p data-i18n="settings.notificationDescription">대시보드에서 받을 알림 유형</p></div></div><div class="toggle-list"><label class="toggle-row"><div><strong data-i18n="settings.newFanCardNotification">새 팬 카드 알림</strong><span data-i18n="settings.newFanCardNotificationNote">수신 즉시 대시보드 표시</span></div><span class="switch"><input id="settingsNotificationToggle" type="checkbox" /><span class="switch-slider"></span></span></label></div></section>
 
-    <section class="panel"><div class="panel-title"><div><h2 data-i18n="settings.dangerTitle">위험 영역</h2><p data-i18n="settings.dangerDescription">민감한 계정 작업은 확인 후 처리됩니다.</p></div></div><div class="list"><button class="danger-btn" id="logoutButton" type="button" data-i18n="nav.logout">로그아웃</button><button class="danger-btn" type="button" disabled data-i18n="settings.deleteAccountRequest">계정 삭제 요청</button></div></section>
+    <section class="panel"><div class="panel-title"><div><h2 data-i18n="settings.dangerTitle">위험 영역</h2><p data-i18n="settings.dangerDescription">민감한 계정 작업은 확인 후 처리됩니다.</p></div></div><div class="list danger-actions"><button class="danger-btn" id="logoutButton" type="button" data-i18n="nav.logout">로그아웃</button></div></section>
   </aside>
 </section>
 

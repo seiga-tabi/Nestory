@@ -485,9 +485,9 @@ async function initPublicStreamerList() {
           variant: 'empty',
           icon: 'S',
           title: publicT('index.emptyTitle', {}, '등록된 스트리머가 아직 없습니다.'),
-          message: publicT('index.emptyDescription', {}, '첫 번째 스트리머 프로필을 등록해 보세요. 관리자 승인 대기 중인 스트리머가 있을 수 있습니다.'),
-          actionLabel: publicT('index.emptyAction', {}, '스트리머 등록 문의'),
-          actionHref: 'access-request.html'
+          message: publicT('index.emptyDescription', {}, '첫 번째 스트리머 프로필은 스트리머 등록 신청 화면에서 신청 후 승인되면 공개됩니다.'),
+          actionLabel: publicT('index.emptyAction', {}, 'Twitch로 시작하기'),
+          actionHref: 'register.html'
         });
     }
     if (errorState) errorState.hidden = true;

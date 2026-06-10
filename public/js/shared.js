@@ -5,6 +5,7 @@
   const userSelector = '[data-auth-user]';
   const adminSelector = '[data-auth-admin]';
   const streamerSelector = '[data-auth-streamer]';
+  const viewerSelector = '[data-auth-viewer]';
   const controlledSelector = '[data-auth-controlled]';
   const authStorageKeys = [
     'seiga_auth_state',
@@ -171,6 +172,12 @@
     node.dataset.authStreamer = 'true';
   }
 
+  function markViewerNode(node, kind = 'viewer') {
+    if (!node) return;
+    markAuthNode(node, 'user', kind);
+    node.dataset.authViewer = 'true';
+  }
+
   function ensureAdminHeaderLink(actions) {
     const link = ensureAuthLink(
       actions,
@@ -184,6 +191,66 @@
     );
     markAdminNode(link);
     return link;
+  }
+
+  function ensureOverlayHeaderLink(actions) {
+    const link = ensureAuthLink(
+      actions,
+      '[data-auth-kind="overlay"], a[href="overlay-manager.html"]',
+      'ghost-btn',
+      'overlay-manager.html',
+      'dashboard.nav.overlays',
+      '오버레이',
+      'user',
+      'overlay'
+    );
+    markStreamerNode(link);
+    return link;
+  }
+
+  function ensureViewerHeaderLink(actions) {
+    const link = ensureAuthLink(
+      actions,
+      '[data-auth-kind="viewer-stats"], a[href="viewer-stats.html"]',
+      'primary-btn',
+      'viewer-stats.html',
+      'nav.viewerStats',
+      '내 통계',
+      'user',
+      'viewer-stats'
+    );
+    markViewerNode(link, 'viewer-stats');
+    return link;
+  }
+
+  function ensureViewerSidebarLink(nav, href, icon, i18nKey, fallback, kind, beforeNode = null) {
+    if (!nav) return null;
+    let link = nav.querySelector(`[data-auth-kind="${kind}"], a[href="${href}"]`);
+    if (!link) {
+      link = document.createElement('a');
+      link.href = href;
+      link.dataset.nav = 'true';
+      link.innerHTML = `<span class="nav-icon">${escapeHtml(icon)}</span><span data-i18n="${escapeHtml(i18nKey)}">${escapeHtml(t(i18nKey, {}, fallback))}</span>`;
+      if (beforeNode) nav.insertBefore(link, beforeNode);
+      else nav.append(link);
+    }
+    markViewerNode(link, kind);
+    link.href = href;
+    link.dataset.authKind = kind;
+    const label = link.querySelector('[data-i18n], [data-shell-nav-label]') || link;
+    label.dataset.i18n = i18nKey;
+    label.textContent = t(i18nKey, {}, fallback);
+    return link;
+  }
+
+  function ensureViewerSidebarLinks(nav) {
+    if (!nav) return;
+    const dashboardLink = nav.querySelector('a[href="dashboard.html"]');
+    if (dashboardLink) markStreamerNode(dashboardLink);
+    const settingsLink = nav.querySelector('a[href="settings.html"]');
+    ensureViewerSidebarLink(nav, 'viewer-stats.html', '📈', 'nav.viewerStats', '내 통계', 'viewer-stats', dashboardLink || settingsLink);
+    ensureViewerSidebarLink(nav, 'favorites.html', '♡', 'nav.favorites', '즐겨찾기', 'favorites', dashboardLink || settingsLink);
+    ensureViewerSidebarLink(nav, 'streamer-apply.html', '✦', 'nav.streamerApply', '스트리머 등록 신청', 'streamer-apply', dashboardLink || settingsLink);
   }
 
   function ensureAdminSidebarLink(nav) {
@@ -208,6 +275,27 @@
     return link;
   }
 
+  function ensureOverlaySidebarLink(nav) {
+    if (!nav) return null;
+    let link = nav.querySelector('[data-auth-kind="overlay"], a[href="overlay-manager.html"]');
+    if (!link) {
+      link = document.createElement('a');
+      link.href = 'overlay-manager.html';
+      link.dataset.nav = 'true';
+      link.innerHTML = `<span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">${escapeHtml(t('dashboard.nav.overlays', {}, '오버레이'))}</span>`;
+      const settingsLink = nav.querySelector('a[href="settings.html"]');
+      if (settingsLink) nav.insertBefore(link, settingsLink);
+      else nav.append(link);
+    }
+    markStreamerNode(link);
+    link.dataset.authKind = 'overlay';
+    link.href = 'overlay-manager.html';
+    const label = link.querySelector('[data-i18n], [data-shell-nav-label]') || link;
+    label.dataset.i18n = 'dashboard.nav.overlays';
+    label.textContent = t('dashboard.nav.overlays', {}, '오버레이');
+    return link;
+  }
+
   function normalizeAdminLinks(root = document) {
     root.querySelectorAll('a[href="admin-streamer-requests.html"], a[href="admin-access-requests.html"], [data-auth-admin]').forEach(markAdminNode);
     root.querySelectorAll('.sidebar .nav').forEach(ensureAdminSidebarLink);
@@ -220,8 +308,10 @@
       'a[href="fan-cards.html"]',
       'a[href="analytics.html"]',
       'a[href="schedule.html"]',
+      'a[href="overlay-manager.html"]',
       '[data-auth-streamer]'
     ].join(',')).forEach(markStreamerNode);
+    root.querySelectorAll('.sidebar .nav').forEach(ensureOverlaySidebarLink);
   }
 
   function normalizeHeaderActions(root = document) {
@@ -236,17 +326,18 @@
           configureAction(node, 'login.html');
         }
 
-        if (href === 'access-request.html' || i18nKey === 'nav.start') {
+        if (href === 'register.html' || i18nKey === 'nav.start') {
           markAuthNode(node, 'guest', 'start');
-          configureAction(node, 'access-request.html');
+          configureAction(node, 'register.html');
         }
 
         if (href === 'dashboard.html') {
-          markAuthNode(node, 'user', 'dashboard');
+          markStreamerNode(node);
+          node.dataset.authKind = 'dashboard';
         }
       });
 
-      ensureAuthLink(
+      const dashboardLink = ensureAuthLink(
         actions,
         '[data-auth-kind="dashboard"], a[href="dashboard.html"]',
         'primary-btn',
@@ -256,6 +347,9 @@
         'user',
         'dashboard'
       );
+      markStreamerNode(dashboardLink);
+      ensureViewerHeaderLink(actions);
+      ensureOverlayHeaderLink(actions);
       ensureAdminHeaderLink(actions);
       ensureLogoutButton(actions);
     });
@@ -266,6 +360,17 @@
     });
     normalizeAdminLinks(root);
     normalizeStreamerLinks(root);
+    normalizeViewerLinks(root);
+  }
+
+  function normalizeViewerLinks(root = document) {
+    root.querySelectorAll([
+      'a[href="viewer-stats.html"]',
+      'a[href="favorites.html"]',
+      'a[href="streamer-apply.html"]',
+      '[data-auth-viewer]'
+    ].join(',')).forEach((node) => markViewerNode(node, node.dataset.authKind || 'viewer'));
+    root.querySelectorAll('.sidebar .nav').forEach(ensureViewerSidebarLinks);
   }
 
   function setVisible(node, visible) {
@@ -277,6 +382,7 @@
     const authenticated = Boolean(state?.authenticated);
     const admin = isAdminState(state);
     const streamer = isStreamerState(state);
+    const viewer = authenticated && !admin && !streamer;
     const role = normalizeRole(state?.role || state?.user?.role);
     document.documentElement.classList.remove(
       'auth-loading',
@@ -299,6 +405,7 @@
     document.querySelectorAll(userSelector).forEach((node) => setVisible(node, authenticated));
     document.querySelectorAll(adminSelector).forEach((node) => setVisible(node, admin));
     document.querySelectorAll(streamerSelector).forEach((node) => setVisible(node, streamer));
+    document.querySelectorAll(viewerSelector).forEach((node) => setVisible(node, viewer));
     document.querySelectorAll(controlledSelector).forEach((node) => {
       if (!node.matches(guestSelector) && !node.matches(userSelector) && !node.matches(adminSelector) && !node.matches(streamerSelector)) setVisible(node, true);
     });

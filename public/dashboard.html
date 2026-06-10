@@ -20,22 +20,26 @@
           </div>
         </a>
         <nav class="nav">
-          <a href="dashboard.html" data-nav><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
+          <a href="viewer-stats.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">📈</span><span data-i18n="nav.viewerStats">내 통계</span></a>
+          <a href="favorites.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">♡</span><span data-i18n="nav.favorites">즐겨찾기</span></a>
+          <a href="streamer-apply.html" data-nav data-auth-viewer data-auth-controlled data-auth-user><span class="nav-icon">✦</span><span data-i18n="nav.streamerApply">스트리머 등록 신청</span></a>
+          <a href="dashboard.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🏠</span><span data-i18n="nav.dashboard">대시보드</span></a>
           <a href="profile-card.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🎴</span><span data-i18n="dashboard.nav.profileCard">프로필 카드</span></a>
           <a href="fan-cards.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">💌</span><span data-i18n="dashboard.nav.fanCards">팬 카드</span></a>
           <a href="analytics.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">📊</span><span data-i18n="dashboard.nav.analytics">방송 통계</span></a>
           <a href="schedule.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🗓️</span><span data-i18n="dashboard.nav.schedule">방송 일정</span></a>
+          <a href="overlay-manager.html" data-nav data-auth-streamer data-auth-controlled data-auth-user><span class="nav-icon">🖥</span><span data-i18n="dashboard.nav.overlays">오버레이</span></a>
           <a href="settings.html" data-nav><span class="nav-icon">⚙️</span><span data-i18n="dashboard.nav.settings">설정</span></a>
         </nav>
       </div>
       <div class="sidebar-card">
         <strong data-i18n="dashboard.adminMemoTitle">대시보드 메모</strong>
-        <p data-i18n="dashboard.adminMemoText">Twitch 연결과 스트리머 등록 신청 상태를 확인해보세요.</p>
+        <p data-i18n="dashboard.adminMemoText">승인된 스트리머와 관리자를 위한 운영 화면입니다.</p>
         <button class="primary-btn" type="button" data-session-status data-i18n="dashboard.sessionStatus">상태 확인</button>
       </div>
     </aside>
 
-    <main class="main">
+    <main class="main management-dashboard">
       <div class="mobile-header">
         <strong>Seiga Studio</strong>
         <button class="icon-btn" type="button" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
@@ -43,7 +47,7 @@
       <header class="topbar">
         <div class="page-title">
           <h1 data-i18n="dashboard.title">대시보드 화면</h1>
-          <p data-i18n="dashboard.description">계정 상태, Twitch 연결, 스트리머 등록 신청과 방송 관리 현황을 확인하세요.</p>
+          <p data-i18n="dashboard.description">스트리머 프로필, 팬 카드, 방송 운영 현황을 확인하세요.</p>
         </div>
         <div class="top-actions">
           <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="언어 선택">
@@ -55,114 +59,48 @@
           <button class="ghost-btn" type="button" data-logout-button data-i18n="nav.logout">로그아웃</button>
         </div>
       </header>
-      <section class="grid-3 dashboard-user-panel" id="userDashboardPanel" hidden>
-        <article class="card">
-          <div class="section-title">
-            <div>
-              <h2 id="dashboardUserTitle" data-i18n="dashboard.userWelcomeTitle">일반 사용자 대시보드</h2>
-              <p id="dashboardUserText" data-i18n="dashboard.userWelcomeText">Twitch 계정을 연결하고 스트리머 등록 신청을 준비할 수 있습니다.</p>
-            </div>
-            <span class="badge" id="dashboardUserRoleBadge">USER</span>
-          </div>
-          <div class="list" id="dashboardUserStatusList" aria-live="polite">
-            <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</strong></div></div>
-          </div>
-        </article>
 
-        <article class="card">
-          <div class="section-title">
-            <div>
-              <h2 data-i18n="dashboard.twitchTitle">Twitch 연결</h2>
-              <p data-i18n="dashboard.twitchDescription">Twitch 계정 연결과 팔로우 목록을 확인합니다.</p>
-            </div>
-            <span class="badge" id="dashboardTwitchBadge">Twitch</span>
-          </div>
-          <div class="list" id="dashboardTwitchStatus" aria-live="polite">
-            <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.loadingData">데이터를 불러오는 중입니다.</strong></div></div>
-          </div>
-          <div class="hero-actions">
-            <button class="primary-btn" id="dashboardTwitchConnectButton" type="button" data-i18n="dashboard.twitchConnect">Twitch 연결</button>
-            <button class="ghost-btn" id="dashboardRefreshFollowsButton" type="button" data-i18n="dashboard.refreshFollows">팔로우 새로고침</button>
-          </div>
-        </article>
-
-        <article class="card">
-          <div class="section-title">
-            <div>
-              <h2 data-i18n="dashboard.streamerRequestTitle">스트리머 등록 신청</h2>
-              <p data-i18n="dashboard.streamerRequestDescription">승인 후 프로필 카드와 방송 관리 기능이 표시됩니다.</p>
-            </div>
-            <span class="badge" id="streamerRequestBadge">READY</span>
-          </div>
-          <div id="streamerRequestStatus" class="request-status" aria-live="polite"></div>
-          <form id="streamerRequestForm" class="form-grid streamer-request-form" novalidate>
-            <div class="two-col">
-              <div class="field">
-                <label for="requestName" data-i18n="dashboard.requestName">활동명</label>
-                <input id="requestName" name="requestName" type="text" maxlength="80" autocomplete="name" required />
-              </div>
-              <div class="field">
-                <label for="requestTwitchId" data-i18n="dashboard.requestTwitchId">Twitch ID</label>
-                <input id="requestTwitchId" name="requestTwitchId" type="text" maxlength="80" autocomplete="off" />
-              </div>
-            </div>
-            <div class="field">
-              <label for="requestMainContent" data-i18n="dashboard.requestMainContent">주 콘텐츠</label>
-              <input id="requestMainContent" name="requestMainContent" type="text" maxlength="120" data-i18n-placeholder="dashboard.requestMainContentPlaceholder" placeholder="예: 게임, 잡담, 음악" />
-            </div>
-            <div class="field">
-              <label for="requestBio" data-i18n="dashboard.requestBio">자기소개</label>
-              <textarea id="requestBio" name="requestBio" maxlength="500" data-i18n-placeholder="dashboard.requestBioPlaceholder" placeholder="방송 스타일과 채널 소개를 적어주세요."></textarea>
-            </div>
-            <div class="field">
-              <label for="requestReason" data-i18n="dashboard.requestReason">신청 사유</label>
-              <textarea id="requestReason" name="requestReason" maxlength="500" data-i18n-placeholder="dashboard.requestReasonPlaceholder" placeholder="스트리머 등록이 필요한 이유를 적어주세요."></textarea>
-            </div>
-            <div class="submit-row">
-              <button class="primary-btn" id="submitStreamerRequestButton" type="submit" data-i18n="dashboard.submitStreamerRequest">등록 신청 제출</button>
-              <a class="ghost-btn" href="access-request.html" data-i18n="dashboard.openRequestPage">신청 화면 열기</a>
-            </div>
-          </form>
-        </article>
-      </section>
-
-      <section class="card dashboard-follow-panel" id="followedChannelsPanel" hidden>
-        <div class="section-title">
-          <div>
-            <h2 data-i18n="dashboard.followedTitle">내가 팔로우한 Twitch 스트리머</h2>
-            <p data-i18n="dashboard.followedDescription">연결된 Twitch 계정 기준으로 팔로우 목록을 불러옵니다.</p>
-          </div>
-          <span class="badge" id="followedChannelsBadge">0</span>
-        </div>
-        <div id="followedChannelsState" class="request-status" aria-live="polite"></div>
-        <div class="dashboard-follow-groups">
-          <article class="follow-group">
-            <div class="section-title">
-              <div>
-                <h3 data-i18n="dashboard.followedRegisteredTitle">Nestory에 등록된 팔로우 스트리머</h3>
-                <p data-i18n="dashboard.followedRegisteredDescription">공개 프로필이 승인된 스트리머입니다.</p>
-              </div>
-              <span class="badge" id="followedRegisteredBadge">0</span>
-            </div>
-            <div class="list dashboard-follow-list" id="registeredFollowedChannelsList" aria-live="polite">
-              <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.followedLoading">팔로우 목록을 불러오는 중입니다.</strong></div></div>
-            </div>
-          </article>
-          <article class="follow-group">
-            <div class="section-title">
-              <div>
-                <h3 data-i18n="dashboard.followedUnregisteredTitle">미등록 팔로우 스트리머</h3>
-                <p data-i18n="dashboard.followedUnregisteredDescription">Nestory에 아직 공개 등록되지 않은 채널입니다.</p>
-              </div>
-              <span class="badge" id="followedUnregisteredBadge">0</span>
-            </div>
-            <div class="list dashboard-follow-list" id="unregisteredFollowedChannelsList" aria-live="polite">
-              <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.followedLoading">팔로우 목록을 불러오는 중입니다.</strong></div></div>
-            </div>
-          </article>
-        </div>
-      </section>
-
+<section class="card management-tools" data-streamer-dashboard>
+  <div class="section-title">
+    <div>
+      <h2 data-i18n="dashboard.managementToolsTitle">관리 도구</h2>
+      <p data-i18n="dashboard.managementToolsDescription">프로필, 팬 카드, 오버레이, 통계를 빠르게 정리합니다.</p>
+    </div>
+    <span class="badge" data-i18n="dashboard.managementToolsBadge">STREAMER / ADMIN</span>
+  </div>
+  <div class="management-tool-grid">
+    <a class="management-tool-card" href="profile-card.html" data-auth-streamer data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">🎴</span>
+      <strong data-i18n="dashboard.toolProfileTitle">프로필 카드</strong>
+      <span data-i18n="dashboard.toolProfileDescription">공개 프로필과 공유용 카드를 편집합니다.</span>
+    </a>
+    <a class="management-tool-card" href="fan-cards.html" data-auth-streamer data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">💌</span>
+      <strong data-i18n="dashboard.toolFanCardsTitle">팬 카드</strong>
+      <span data-i18n="dashboard.toolFanCardsDescription">수신 메시지와 읽기 큐를 확인합니다.</span>
+    </a>
+    <a class="management-tool-card" href="overlay-manager.html" data-auth-streamer data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">🖥</span>
+      <strong data-i18n="dashboard.toolOverlayTitle">오버레이</strong>
+      <span data-i18n="dashboard.toolOverlayDescription">OBS 브라우저 소스용 화면을 관리합니다.</span>
+    </a>
+    <a class="management-tool-card" href="analytics.html" data-auth-streamer data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">📊</span>
+      <strong data-i18n="dashboard.toolAnalyticsTitle">방송 통계</strong>
+      <span data-i18n="dashboard.toolAnalyticsDescription">방문자 흐름과 공개 반응을 확인합니다.</span>
+    </a>
+    <a class="management-tool-card" href="schedule.html" data-auth-streamer data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">🗓️</span>
+      <strong data-i18n="dashboard.toolScheduleTitle">방송 일정</strong>
+      <span data-i18n="dashboard.toolScheduleDescription">이번 주 방송 일정을 정리합니다.</span>
+    </a>
+    <a class="management-tool-card management-tool-card--admin" href="admin-streamer-requests.html" data-auth-admin data-auth-controlled data-auth-user>
+      <span class="management-tool-icon">✓</span>
+      <strong data-i18n="dashboard.toolAdminRequestsTitle">등록 요청 관리</strong>
+      <span data-i18n="dashboard.toolAdminRequestsDescription">신규 스트리머 신청을 검토합니다.</span>
+    </a>
+  </div>
+</section>
 <section class="grid-4" data-streamer-dashboard>
   <article class="card stat-card" style="--accent: rgba(167,139,250,.24)">
     <div class="stat-label" data-i18n="dashboard.todayVisitors">오늘 방문자</div>
@@ -225,8 +163,8 @@
 
   <article class="card">
     <div class="section-title"><div><h3 data-i18n="dashboard.visitorFlow">방문자 흐름</h3><p data-i18n="dashboard.visitorFlowDescription">최근 7일 기준</p></div><a class="badge" href="analytics.html" data-i18n="dashboard.analytics">통계</a></div>
-    <div class="mini-chart" id="dashboardVisitorFlow">
-      <div class="list-item"><div class="item-content"><strong data-i18n="dashboard.visitorFlowHint">방문자 흐름은 통계 화면에서 확인할 수 있습니다.</strong></div></div>
+    <div class="mini-chart dashboard-visitor-flow-note" id="dashboardVisitorFlow">
+      <div class="list-item dashboard-visitor-flow-message"><div class="item-content"><strong data-i18n="dashboard.visitorFlowHint">방문자 흐름은 통계 화면에서 확인할 수 있습니다.</strong></div></div>
     </div>
   </article>
 

@@ -34,6 +34,7 @@ const schema = z.object({
   TWITCH_REDIRECT_URI: z.preprocess(blankToUndefined, z.string().url().optional()).default('http://localhost:25570/auth/twitch/callback'),
   UPLOAD_DIR: z.string().default('uploads'),
   MAX_AVATAR_UPLOAD_MB: z.coerce.number().positive().max(20).default(3),
+  MAX_OVERLAY_ASSET_UPLOAD_MB: z.coerce.number().positive().max(50).default(10),
   PUBLIC_BASE_URL: z.string().url().default('http://localhost:25570'),
   SMTP_HOST: z.preprocess(blankToUndefined, z.string().optional()).default(''),
   SMTP_PORT: z.preprocess(blankToUndefined, z.coerce.number().int().positive().optional()),

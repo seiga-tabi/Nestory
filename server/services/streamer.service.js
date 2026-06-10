@@ -54,6 +54,7 @@ async function mapPublicProfile(profile, options = {}) {
     where: { profileId: profile.id, status: 'APPROVED', isPublic: true }
   });
   const viewCount = await prisma.pageView.count({ where: { profileId: profile.id } });
+  const favoriteCount = await prisma.favorite.count({ where: { streamerProfileId: profile.id } });
 
   return {
     id: profile.id,
@@ -64,6 +65,10 @@ async function mapPublicProfile(profile, options = {}) {
     mainContent: profile.mainContent,
     language: profile.language,
     avatarUrl: profile.avatarUrl,
+    coverImageUrl: profile.coverImageUrl,
+    coverImage: profile.coverImageUrl,
+    backgroundImageUrl: profile.coverImageUrl,
+    backgroundImage: profile.coverImageUrl,
     cardDesign: profile.cardDesign,
     mainColor: profile.mainColor,
     subColor: profile.subColor,
@@ -73,6 +78,7 @@ async function mapPublicProfile(profile, options = {}) {
     viewerCount: streamStatus.viewerCount || 0,
     streamStatus,
     fanCardCount: approvedFanCount,
+    favoriteCount,
     viewCount,
     links: mapLinks(profile.socialLinks),
     schedule: mapSchedule(profile.schedule),

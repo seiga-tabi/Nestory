@@ -153,9 +153,9 @@
         }
 
         html:not(.auth-ready) .header-actions a[href="login.html"],
-        html:not(.auth-ready) .header-actions a[href="access-request.html"],
+        html:not(.auth-ready) .header-actions a[href="register.html"],
         html:not(.auth-ready) .header-actions button[onclick*="login.html"],
-        html:not(.auth-ready) .header-actions button[onclick*="access-request.html"],
+        html:not(.auth-ready) .header-actions button[onclick*="register.html"],
         html:not(.auth-ready) [data-auth-controlled],
         html.auth-loading [data-auth-controlled] {
             visibility: hidden;
@@ -1492,8 +1492,8 @@
             <a class="ghost-btn" href="login.html" data-i18n="nav.login">
                 로그인
             </a>
-            <a class="primary-btn" href="access-request.html" data-i18n="nav.start">
-                스트리머 시작하기
+            <a class="primary-btn" href="register.html" data-i18n="nav.start">
+              Twitch로 시작하기
             </a>
             <button class="mobile-menu" type="button" aria-controls="publicNavigation" aria-expanded="false" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
         </div>
@@ -1650,7 +1650,7 @@
                     <strong data-i18n="index.emptyTitle">등록된 스트리머가 아직 없습니다.</strong>
                     <p data-i18n="index.emptyDescription">첫 번째 스트리머 프로필을 등록해 보세요. 관리자 승인 대기 중인 스트리머가 있을 수 있습니다.</p>
                     <div class="index-state-actions">
-                        <a class="primary-btn" href="access-request.html" data-i18n="index.emptyAction">스트리머 등록 문의</a>
+                        <a class="primary-btn" href="register.html" data-i18n="index.emptyAction">Twitch로 시작하기</a>
                     </div>
                 </div>
             </div>

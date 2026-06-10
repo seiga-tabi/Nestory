@@ -492,28 +492,6 @@
   transform: none;
 }
 
-.profile-card--portrait .profile-card__qr {
-  align-self: flex-end;
-  width: 74px;
-  min-height: 74px;
-  padding: 8px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(28, 28, 38, 0.06);
-}
-
-.profile-card--portrait .profile-card__qr svg,
-.profile-card--portrait .profile-card__qr img,
-.profile-card--portrait .profile-card__qr canvas {
-  width: 54px;
-  height: 54px;
-  display: block;
-}
-
-.profile-card--portrait .profile-card__qr span {
-  display: none;
-}
-
 .profile-card.profile-card--portrait.style-soft,
 .profile-card.profile-card--portrait.profile-card--glass {
   --profile-card-bg: rgba(255, 255, 255, 0.66);

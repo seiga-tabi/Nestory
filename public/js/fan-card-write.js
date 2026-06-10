@@ -87,7 +87,16 @@
     return streamers.find((profile) => profile.slug === select.value);
   }
 
+  function updateVisibilityOptions() {
+    document.querySelectorAll('input[name="visibility"]').forEach((input) => {
+      const option = input.closest('.visibility-option, .option-chip');
+      if (!option) return;
+      option.classList.toggle('is-selected', input.checked);
+    });
+  }
+
   function updatePreview() {
+    updateVisibilityOptions();
     const streamer = selectedStreamer();
     const message = messageInput?.value.trim();
     const sender = nicknameInput?.value.trim();
@@ -116,6 +125,7 @@
   messageInput?.addEventListener('input', updatePreview);
   nicknameInput?.addEventListener('input', updatePreview);
   document.querySelectorAll('input[name="visibility"]').forEach((input) => input.addEventListener('change', updatePreview));
+  updateVisibilityOptions();
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

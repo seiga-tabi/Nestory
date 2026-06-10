@@ -115,7 +115,8 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD`: 관리자 seed 계정
 - `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, `TWITCH_REDIRECT_URI`: Twitch OAuth/API 설정
 - `PUBLIC_BASE_URL`: 메일 링크와 배포 Redirect URI 기준 URL
-- `MAX_AVATAR_UPLOAD_MB`: 이미지 업로드 최대 크기
+- `MAX_AVATAR_UPLOAD_MB`: avatar/cover 이미지 업로드 최대 크기
+- `MAX_OVERLAY_ASSET_UPLOAD_MB`: overlay 이미지/GIF asset 업로드 최대 크기
 
 ## Key API Routes
 
@@ -139,8 +140,17 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - `GET /api/public/streamers`
 - `GET /api/public/rankings`
 - `GET /api/public/streamers/:slug`
+- `GET /api/public/streamers/:slug/favorite`
+- `POST /api/public/streamers/:slug/favorite`
+- `DELETE /api/public/streamers/:slug/favorite`
 - `GET /api/public/streamers/:slug/stream-status`
 - `POST /api/public/streamers/:slug/fan-cards`
+- `GET /api/favorites`
+- `GET /api/favorites/:streamerId/status`
+- `POST /api/favorites/:streamerId`
+- `DELETE /api/favorites/:streamerId`
+- `GET /api/streamer-requests/me`
+- `GET /api/viewer-stats/me`
 - `GET /api/i18n/locale`
 - `POST /api/i18n/locale`
 - `POST /api/access-requests`
@@ -149,12 +159,26 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - `GET /api/profile-card`
 - `PUT /api/profile-card`
 - `POST /api/profile-card/avatar`
+- `POST /api/profile-card/cover`
 - `GET /api/fan-cards`
 - `PATCH /api/fan-cards/:id`
 - `DELETE /api/fan-cards/:id`
 - `GET /api/schedule`
 - `PUT /api/schedule`
 - `GET /api/analytics/summary`
+- `GET /api/overlays`
+- `POST /api/overlays`
+- `GET /api/overlays/:id`
+- `PATCH /api/overlays/:id`
+- `DELETE /api/overlays/:id`
+- `GET /api/overlays/:id/assets`
+- `POST /api/overlays/:id/assets`
+- `DELETE /api/overlays/:id/assets/:assetId`
+- `POST /api/overlays/:id/duplicate`
+- `POST /api/overlays/:id/regenerate-token`
+- `GET /api/overlays/public/:token`
+- `GET /api/overlay-public/:token`
+- `GET /overlay.html?token=...`
 - `GET /api/settings`
 - `PUT /api/settings/profile`
 - `PUT /api/settings/password`
@@ -178,7 +202,11 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - Broadcast status is read from Twitch when configured, otherwise the latest `StreamSnapshot` is used as a fallback.
 - Actual `.env` files and uploaded assets are ignored by Git.
 - API errors keep the legacy `message` field and also include `ok: false` plus a stable `code`.
-- Avatar uploads are limited by `MAX_AVATAR_UPLOAD_MB` and validated by extension, MIME type, and image signature.
+- Avatar and cover uploads are limited by `MAX_AVATAR_UPLOAD_MB` and validated by extension, MIME type, and image signature. Cover uploads use multipart field `coverImage`, persist `StreamerProfile.coverImageUrl`, and return `/uploads/covers/...` public URLs.
+- Favorites are stored in the `Favorite` table with a unique `userId + streamerProfileId` pair. Favorite APIs require login, only target approved public streamers, and return `{ ok, favorited, isFavorite, favoriteCount, streamer }`.
+- `GET /api/auth/me` exposes `role` as `USER`, `STREAMER`, or `ADMIN`; regular `USER` accounts also receive `defaultPage/homePage: "viewer-stats.html"` so frontend routing can keep `dashboard.html` focused on streamer/admin management. `/api/dashboard/*` is protected as a streamer/admin API; viewer features use `/api/favorites`, `/api/streamer-requests/me`, and `/api/viewer-stats/me`.
+- Viewer chat stats are exposed through `GET /api/viewer-stats/me`. MVP responses are empty aggregates with `VIEWER_STATS_COLLECTION_NOT_STARTED`; Twitch historical chat is not imported, and future stats should come from Nestory-collected chat events or aggregated per-channel counters.
+- Stream overlays are stored in the `Overlay` table. Overlay type is stored as `configJson.overlayType` (`CHAT`, `DONATION`, `FOLLOW`, `FAN_CARD`, `CUSTOM`) with type-specific settings in `configJson.chat`, `configJson.donation`, `configJson.follow`, `configJson.fanCard`, or `configJson.custom`. `DELETE /api/overlays/:id` is a soft delete: it sets `status=DISABLED` and `isEnabled=false`, hides the overlay from management lists, and prevents public token rendering. Overlay assets are stored in `OverlayAsset` and served from `/uploads/overlays/...`; upload uses multipart field `asset` with `image`/`file` aliases, accepts jpg/png/webp/gif, and returns only public URLs. Overlay management APIs require `STREAMER` or `ADMIN`; regular `USER` accounts receive `403 OVERLAY_STREAMER_REQUIRED`. OBS browser sources can use `/overlay.html?token=...`, which reads public data from `GET /api/overlay-public/:token`; the raw token is returned only on create/regenerate/duplicate and only `tokenHash` is stored. `htmlCode`, `cssCode`, and `jsCode` are saved for the editor, but public overlay responses include `jsCode` only when `allowCustomJs=true`; only admins can enable `allowCustomJs`, and v1 rendering does not execute `jsCode`.
 - Express sessions use the Prisma-backed `Session` table when `SESSION_STORE=database`; if the database is unavailable, the server falls back to in-memory sessions and returns clear JSON errors for DB-backed API requests.
 - 일반 회원가입은 관리자 승인 없이 `VIEWER` DB role로 즉시 `ACTIVE` 계정을 생성합니다. API 응답에서는 이 일반 사용자 역할을 `USER`로 노출합니다.
 - Twitch OAuth 신규 로그인은 일반 사용자 계정 생성/로그인만 처리하며 스트리머 등록 요청을 자동 생성하지 않습니다. 로그인된 사용자의 Twitch 재연동도 현재 계정의 Twitch 연결 정보만 갱신합니다.

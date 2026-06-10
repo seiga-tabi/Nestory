@@ -117,11 +117,14 @@ router.post('/logout', asyncHandler(async (req, res) => {
 }));
 
 router.get('/me', (req, res) => {
+  const homePage = authService.defaultPageForRole(req.user?.role);
   res.json({
     authenticated: Boolean(req.user),
     user: authService.publicUser(req.user),
     role: authService.publicRole(req.user?.role) || null,
     isAdmin: req.user?.role === 'ADMIN',
+    defaultPage: req.user ? homePage : null,
+    homePage: req.user ? homePage : null,
     streamerProfile: authService.publicProfile(req.user?.streamerProfile)
   });
 });

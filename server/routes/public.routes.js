@@ -12,7 +12,17 @@ const { listPublicStreamers, getPublicStreamer } = require('../services/streamer
 const { streamStatusForProfile } = require('../services/twitch.service');
 const { createFanCard } = require('../services/fanCard.service');
 const { rankings } = require('../services/ranking.service');
-const { createAccessRequest } = require('../services/accessRequest.service');
+const { createAccessRequest, getMyAccessRequestStatus } = require('../services/accessRequest.service');
+const {
+  favoriteStatus,
+  favoriteStatusById,
+  addFavorite,
+  addFavoriteById,
+  removeFavorite,
+  removeFavoriteById,
+  listFavorites,
+  isFavoritedByProfileId
+} = require('../services/favorite.service');
 
 const router = express.Router();
 
@@ -75,7 +85,41 @@ const createStreamerRequestHandler = asyncHandler(async (req, res) => {
 });
 
 router.post('/access-requests', validate(accessRequestSchema), createAccessRequestHandler);
+router.get('/streamer-requests/me', requireAuth, asyncHandler(async (req, res) => {
+  res.json({
+    ok: true,
+    ...(await getMyAccessRequestStatus(req.user))
+  });
+}));
 router.post('/streamer-requests', requireAuth, validate(streamerRequestSchema), createStreamerRequestHandler);
+
+router.get('/favorites', requireAuth, asyncHandler(async (req, res) => {
+  res.json({ items: await listFavorites(req.user.id) });
+}));
+
+router.get('/favorites/:streamerId/status', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await favoriteStatusById(req.user.id, req.params.streamerId));
+}));
+
+router.post('/favorites/:streamerId', requireAuth, asyncHandler(async (req, res) => {
+  res.status(201).json(await addFavoriteById(req.user.id, req.params.streamerId));
+}));
+
+router.delete('/favorites/:streamerId', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await removeFavoriteById(req.user.id, req.params.streamerId));
+}));
+
+router.get('/streamers/:slug/favorite', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await favoriteStatus(req.user.id, req.params.slug));
+}));
+
+router.post('/streamers/:slug/favorite', requireAuth, asyncHandler(async (req, res) => {
+  res.status(201).json(await addFavorite(req.user.id, req.params.slug));
+}));
+
+router.delete('/streamers/:slug/favorite', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await removeFavorite(req.user.id, req.params.slug));
+}));
 
 router.get('/streamers/:slug/stream-status', asyncHandler(async (req, res) => {
   const profile = await prisma.streamerProfile.findFirst({
@@ -134,7 +178,12 @@ router.get('/streamers/:slug', asyncHandler(async (req, res) => {
     }
   }).catch(() => {});
 
-  res.json(profile);
+  const favorited = req.user ? await isFavoritedByProfileId(req.user.id, profile.id) : false;
+  res.json({
+    ...profile,
+    favorited,
+    isFavorite: favorited
+  });
 }));
 
 module.exports = { publicRoutes: router };

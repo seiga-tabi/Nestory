@@ -12,6 +12,9 @@
 
   const allowedNextPages = new Set([
     'dashboard.html',
+    'viewer-stats.html',
+    'favorites.html',
+    'streamer-apply.html',
     'profile-card.html',
     'fan-cards.html',
     'analytics.html',
@@ -24,13 +27,11 @@
     'streamer-detail.html',
     'fan-card-write.html',
     'about.html',
-    'access-request.html',
     'viewer-cards.html',
     'message-board.html'
   ]);
   const searchParams = new URLSearchParams(location.search);
   const safeNext = sanitizeNext(searchParams.get('next'));
-  const redirectTarget = safeNext || 'dashboard.html';
   let currentMessage = null;
 
   function t(key, params = {}, fallback = key) {
@@ -67,8 +68,23 @@
     }
   }
 
-  function redirectAfterLogin() {
-    location.href = redirectTarget;
+  function normalizeRole(auth = {}) {
+    const role = String(auth.role || auth.user?.role || auth.raw?.role || 'USER').toUpperCase();
+    return role === 'VIEWER' ? 'USER' : role;
+  }
+
+  function defaultTargetForAuth(auth = {}) {
+    const role = normalizeRole(auth);
+    const isAdmin = role === 'ADMIN' || auth.isAdmin === true || auth.user?.isAdmin === true;
+    const isStreamer = role === 'STREAMER'
+      || isAdmin
+      || auth.user?.isStreamer === true
+      || Boolean(auth.streamerProfile);
+    return isStreamer ? 'dashboard.html' : 'viewer-stats.html';
+  }
+
+  function redirectAfterLogin(authState = {}) {
+    location.href = safeNext || defaultTargetForAuth(authState);
   }
 
   function loginErrorDescriptor(error) {
@@ -106,7 +122,7 @@
   const auth = window.SeigaAuth;
 
   (auth?.getAuthState ? auth.getAuthState({ force: true }) : api.getJson('/api/auth/me')).then((me) => {
-    if (me.authenticated) redirectAfterLogin();
+    if (me.authenticated) redirectAfterLogin(me);
   }).catch(() => {});
 
   showTwitchQueryError();
@@ -127,13 +143,13 @@
         password: document.getElementById('password').value,
         rememberMe: document.getElementById('rememberMe')?.checked || false
       });
-      await auth?.refreshAuthState?.();
+      const nextAuthState = await auth?.refreshAuthState?.();
       if (safeNext) {
         showTranslatedMessage('success', 'auth.loginSuccessNext', {}, '로그인 후 원래 페이지로 이동합니다.');
       } else {
-        showTranslatedMessage('success', 'auth.loginSuccess', {}, '로그인되었습니다. 대시보드로 이동합니다.');
+        showTranslatedMessage('success', 'auth.loginSuccess', {}, '로그인되었습니다. 기본 화면으로 이동합니다.');
       }
-      setTimeout(redirectAfterLogin, 400);
+      setTimeout(() => redirectAfterLogin(nextAuthState), 400);
     } catch (error) {
       const descriptor = loginErrorDescriptor(error);
       if (descriptor) {

@@ -61,6 +61,18 @@ enum PasswordTokenPurpose {
   PASSWORD_SETUP
 }
 
+enum OverlayMode {
+  BUILDER
+  CUSTOM_HTML_CSS
+  CUSTOM_ADVANCED
+}
+
+enum OverlayStatus {
+  DRAFT
+  ACTIVE
+  DISABLED
+}
+
 model User {
   id                    String                @id @default(cuid())
   email                 String                @unique
@@ -77,6 +89,7 @@ model User {
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   streamerProfile       StreamerProfile?
+  favorites             Favorite[]
   passwordResetTokens   PasswordResetToken[]
 
   @@index([role])
@@ -94,6 +107,7 @@ model StreamerProfile {
   mainContent     String
   language        String
   avatarUrl       String?
+  coverImageUrl   String?
   cardDesign      CardDesign       @default(CLEAN_WHITE)
   mainColor       String           @default("#7c3aed")
   subColor        String           @default("#f9a8d4")
@@ -107,6 +121,8 @@ model StreamerProfile {
   fanCards        FanCard[]
   snapshots       StreamSnapshot[]
   pageViews       PageView[]
+  favorites       Favorite[]
+  overlays        Overlay[]
 
   @@index([isPublic])
   @@index([mainContent])
@@ -185,6 +201,63 @@ model PageView {
   @@index([profileId, createdAt])
   @@index([path])
   @@index([visitorHash])
+}
+
+model Favorite {
+  id                String          @id @default(cuid())
+  userId            String
+  streamerProfileId String
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streamerProfile   StreamerProfile @relation(fields: [streamerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, streamerProfileId])
+  @@index([streamerProfileId])
+  @@index([userId, createdAt])
+}
+
+model Overlay {
+  id                String          @id @default(cuid())
+  streamerProfileId String
+  name              String
+  title             String          @default("새 오버레이")
+  description       String?
+  slug              String
+  tokenHash         String          @unique
+  mode              OverlayMode     @default(BUILDER)
+  status            OverlayStatus   @default(DRAFT)
+  width             Int             @default(1920)
+  height            Int             @default(1080)
+  isEnabled         Boolean         @default(true)
+  thumbnailUrl      String?
+  htmlCode          String?
+  cssCode           String?
+  jsCode            String?
+  allowCustomJs     Boolean         @default(false)
+  configJson        Json
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  streamerProfile   StreamerProfile @relation(fields: [streamerProfileId], references: [id], onDelete: Cascade)
+  assets            OverlayAsset[]
+
+  @@unique([streamerProfileId, slug])
+  @@index([streamerProfileId])
+  @@index([isEnabled])
+}
+
+model OverlayAsset {
+  id         String   @id @default(cuid())
+  overlayId  String
+  uploaderId String?
+  url        String
+  fileName   String
+  mimeType   String
+  size       Int
+  createdAt  DateTime @default(now())
+  overlay    Overlay  @relation(fields: [overlayId], references: [id], onDelete: Cascade)
+
+  @@index([overlayId, createdAt])
+  @@index([uploaderId, createdAt])
 }
 
 model AccessRequest {

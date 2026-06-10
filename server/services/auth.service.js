@@ -12,8 +12,13 @@ function publicRole(role) {
   return role === 'VIEWER' ? 'USER' : role;
 }
 
+function defaultPageForRole(role) {
+  return ['STREAMER', 'ADMIN'].includes(role) ? 'dashboard.html' : 'viewer-stats.html';
+}
+
 function publicUser(user) {
   if (!user) return null;
+  const defaultPage = defaultPageForRole(user.role);
   return {
     id: user.id,
     email: user.email,
@@ -22,6 +27,8 @@ function publicUser(user) {
     dbRole: user.role,
     isAdmin: user.role === 'ADMIN',
     isStreamer: ['STREAMER', 'ADMIN'].includes(user.role),
+    defaultPage,
+    homePage: defaultPage,
     status: user.status,
     passwordSetupRequired: Boolean(user.passwordSetupRequired),
     twitchLogin: user.twitchLogin || null
@@ -286,6 +293,7 @@ module.exports = {
   getPasswordSetupStatus,
   completePasswordSetup,
   publicRole,
+  defaultPageForRole,
   publicUser,
   publicProfile
 };

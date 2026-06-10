@@ -13,6 +13,8 @@
   let settings = null;
   let twitchStatus = null;
   let twitchNotice = null;
+  const authUser = me.user || me;
+  const isAdmin = String(authUser?.role || '').toUpperCase() === 'ADMIN' || authUser?.isAdmin === true;
 
   function t(key, params = {}, fallback = key) {
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
@@ -21,6 +23,12 @@
   function setValue(id, value) {
     const node = $(id);
     if (node) node.value = value || '';
+  }
+
+  function applyAdminSettingsVisibility() {
+    document.querySelectorAll('[data-admin-setting]').forEach((node) => {
+      node.hidden = !isAdmin;
+    });
   }
 
   function setTwitchNotice(type, key, fallback) {
@@ -107,6 +115,7 @@
     $('settingsNotificationToggle').checked = profile.notificationOpt !== false;
     $('settingsMainColor').value = profile.mainColor || '#7c3aed';
     $('settingsSubColor').value = profile.subColor || '#f9a8d4';
+    applyAdminSettingsVisibility();
     updateThemePreview();
   }
 
@@ -206,5 +215,6 @@
   });
 
   consumeTwitchQuery();
+  applyAdminSettingsVisibility();
   load();
 })();

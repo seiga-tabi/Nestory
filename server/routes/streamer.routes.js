@@ -1,13 +1,13 @@
 const express = require('express');
 const { prisma } = require('../db/prisma');
-const { requireAuth } = require('../middleware/auth');
+const { requireStreamer } = require('../middleware/auth');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { ensureRawProfileForUser } = require('../services/streamer.service');
 const { streamStatusForProfile } = require('../services/twitch.service');
 
 const router = express.Router();
 
-router.use(requireAuth);
+router.use(requireStreamer);
 
 router.get('/summary', asyncHandler(async (req, res) => {
   if (!['STREAMER', 'ADMIN'].includes(req.user.role)) {

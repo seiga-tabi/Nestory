@@ -7,7 +7,13 @@ const { asyncHandler } = require('../utils/asyncHandler');
 const { sendError } = require('../utils/httpError');
 const { ensureRawProfileForUser, privateProfile } = require('../services/streamer.service');
 const { updateProfileCard } = require('../services/profileCard.service');
-const { avatarUpload, validateUploadedAvatar, removeUpload } = require('../services/upload.service');
+const {
+  avatarUpload,
+  coverUpload,
+  validateUploadedAvatar,
+  validateUploadedImage,
+  removeUpload
+} = require('../services/upload.service');
 
 const router = express.Router();
 
@@ -19,6 +25,7 @@ const profileSchema = z.object({
     mainContent: z.string().max(80),
     language: z.string().max(40).optional().default('KR/JA'),
     avatarUrl: z.string().optional().nullable(),
+    coverImageUrl: z.string().max(500).optional().nullable(),
     cardDesign: z.string().optional().default('CLEAN_WHITE'),
     mainColor: z.string().max(20).optional().default('#7c3aed'),
     subColor: z.string().max(20).optional().default('#f9a8d4'),
@@ -68,6 +75,30 @@ router.post('/avatar', avatarUpload.single('avatar'), asyncHandler(async (req, r
     res.json({ avatarUrl });
   } catch (error) {
     removeUpload(avatarUrl);
+    throw error;
+  }
+}));
+
+router.post('/cover', coverUpload.single('coverImage'), asyncHandler(async (req, res) => {
+  if (!req.file) return sendError(res, 400, '업로드할 배경 이미지를 선택해주세요.', 'UPLOAD_FILE_REQUIRED');
+  await validateUploadedImage(req.file);
+
+  const coverImageUrl = `/uploads/covers/${req.file.filename}`;
+  try {
+    const profile = await ensureRawProfileForUser(req.user);
+    await prisma.streamerProfile.update({
+      where: { id: profile.id },
+      data: { coverImageUrl }
+    });
+    removeUpload(profile.coverImageUrl);
+    res.json({
+      coverImageUrl,
+      coverImage: coverImageUrl,
+      backgroundImageUrl: coverImageUrl,
+      backgroundImage: coverImageUrl
+    });
+  } catch (error) {
+    removeUpload(coverImageUrl);
     throw error;
   }
 }));

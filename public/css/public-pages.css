@@ -92,9 +92,9 @@ button { cursor: pointer; }
 .nav a.active, .nav a:hover { color: var(--primary); background: rgba(167, 139, 250, 0.15); }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 html:not(.auth-ready) .header-actions a[href="login.html"],
-html:not(.auth-ready) .header-actions a[href="access-request.html"],
+html:not(.auth-ready) .header-actions a[href="register.html"],
 html:not(.auth-ready) .header-actions button[onclick*="login.html"],
-html:not(.auth-ready) .header-actions button[onclick*="access-request.html"],
+html:not(.auth-ready) .header-actions button[onclick*="register.html"],
 html:not(.auth-ready) [data-auth-controlled],
 html.auth-loading [data-auth-controlled] {
   visibility: hidden;
@@ -103,6 +103,7 @@ html.auth-ready.authenticated [data-auth-guest],
 html.auth-ready.unauthenticated [data-auth-user],
 html.auth-ready:not(.admin) [data-auth-admin],
 html.auth-ready:not(.streamer) [data-auth-streamer],
+html.auth-ready:not(.role-user) [data-auth-viewer],
 [data-auth-controlled][hidden] {
   display: none !important;
 }
@@ -114,6 +115,9 @@ html.auth-ready.admin .nav [data-auth-admin] {
   display: flex;
 }
 html.auth-ready.streamer .nav [data-auth-streamer] {
+  display: flex;
+}
+html.auth-ready.role-user .nav [data-auth-viewer] {
   display: flex;
 }
 .language-switcher {
@@ -321,6 +325,92 @@ h1 { max-width: 760px; font-size: clamp(36px, 6vw, 68px); line-height: 0.98; let
 .radio-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .option-chip { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.78); color: var(--muted); font-size: 13px; font-weight: 850; }
 .option-chip input { accent-color: var(--primary); }
+.visibility-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+.visibility-option {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.56);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.visibility-option::after {
+  content: "✓";
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+  font-size: 12px;
+  font-weight: 950;
+  opacity: 0;
+  transform: scale(.84);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.visibility-option input {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--primary);
+}
+.visibility-option span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.visibility-option strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+.visibility-option small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.visibility-option:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 14px 28px rgba(102,88,160,.1);
+}
+.visibility-option:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(167,139,250,.18);
+}
+.visibility-option.is-selected {
+  color: var(--primary);
+  border-color: rgba(124, 58, 237, 0.38);
+  background: linear-gradient(135deg, rgba(255,255,255,.94), rgba(243,232,255,.78));
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.12);
+}
+.visibility-option.is-selected strong {
+  color: var(--primary);
+}
+.visibility-option.is-selected::after {
+  opacity: 1;
+  transform: scale(1);
+}
 .submit-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .setup-state {
   min-height: 260px;
@@ -464,4 +554,5 @@ h1 { max-width: 760px; font-size: clamp(36px, 6vw, 68px); line-height: 0.98; let
   h1 { font-size: 36px; }
   .hero p { font-size: 14px; }
   .two-col { grid-template-columns: 1fr; }
+  .visibility-options { grid-template-columns: 1fr; }
 }

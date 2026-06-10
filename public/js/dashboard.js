@@ -11,12 +11,20 @@
 
   const $ = (id) => document.getElementById(id);
   const roleState = normalizeRoleState(me);
+  if (!roleState.canUseStreamerTools) {
+    location.replace('viewer-stats.html');
+    return;
+  }
+
   let lastSummary = null;
   let lastError = null;
   let renderState = 'idle';
   let twitchStatus = null;
   let followedItems = [];
   let publicStreamers = [];
+  let favoriteItems = [];
+  const followedInitialLimit = 6;
+  const followedExpanded = { registered: false, unregistered: false };
 
   function t(key, params = {}, fallback = key) {
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
@@ -95,17 +103,16 @@
 
   function applyDashboardShell() {
     document.documentElement.classList.toggle('dashboard-streamer', roleState.canUseStreamerTools);
-    document.documentElement.classList.toggle('dashboard-user-only', !roleState.canUseStreamerTools);
 
     document.querySelectorAll('[data-streamer-dashboard]').forEach((section) => {
-      section.hidden = !roleState.canUseStreamerTools;
+      section.hidden = false;
     });
 
     const userPanel = $('userDashboardPanel');
-    if (userPanel) userPanel.hidden = false;
+    if (userPanel) userPanel.hidden = true;
 
     const followPanel = $('followedChannelsPanel');
-    if (followPanel) followPanel.hidden = false;
+    if (followPanel) followPanel.hidden = true;
 
     const roleBadge = $('dashboardUserRoleBadge');
     if (roleBadge) roleBadge.textContent = roleLabel().toUpperCase();
@@ -120,7 +127,7 @@
         title.textContent = t('dashboard.streamerWelcomeTitle', {}, '스트리머 기능이 활성화되었습니다.');
         text.textContent = t('dashboard.streamerWelcomeText', {}, '프로필 카드, 방송 정보, 팬 카드와 일반 사용자 기능을 함께 사용할 수 있습니다.');
       } else {
-        title.textContent = t('dashboard.userWelcomeTitle', {}, '일반 사용자 대시보드');
+        title.textContent = t('dashboard.userWelcomeTitle', {}, '일반 사용자 화면');
         text.textContent = t('dashboard.userWelcomeText', {}, 'Twitch 계정을 연결하고 스트리머 등록 신청을 준비할 수 있습니다.');
       }
     }
@@ -272,11 +279,6 @@
   }
 
   async function loadSummary(showDone = false) {
-    if (!roleState.canUseStreamerTools) {
-      await refreshUserDashboard(showDone);
-      return;
-    }
-
     renderStreamerLoading();
     try {
       const summary = await api.getJson('/api/dashboard/summary');
@@ -482,6 +484,54 @@
     return '';
   }
 
+  function normalizeFavoriteItem(item = {}) {
+    const streamer = item.streamer || item.streamerProfile || item.profile || item;
+    return {
+      id: item.id || streamer.id || streamer.slug,
+      name: safeText(streamer.name || streamer.displayName, t('index.noName', {}, '이름 없는 스트리머')),
+      handle: safeText(streamer.handle || streamer.username, ''),
+      mainContent: safeText(streamer.mainContent || streamer.category, t('profileCard.noContent', {}, '콘텐츠 미등록')),
+      imageUrl: safeText(streamer.avatarUrl || streamer.profileImage || streamer.coverImageUrl || streamer.coverImage, ''),
+      href: publicProfileHref(streamer)
+    };
+  }
+
+  function favoriteAvatarHtml(item) {
+    if (item.imageUrl) {
+      return `<img src="${api.escapeHtml(item.imageUrl)}" alt="" loading="lazy" />`;
+    }
+    return `<span>${api.escapeHtml(Array.from(item.name || '?')[0] || '?')}</span>`;
+  }
+
+  function renderFavoriteStreamers(items = favoriteItems, error = null) {
+    const list = $('favoriteStreamersList');
+    const badge = $('favoriteStreamersBadge');
+    if (!list) return;
+    if (error) {
+      if (badge) badge.textContent = '0';
+      list.innerHTML = listStateHtml('dashboard.favoriteStreamersError', '즐겨찾기 목록을 불러오지 못했습니다.', '!', error.message || '');
+      return;
+    }
+
+    const normalized = items.map(normalizeFavoriteItem).filter((item) => item.href);
+    if (badge) badge.textContent = numberText(normalized.length);
+    if (!normalized.length) {
+      list.innerHTML = listStateHtml('dashboard.favoriteStreamersEmpty', '아직 즐겨찾기한 스트리머가 없습니다.', '♡', t('dashboard.favoriteStreamersEmptyHint', {}, '공개 프로필에서 즐겨찾기를 추가하면 이곳에 표시됩니다.'));
+      return;
+    }
+
+    list.innerHTML = normalized.map((item) => `
+      <article class="dashboard-favorite-card">
+        <div class="dashboard-favorite-avatar">${favoriteAvatarHtml(item)}</div>
+        <div class="dashboard-favorite-body">
+          <strong>${api.escapeHtml(item.name)}</strong>
+          <span>${api.escapeHtml([item.handle ? `@${item.handle.replace(/^@/, '')}` : '', item.mainContent].filter(Boolean).join(' · '))}</span>
+        </div>
+        <a class="ghost-btn" href="${api.escapeHtml(item.href)}">${api.escapeHtml(t('dashboard.followedViewProfile', {}, '프로필 보기'))}</a>
+      </article>
+    `).join('');
+  }
+
   function renderFollowedChannels(items = followedItems) {
     const registeredList = $('registeredFollowedChannelsList');
     const unregisteredList = $('unregisteredFollowedChannelsList');
@@ -519,10 +569,10 @@
     function itemHtml(item, options = {}) {
       const href = publicProfileHref(item.publicMatch);
       const action = href
-        ? `<a class="ghost-btn" href="${api.escapeHtml(href)}">${api.escapeHtml(t('dashboard.followedViewProfile', {}, '프로필 보기'))}</a>`
-        : `<span class="badge">${api.escapeHtml(t('dashboard.followedUnregistered', {}, 'Nestory에 아직 등록되지 않았습니다'))}</span>`;
+        ? `<span class="badge dashboard-follow-status is-registered">${api.escapeHtml(t('dashboard.followedRegistered', {}, '등록됨'))}</span><a class="ghost-btn" href="${api.escapeHtml(href)}">${api.escapeHtml(t('dashboard.followedViewProfile', {}, '프로필 보기'))}</a>`
+        : `<span class="badge dashboard-follow-status is-unregistered">${api.escapeHtml(t('dashboard.followedUnregisteredShort', {}, '미등록'))}</span>`;
       return `
-        <div class="list-item">
+        <div class="list-item dashboard-follow-item">
           <div class="item-icon">T</div>
           <div class="item-content">
             <strong>${api.escapeHtml(item.name)}</strong>
@@ -534,12 +584,26 @@
       `;
     }
 
-    registeredList.innerHTML = registered.length
-      ? registered.map((item) => itemHtml(item)).join('')
-      : listStateHtml('dashboard.followedRegisteredEmpty', 'Nestory에 등록된 팔로우 스트리머가 아직 없습니다.', '0');
-    unregisteredList.innerHTML = unregistered.length
-      ? unregistered.map((item) => itemHtml(item, { unregistered: true })).join('')
-      : listStateHtml('dashboard.followedUnregisteredEmpty', '미등록 팔로우 스트리머가 없습니다.', '0');
+    function groupHtml(groupItems, groupKey, options = {}) {
+      if (!groupItems.length) {
+        return options.emptyHtml;
+      }
+      const expanded = Boolean(followedExpanded[groupKey]);
+      const visible = expanded ? groupItems : groupItems.slice(0, followedInitialLimit);
+      const hiddenCount = Math.max(groupItems.length - visible.length, 0);
+      const button = groupItems.length > followedInitialLimit
+        ? `<button class="ghost-btn follow-toggle" type="button" data-follow-toggle="${api.escapeHtml(groupKey)}">${api.escapeHtml(expanded ? t('dashboard.followedShowLess', {}, '접기') : t('dashboard.followedShowMore', { count: hiddenCount }, `더 보기 (${hiddenCount})`))}</button>`
+        : '';
+      return `${visible.map((item) => itemHtml(item, options)).join('')}${button}`;
+    }
+
+    registeredList.innerHTML = groupHtml(registered, 'registered', {
+      emptyHtml: listStateHtml('dashboard.followedRegisteredEmpty', 'Nestory에 등록된 팔로우 스트리머가 아직 없습니다.', '0')
+    });
+    unregisteredList.innerHTML = groupHtml(unregistered, 'unregistered', {
+      unregistered: true,
+      emptyHtml: listStateHtml('dashboard.followedUnregisteredEmpty', '미등록 팔로우 스트리머가 없습니다.', '0')
+    });
   }
 
   async function loadPublicStreamers() {
@@ -603,9 +667,25 @@
     }
   }
 
+  async function loadFavoriteStreamers() {
+    const list = $('favoriteStreamersList');
+    if (list) {
+      list.innerHTML = listStateHtml('dashboard.favoriteStreamersLoading', '즐겨찾기 목록을 불러오는 중입니다.', '♡');
+    }
+    try {
+      const payload = await api.getJson('/api/public/favorites');
+      favoriteItems = Array.isArray(payload?.items) ? payload.items : [];
+      renderFavoriteStreamers(favoriteItems);
+    } catch (error) {
+      favoriteItems = [];
+      renderFavoriteStreamers([], error);
+    }
+  }
+
   async function refreshUserDashboard(showDone = false) {
     renderUserStatus();
     renderRequestStatus();
+    await loadFavoriteStreamers();
     await loadTwitchStatus();
     await loadPublicStreamers();
     await loadFollowedChannels(false);
@@ -729,19 +809,12 @@
 
   function rerenderCurrentState() {
     applyDashboardShell();
-    renderUserStatus();
-    renderRequestStatus();
-    if (twitchStatus) renderTwitchStatus(twitchStatus);
-    renderFollowedChannels(followedItems);
-
-    if (roleState.canUseStreamerTools) {
-      if (renderState === 'summary' && lastSummary) {
-        renderStreamerSummary(lastSummary);
-      } else if (renderState === 'error') {
-        renderStreamerError(lastError);
-      } else if (renderState === 'loading') {
-        renderStreamerLoading();
-      }
+    if (renderState === 'summary' && lastSummary) {
+      renderStreamerSummary(lastSummary);
+    } else if (renderState === 'error') {
+      renderStreamerError(lastError);
+    } else if (renderState === 'loading') {
+      renderStreamerLoading();
     }
   }
 
@@ -754,8 +827,18 @@
   });
   $('dashboardRefreshFollowsButton')?.addEventListener('click', () => loadFollowedChannels(true));
   $('followedChannelsPanel')?.addEventListener('click', (event) => {
-    if (!event.target.closest('[data-follow-reconnect]')) return;
-    location.href = buildTwitchUrl('reconnect');
+    const toggle = event.target.closest('[data-follow-toggle]');
+    if (toggle) {
+      const key = toggle.dataset.followToggle;
+      if (key === 'registered' || key === 'unregistered') {
+        followedExpanded[key] = !followedExpanded[key];
+        renderFollowedChannels(followedItems);
+      }
+      return;
+    }
+    if (event.target.closest('[data-follow-reconnect]')) {
+      location.href = buildTwitchUrl('reconnect');
+    }
   });
   $('streamerRequestForm')?.addEventListener('submit', submitStreamerRequest);
 
@@ -763,7 +846,5 @@
 
   handleTwitchQueryNotice();
   applyDashboardShell();
-  prefillRequestForm();
-  await refreshUserDashboard(false);
-  if (roleState.canUseStreamerTools) await loadSummary();
+  await loadSummary();
 })();

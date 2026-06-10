@@ -93,12 +93,46 @@
     node.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  function setBackgroundUploadStatus(state = 'empty', filename = '') {
+    const node = $('backgroundUploadStatus');
+    if (!node) return;
+    node.classList.toggle('is-selected', state === 'selected');
+    node.classList.toggle('is-saved', state === 'saved');
+    if (state === 'selected') {
+      node.textContent = t('profileCard.backgroundFileSelected', { filename }, `선택됨: ${filename}`);
+      return;
+    }
+    if (state === 'saved') {
+      node.textContent = t('profileCard.backgroundSavedStatus', {}, '저장된 배경 이미지가 적용되어 있습니다.');
+      return;
+    }
+    node.textContent = t('profileCard.backgroundNoFile', {}, '배경 이미지가 아직 선택되지 않았습니다');
+  }
+
+  function refreshBackgroundUploadStatus() {
+    if (pendingBackgroundFile) {
+      setBackgroundUploadStatus('selected', pendingBackgroundFile.name || t('common.imageAlt', {}, '이미지'));
+      return;
+    }
+    setBackgroundUploadStatus(resolveStoredBackgroundUrl() ? 'saved' : 'empty');
+  }
+
+  function setSaveState(isLoading) {
+    const button = $('saveProfileButton');
+    if (!button) return;
+    if (!button.dataset.defaultText) button.dataset.defaultText = button.textContent;
+    button.disabled = isLoading;
+    button.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    button.textContent = isLoading ? t('profileCard.saving', {}, '저장 중...') : button.dataset.defaultText;
+  }
+
   function revokeObjectUrl(url) {
     if (url) URL.revokeObjectURL(url);
   }
 
   function ensureOption(select, value) {
     if (!select || !value) return;
+    if (!select.options) return;
     if (!Array.from(select.options).some((option) => option.value === value || option.textContent === value)) {
       const option = document.createElement('option');
       option.value = value;
@@ -192,6 +226,59 @@
       .slice(0, 5);
   }
 
+  function splitTagInput(value) {
+    const seen = new Set();
+    return String(value || '')
+      .split(/[,\n、，]/)
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .filter((tag) => {
+        const key = tag.toLocaleLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  function writeTagInput(targetId, values) {
+    const node = $(targetId);
+    if (!node) return;
+    node.value = values.filter(Boolean).slice(0, 6).join(', ');
+    node.dispatchEvent(new Event('input', { bubbles: true }));
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+    node.focus();
+  }
+
+  function renderInputTagPills(tags = collectPlayStyleTags()) {
+    const box = $('playStyleTagPills');
+    if (!box) return;
+    box.hidden = !tags.length;
+    box.innerHTML = tags
+      .map((tag) => `<button class="tag-pill" type="button" data-remove-tag="${api.escapeHtml(tag)}" aria-label="${api.escapeHtml(t('profileCard.removeTag', { tag }, `${tag} 삭제`))}">${api.escapeHtml(tag)}</button>`)
+      .join('');
+  }
+
+  function applyTagPreset(button) {
+    const group = button.closest('[data-tag-target]');
+    const targetId = group?.dataset.tagTarget;
+    const mode = group?.dataset.tagMode || 'replace';
+    const node = targetId ? $(targetId) : null;
+    const value = safeText(button.textContent, '');
+    if (!node || !value) return;
+    if (mode === 'append') {
+      const next = splitTagInput(node.value);
+      if (!next.some((tag) => tag.toLocaleLowerCase() === value.toLocaleLowerCase())) {
+        next.push(value);
+      }
+      writeTagInput(targetId, next);
+      return;
+    }
+    node.value = value;
+    node.dispatchEvent(new Event('input', { bubbles: true }));
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+    node.focus();
+  }
+
   function displayHandle(value) {
     const text = safeText(value, '');
     if (!text) return t('profileCard.noTwitchId', {}, 'Twitch ID 미등록');
@@ -201,6 +288,33 @@
   function displayLanguage(value) {
     const text = safeText(value, '');
     return languageLabels[text] || text;
+  }
+
+  function normalizeLanguageInput(value) {
+    const raw = safeText(value, '');
+    if (!raw) return '';
+    const tokens = raw.split(/[,\n、，]+/).map((token) => token.trim()).filter(Boolean);
+    const values = tokens.length > 1 ? tokens : raw.split(/\s*\/\s*/).map((token) => token.trim()).filter(Boolean);
+    const seen = new Set();
+    const unique = values.filter((token) => {
+      const key = token.toLocaleLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const normalized = unique.length > 1 ? unique.join(' / ') : raw;
+    if (normalized.length > 40) {
+      throw new Error(t('profileCard.languageTooLong', {}, '언어는 40자 이하로 입력해주세요.'));
+    }
+    return normalized;
+  }
+
+  function normalizeMainContentInput(value) {
+    const text = safeText(value, '');
+    if (text.length > 80) {
+      throw new Error(t('profileCard.mainContentTooLong', {}, '주 콘텐츠는 80자 이하로 입력해주세요.'));
+    }
+    return text;
   }
 
   function profileStringValue(value) {
@@ -398,6 +512,7 @@
     applyDesign(currentProfile.cardDesign);
     linksToInputs(currentProfile.socialLinks || []);
     scheduleToInputs(currentProfile.schedule || []);
+    refreshBackgroundUploadStatus();
     updatePreview();
   }
 
@@ -486,30 +601,6 @@
     }
   }
 
-  function publicProfileUrl() {
-    const slug = currentProfile?.slug || serverSnapshot?.slug || '';
-    return slug
-      ? `${location.origin}/streamer-detail.html?slug=${encodeURIComponent(slug)}`
-      : location.href;
-  }
-
-  function renderQr() {
-    const box = $('qrBox');
-    if (!box) return;
-    if ($('showQr')?.checked === false) {
-      box.hidden = true;
-      box.innerHTML = '';
-      return;
-    }
-
-    const slug = currentProfile?.slug || serverSnapshot?.slug || '';
-    const matrix = createQrMatrix(compactQrText(publicProfileUrl(), slug));
-    const labelKo = '프로필 QR';
-    const label = t('profileCard.profileQr', {}, labelKo);
-    box.hidden = false;
-    box.innerHTML = `${qrMatrixToSvg(matrix)}<span data-i18n="profileCard.profileQr">${api.escapeHtml(label)}</span>`;
-  }
-
   function renderVisibility() {
     const visibility = $('previewVisibility');
     if (!visibility) return;
@@ -573,9 +664,9 @@
     renderBackground();
     renderPreviewLinks();
     renderPreviewSchedule();
-    renderQr();
     renderStreamStatus();
     renderDetailScreenPreview({ mainColor, subColor, name, handle, subtitle, mainContent, language, playStyleTags });
+    renderInputTagPills(playStyleTags);
   }
 
   async function load() {
@@ -599,13 +690,39 @@
 
   async function save() {
     const previewOnlyPlayStyleTags = $('playStyleTags')?.value || '';
-    const storedBackgroundUrl = resolveStoredBackgroundUrl();
+    let uploadedBackgroundUrl = '';
+    if (pendingBackgroundFile) {
+      const result = await api.uploadFile('/api/profile-card/cover', 'coverImage', pendingBackgroundFile);
+      uploadedBackgroundUrl = result.coverImageUrl || result.backgroundImageUrl || result.coverImage || result.backgroundImage || '';
+      if (uploadedBackgroundUrl) {
+        revokeObjectUrl(backgroundPreviewUrl);
+        backgroundPreviewUrl = '';
+        pendingBackgroundFile = null;
+        if ($('backgroundUpload')) $('backgroundUpload').value = '';
+        currentProfile = {
+          ...(currentProfile || {}),
+          coverImageUrl: uploadedBackgroundUrl,
+          backgroundImageUrl: uploadedBackgroundUrl,
+          coverImage: uploadedBackgroundUrl,
+          backgroundImage: uploadedBackgroundUrl
+        };
+        serverSnapshot = {
+          ...(serverSnapshot || {}),
+          coverImageUrl: uploadedBackgroundUrl,
+          backgroundImageUrl: uploadedBackgroundUrl,
+          coverImage: uploadedBackgroundUrl,
+          backgroundImage: uploadedBackgroundUrl
+        };
+        setBackgroundUploadStatus('saved');
+      }
+    }
+    const storedBackgroundUrl = uploadedBackgroundUrl || resolveStoredBackgroundUrl();
     const body = {
       name: $('streamerName').value.trim(),
       handle: $('handle').value.trim(),
       subtitle: $('subtitle').value.trim(),
-      mainContent: $('mainContent').value.trim(),
-      language: $('language')?.value.trim() || '',
+      mainContent: normalizeMainContentInput($('mainContent').value),
+      language: normalizeLanguageInput($('language')?.value || ''),
       cardDesign: selectedDesign(),
       mainColor: $('mainColor').value,
       subColor: $('subColor').value,
@@ -613,6 +730,8 @@
       socialLinks: collectLinks(),
       schedule: collectSchedule(),
       ...(storedBackgroundUrl ? {
+        coverImageUrl: storedBackgroundUrl,
+        backgroundImageUrl: storedBackgroundUrl,
         backgroundImage: storedBackgroundUrl,
         coverImage: storedBackgroundUrl
       } : {})
@@ -621,10 +740,6 @@
     serverSnapshot = clone(saved) || {};
     applyProfile(serverSnapshot);
     setValue('playStyleTags', previewOnlyPlayStyleTags);
-    if (pendingBackgroundFile) {
-      api.showToast(t('profileCard.backgroundSaveUnsupported', {}, '현재 서버가 배경 이미지 저장 API를 지원하지 않아 배경 이미지는 저장되지 않았습니다.'));
-      return;
-    }
     api.showToast(t('profileCard.saveDone', {}, '프로필 카드가 저장되었습니다.'));
   }
 
@@ -664,7 +779,9 @@
       const canvas = await renderVisibleCardCanvas(target);
       const blob = await canvasToBlob(canvas);
       triggerPngDownload(blob, buildExportFilename());
-      api.showToast(t('profileCard.pngSaved', {}, '현재 미리보기 카드가 PNG로 저장되었습니다.'));
+      const savedMessage = t('profileCard.pngSaved', {}, `${canvas.width}x${canvas.height} PNG로 저장했습니다.`)
+        .replace('1200x675', `${canvas.width}x${canvas.height}`);
+      api.showToast(savedMessage);
     } catch (error) {
       api.showToast(error?.message || t('profileCard.pngFailed', {}, 'PNG 내보내기에 실패했습니다. 이미지 권한 또는 네트워크 상태를 확인해주세요.'));
     } finally {
@@ -966,10 +1083,6 @@
   }
 
   function buildExportProfile() {
-    const slug = currentProfile?.slug || serverSnapshot?.slug || '';
-    const profileUrl = slug
-      ? `${location.origin}/streamer-detail.html?slug=${encodeURIComponent(slug)}`
-      : location.href;
     const mainContent = safeText($('mainContent')?.value, '');
     const language = displayLanguage($('language')?.value);
     const tags = collectPlayStyleTags();
@@ -989,8 +1102,6 @@
       design: document.querySelector('input[name="cardDesign"]:checked')?.value || 'style-clean',
       status: safeText($('previewStatus')?.textContent, 'AUTO'),
       visibility: selectedVisibility() ? 'PUBLIC' : 'PRIVATE',
-      profileUrl,
-      qrText: compactQrText(profileUrl, slug),
       stageImageUrl: resolveBackgroundUrl() || resolveAvatarUrl() || ''
     };
   }
@@ -1162,21 +1273,17 @@
   }
 
   function drawBottomExportPanel(ctx, profile, theme) {
-    fillRoundRect(ctx, 674, 414, 252, 116, 26, theme.isClean ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.13)');
-    fillRoundRect(ctx, 674, 548, 252, 54, 22, theme.isClean ? 'rgba(255,255,255,.62)' : 'rgba(255,255,255,.1)');
-    fillRoundRect(ctx, 948, 414, 162, 188, 26, theme.isClean ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.88)');
+    fillRoundRect(ctx, 674, 414, 436, 116, 26, theme.isClean ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.13)');
+    fillRoundRect(ctx, 674, 548, 436, 54, 22, theme.isClean ? 'rgba(255,255,255,.62)' : 'rgba(255,255,255,.1)');
 
-    drawSingleLine(ctx, 'LINKS', 700, 450, 180, 18, 13, 950, theme.mutedColor);
-    drawWrappedText(ctx, profile.links.map((link) => link.label).join(' · ') || t('common.noLinks', {}, '등록된 링크가 없습니다'), 700, 484, 200, 26, 2, 20, 13, 850, theme.textColor);
+    drawSingleLine(ctx, 'LINKS', 700, 450, 360, 18, 13, 950, theme.mutedColor);
+    drawWrappedText(ctx, profile.links.map((link) => link.label).join(' · ') || t('common.noLinks', {}, '등록된 링크가 없습니다'), 700, 484, 382, 26, 2, 20, 13, 850, theme.textColor);
 
-    drawSingleLine(ctx, 'SCHEDULE', 700, 574, 120, 13, 10, 950, theme.mutedColor);
+    drawSingleLine(ctx, 'SCHEDULE', 700, 574, 360, 13, 10, 950, theme.mutedColor);
     const scheduleText = profile.schedule.length
       ? profile.schedule.map((item) => `${dayLabel(item.dayOfWeek)} ${item.startTime || t('profileCard.timeUnknown', {}, '미정')} ${item.title || ''}`).join(' / ')
       : t('profileCard.scheduleNoneShort', {}, '일정 없음');
-    drawSingleLine(ctx, scheduleText, 700, 596, 198, 16, 11, 850, theme.textColor);
-
-    drawQrMatrix(ctx, createQrMatrix(profile.qrText), 958, 426, 142, '#111827', '#ffffff');
-    drawSingleLine(ctx, 'PROFILE QR', 968, 584, 122, 11, 9, 950, '#6b7280', 'center');
+    drawSingleLine(ctx, scheduleText, 700, 596, 382, 16, 11, 850, theme.textColor);
   }
 
   function drawStatusPill(ctx, label, x, y, width, color, isClean) {
@@ -1324,343 +1431,6 @@
     return `${units.join('').trimEnd()}${suffix}`;
   }
 
-  function compactQrText(profileUrl, slug) {
-    if (utf8Length(profileUrl) <= 230) return profileUrl;
-    const compact = slug ? `${location.origin}/streamer-detail.html?slug=${encodeURIComponent(slug)}` : location.origin;
-    return utf8Length(compact) <= 230 ? compact : location.origin;
-  }
-
-  function utf8Length(value) {
-    return new TextEncoder().encode(String(value || '')).length;
-  }
-
-  function createQrMatrix(text) {
-    const configs = [
-      { version: 5, size: 37, dataCodewords: 108, eccPerBlock: 26, blocks: [108], alignment: [6, 30] },
-      { version: 6, size: 41, dataCodewords: 136, eccPerBlock: 18, blocks: [68, 68], alignment: [6, 34] },
-      { version: 7, size: 45, dataCodewords: 156, eccPerBlock: 20, blocks: [78, 78], alignment: [6, 22, 38] },
-      { version: 8, size: 49, dataCodewords: 194, eccPerBlock: 24, blocks: [97, 97], alignment: [6, 24, 42] },
-      { version: 9, size: 53, dataCodewords: 232, eccPerBlock: 30, blocks: [116, 116], alignment: [6, 26, 46] }
-    ];
-    const rawBytes = Array.from(new TextEncoder().encode(String(text || location.origin)));
-    const config = configs.find((item) => rawBytes.length <= Math.floor((item.dataCodewords * 8 - 12) / 8)) || configs[configs.length - 1];
-    const capacity = Math.floor((config.dataCodewords * 8 - 12) / 8);
-    const data = encodeQrData(rawBytes.slice(0, capacity), config.dataCodewords);
-    const codewords = addQrErrorCorrection(data, config);
-    const matrix = Array.from({ length: config.size }, () => Array(config.size).fill(false));
-    const reserved = Array.from({ length: config.size }, () => Array(config.size).fill(false));
-
-    drawQrFunctionPatterns(matrix, reserved, config);
-    placeQrCodewords(matrix, reserved, codewords);
-    const mask = chooseQrMask(matrix, reserved);
-    applyQrMask(matrix, reserved, mask);
-    drawQrFormatBits(matrix, reserved, config.size, mask);
-    if (config.version >= 7) drawQrVersionBits(matrix, reserved, config);
-    return matrix;
-  }
-
-  function encodeQrData(bytes, dataCodewords) {
-    const bits = [];
-    appendBits(bits, 0x4, 4);
-    appendBits(bits, bytes.length, 8);
-    bytes.forEach((byte) => appendBits(bits, byte, 8));
-    appendBits(bits, 0, Math.min(4, dataCodewords * 8 - bits.length));
-    while (bits.length % 8) bits.push(0);
-    const data = [];
-    for (let i = 0; i < bits.length; i += 8) {
-      data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
-    }
-    for (let pad = 0xec; data.length < dataCodewords; pad = pad === 0xec ? 0x11 : 0xec) {
-      data.push(pad);
-    }
-    return data;
-  }
-
-  function appendBits(bits, value, length) {
-    for (let i = length - 1; i >= 0; i -= 1) bits.push((value >>> i) & 1);
-  }
-
-  function addQrErrorCorrection(data, config) {
-    const divisor = reedSolomonDivisor(config.eccPerBlock);
-    const blocks = [];
-    let offset = 0;
-    config.blocks.forEach((length) => {
-      const block = data.slice(offset, offset + length);
-      offset += length;
-      blocks.push({ data: block, ecc: reedSolomonRemainder(block, divisor) });
-    });
-
-    const result = [];
-    const maxData = Math.max(...blocks.map((block) => block.data.length));
-    for (let i = 0; i < maxData; i += 1) {
-      blocks.forEach((block) => {
-        if (i < block.data.length) result.push(block.data[i]);
-      });
-    }
-    for (let i = 0; i < config.eccPerBlock; i += 1) {
-      blocks.forEach((block) => result.push(block.ecc[i]));
-    }
-    return result;
-  }
-
-  function reedSolomonDivisor(degree) {
-    const result = Array(degree).fill(0);
-    result[degree - 1] = 1;
-    let root = 1;
-    for (let i = 0; i < degree; i += 1) {
-      for (let j = 0; j < result.length; j += 1) {
-        result[j] = gfMultiply(result[j], root);
-        if (j + 1 < result.length) result[j] ^= result[j + 1];
-      }
-      root = gfMultiply(root, 0x02);
-    }
-    return result;
-  }
-
-  function reedSolomonRemainder(data, divisor) {
-    const result = Array(divisor.length).fill(0);
-    data.forEach((byte) => {
-      const factor = byte ^ result.shift();
-      result.push(0);
-      divisor.forEach((coefficient, index) => {
-        result[index] ^= gfMultiply(coefficient, factor);
-      });
-    });
-    return result;
-  }
-
-  function gfMultiply(x, y) {
-    let product = 0;
-    for (let i = 7; i >= 0; i -= 1) {
-      product = (product << 1) ^ ((product >>> 7) * 0x11d);
-      product ^= ((y >>> i) & 1) * x;
-    }
-    return product & 0xff;
-  }
-
-  function drawQrFunctionPatterns(matrix, reserved, config) {
-    const size = config.size;
-    drawQrFinder(matrix, reserved, 0, 0);
-    drawQrFinder(matrix, reserved, size - 7, 0);
-    drawQrFinder(matrix, reserved, 0, size - 7);
-    for (let i = 0; i < size; i += 1) {
-      if (!reserved[6][i]) setQrFunction(matrix, reserved, i, 6, i % 2 === 0);
-      if (!reserved[i][6]) setQrFunction(matrix, reserved, 6, i, i % 2 === 0);
-    }
-    config.alignment.forEach((x) => {
-      config.alignment.forEach((y) => {
-        if (!reserved[y][x]) drawQrAlignment(matrix, reserved, x, y);
-      });
-    });
-    reserveQrFormatAreas(matrix, reserved, size);
-    if (config.version >= 7) reserveQrVersionAreas(matrix, reserved, size);
-    setQrFunction(matrix, reserved, 8, size - 8, true);
-  }
-
-  function drawQrFinder(matrix, reserved, left, top) {
-    for (let y = -1; y <= 7; y += 1) {
-      for (let x = -1; x <= 7; x += 1) {
-        const xx = left + x;
-        const yy = top + y;
-        if (matrix[yy]?.[xx] === undefined) continue;
-        const inside = x >= 0 && x <= 6 && y >= 0 && y <= 6;
-        const dark = inside && (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4));
-        setQrFunction(matrix, reserved, xx, yy, dark);
-      }
-    }
-  }
-
-  function drawQrAlignment(matrix, reserved, centerX, centerY) {
-    for (let y = -2; y <= 2; y += 1) {
-      for (let x = -2; x <= 2; x += 1) {
-        setQrFunction(matrix, reserved, centerX + x, centerY + y, Math.max(Math.abs(x), Math.abs(y)) !== 1);
-      }
-    }
-  }
-
-  function reserveQrFormatAreas(matrix, reserved, size) {
-    for (let i = 0; i < 9; i += 1) {
-      if (i !== 6) {
-        setQrFunction(matrix, reserved, 8, i, false);
-        setQrFunction(matrix, reserved, i, 8, false);
-      }
-    }
-    for (let i = 0; i < 8; i += 1) {
-      setQrFunction(matrix, reserved, size - 1 - i, 8, false);
-      setQrFunction(matrix, reserved, 8, size - 1 - i, false);
-    }
-  }
-
-  function reserveQrVersionAreas(matrix, reserved, size) {
-    for (let i = 0; i < 6; i += 1) {
-      for (let j = 0; j < 3; j += 1) {
-        setQrFunction(matrix, reserved, size - 11 + j, i, false);
-        setQrFunction(matrix, reserved, i, size - 11 + j, false);
-      }
-    }
-  }
-
-  function setQrFunction(matrix, reserved, x, y, dark) {
-    if (matrix[y]?.[x] === undefined) return;
-    matrix[y][x] = dark;
-    reserved[y][x] = true;
-  }
-
-  function placeQrCodewords(matrix, reserved, codewords) {
-    const size = matrix.length;
-    let bitIndex = 0;
-    for (let right = size - 1; right >= 1; right -= 2) {
-      if (right === 6) right = 5;
-      for (let vert = 0; vert < size; vert += 1) {
-        for (let j = 0; j < 2; j += 1) {
-          const x = right - j;
-          const upward = ((right + 1) & 2) === 0;
-          const y = upward ? size - 1 - vert : vert;
-          if (reserved[y][x]) continue;
-          const byte = codewords[Math.floor(bitIndex / 8)];
-          matrix[y][x] = byte === undefined ? false : (((byte >>> (7 - (bitIndex % 8))) & 1) !== 0);
-          bitIndex += 1;
-        }
-      }
-    }
-  }
-
-  function chooseQrMask(matrix, reserved) {
-    let bestMask = 0;
-    let bestPenalty = Infinity;
-    for (let mask = 0; mask < 8; mask += 1) {
-      const clone = matrix.map((row) => row.slice());
-      applyQrMask(clone, reserved, mask);
-      const penalty = qrPenaltyScore(clone);
-      if (penalty < bestPenalty) {
-        bestPenalty = penalty;
-        bestMask = mask;
-      }
-    }
-    return bestMask;
-  }
-
-  function applyQrMask(matrix, reserved, mask) {
-    const size = matrix.length;
-    for (let y = 0; y < size; y += 1) {
-      for (let x = 0; x < size; x += 1) {
-        if (!reserved[y][x] && qrMaskBit(mask, x, y)) matrix[y][x] = !matrix[y][x];
-      }
-    }
-  }
-
-  function qrMaskBit(mask, x, y) {
-    switch (mask) {
-      case 0: return (x + y) % 2 === 0;
-      case 1: return y % 2 === 0;
-      case 2: return x % 3 === 0;
-      case 3: return (x + y) % 3 === 0;
-      case 4: return (Math.floor(y / 2) + Math.floor(x / 3)) % 2 === 0;
-      case 5: return ((x * y) % 2) + ((x * y) % 3) === 0;
-      case 6: return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
-      default: return (((x + y) % 2) + ((x * y) % 3)) % 2 === 0;
-    }
-  }
-
-  function qrPenaltyScore(matrix) {
-    const size = matrix.length;
-    let penalty = 0;
-    for (let y = 0; y < size; y += 1) penalty += qrRunPenalty(matrix[y]);
-    for (let x = 0; x < size; x += 1) penalty += qrRunPenalty(matrix.map((row) => row[x]));
-    for (let y = 0; y < size - 1; y += 1) {
-      for (let x = 0; x < size - 1; x += 1) {
-        const color = matrix[y][x];
-        if (color === matrix[y][x + 1] && color === matrix[y + 1][x] && color === matrix[y + 1][x + 1]) penalty += 3;
-      }
-    }
-    let darkCount = 0;
-    matrix.forEach((row) => row.forEach((dark) => {
-      if (dark) darkCount += 1;
-    }));
-    penalty += Math.floor(Math.abs(darkCount * 20 - size * size * 10) / (size * size)) * 10;
-    return penalty;
-  }
-
-  function qrRunPenalty(line) {
-    let penalty = 0;
-    let runColor = line[0];
-    let runLength = 1;
-    for (let i = 1; i <= line.length; i += 1) {
-      if (line[i] === runColor) {
-        runLength += 1;
-      } else {
-        if (runLength >= 5) penalty += runLength - 2;
-        runColor = line[i];
-        runLength = 1;
-      }
-    }
-    return penalty;
-  }
-
-  function drawQrFormatBits(matrix, reserved, size, mask) {
-    const eclBits = 1;
-    const data = (eclBits << 3) | mask;
-    let rem = data;
-    for (let i = 0; i < 10; i += 1) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
-    const bits = ((data << 10) | rem) ^ 0x5412;
-    for (let i = 0; i <= 5; i += 1) setQrFunction(matrix, reserved, 8, i, getQrBit(bits, i));
-    setQrFunction(matrix, reserved, 8, 7, getQrBit(bits, 6));
-    setQrFunction(matrix, reserved, 8, 8, getQrBit(bits, 7));
-    setQrFunction(matrix, reserved, 7, 8, getQrBit(bits, 8));
-    for (let i = 9; i < 15; i += 1) setQrFunction(matrix, reserved, 14 - i, 8, getQrBit(bits, i));
-    for (let i = 0; i < 8; i += 1) setQrFunction(matrix, reserved, size - 1 - i, 8, getQrBit(bits, i));
-    for (let i = 8; i < 15; i += 1) setQrFunction(matrix, reserved, 8, size - 15 + i, getQrBit(bits, i));
-    setQrFunction(matrix, reserved, 8, size - 8, true);
-  }
-
-  function drawQrVersionBits(matrix, reserved, config) {
-    let rem = config.version;
-    for (let i = 0; i < 12; i += 1) rem = (rem << 1) ^ ((rem >>> 11) * 0x1f25);
-    const bits = (config.version << 12) | rem;
-    for (let i = 0; i < 18; i += 1) {
-      const bit = getQrBit(bits, i);
-      const a = config.size - 11 + (i % 3);
-      const b = Math.floor(i / 3);
-      setQrFunction(matrix, reserved, a, b, bit);
-      setQrFunction(matrix, reserved, b, a, bit);
-    }
-  }
-
-  function getQrBit(value, index) {
-    return ((value >>> index) & 1) !== 0;
-  }
-
-  function drawQrMatrix(ctx, matrix, x, y, size, darkColor, lightColor) {
-    const quiet = 4;
-    const cells = matrix.length + quiet * 2;
-    const cellSize = Math.floor(size / cells);
-    const drawSize = cellSize * cells;
-    const offsetX = x + (size - drawSize) / 2;
-    const offsetY = y + (size - drawSize) / 2;
-    ctx.fillStyle = lightColor;
-    ctx.fillRect(offsetX, offsetY, drawSize, drawSize);
-    ctx.fillStyle = darkColor;
-    matrix.forEach((row, rowIndex) => {
-      row.forEach((dark, colIndex) => {
-        if (!dark) return;
-        ctx.fillRect(offsetX + (colIndex + quiet) * cellSize, offsetY + (rowIndex + quiet) * cellSize, cellSize, cellSize);
-      });
-    });
-  }
-
-  function qrMatrixToSvg(matrix) {
-    const quiet = 4;
-    const cells = matrix.length + quiet * 2;
-    const darkCells = [];
-    matrix.forEach((row, rowIndex) => {
-      row.forEach((dark, colIndex) => {
-        if (!dark) return;
-        darkCells.push(`<rect x="${colIndex + quiet}" y="${rowIndex + quiet}" width="1" height="1" />`);
-      });
-    });
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cells} ${cells}" role="img" aria-label="프로필 QR 코드"><rect width="${cells}" height="${cells}" fill="#fff" /><g fill="#111827">${darkCells.join('')}</g></svg>`;
-  }
-
   function normalizeHexColor(value, fallback) {
     const text = String(value || '').trim();
     if (/^#[0-9a-f]{6}$/i.test(text)) return text;
@@ -1751,6 +1521,7 @@
     revokeObjectUrl(backgroundPreviewUrl);
     pendingBackgroundFile = file || null;
     backgroundPreviewUrl = file ? URL.createObjectURL(file) : '';
+    refreshBackgroundUploadStatus();
     updatePreview();
   });
 
@@ -1766,10 +1537,23 @@
     $(id)?.addEventListener('input', updatePreview);
     $(id)?.addEventListener('change', updatePreview);
   });
+  document.querySelectorAll('.tag-preset-chip').forEach((button) => {
+    button.addEventListener('click', () => applyTagPreset(button));
+  });
+  $('playStyleTagPills')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-remove-tag]');
+    if (!button) return;
+    const removeTag = button.dataset.removeTag;
+    const next = collectPlayStyleTags().filter((tag) => tag !== removeTag);
+    writeTagInput('playStyleTags', next);
+  });
 
   $('saveProfileButton')?.addEventListener('click', (event) => {
     event.preventDefault();
-    save().catch((error) => api.showToast(error.message));
+    setSaveState(true);
+    save()
+      .catch((error) => api.showToast(error.message))
+      .finally(() => setSaveState(false));
   });
   $('downloadProfilePngButton')?.addEventListener('click', (event) => {
     event.preventDefault();
@@ -1779,6 +1563,8 @@
   $('resetProfileButton')?.addEventListener('click', resetToServerSnapshot);
   document.addEventListener('seiga:i18n-change', () => {
     delete $('downloadProfilePngButton')?.dataset.defaultText;
+    delete $('saveProfileButton')?.dataset.defaultText;
+    refreshBackgroundUploadStatus();
     if (currentProfile) updatePreview();
   });
   window.addEventListener('beforeunload', () => {

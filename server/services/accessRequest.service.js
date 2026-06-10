@@ -86,6 +86,40 @@ async function createAccessRequest(body, user = null) {
   return publicAccessRequest(item);
 }
 
+async function getMyAccessRequestStatus(user) {
+  if (!user) return null;
+
+  if (['STREAMER', 'ADMIN'].includes(user.role)) {
+    return {
+      status: 'approved',
+      item: null,
+      canApply: false,
+      role: user.role === 'ADMIN' ? 'ADMIN' : 'STREAMER'
+    };
+  }
+
+  const item = await prisma.accessRequest.findFirst({
+    where: { email: String(user.email || '').trim().toLowerCase() },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      reviewedAt: true,
+      approvedAt: true,
+      rejectedAt: true
+    }
+  });
+  const status = item?.status?.toLowerCase() || 'not_requested';
+
+  return {
+    status,
+    item: publicAccessRequest(item),
+    canApply: !item || item.status === 'REJECTED',
+    role: 'USER'
+  };
+}
+
 async function listAccessRequests(query = {}) {
   const status = normalizeStatus(query.status);
   const items = await prisma.accessRequest.findMany({
@@ -274,6 +308,7 @@ async function rejectAccessRequest(id, adminUser, body = {}) {
 
 module.exports = {
   createAccessRequest,
+  getMyAccessRequestStatus,
   listAccessRequests,
   getAccessRequest,
   approveAccessRequest,

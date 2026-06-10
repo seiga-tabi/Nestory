@@ -295,7 +295,7 @@ router.get('/auth/twitch/callback', asyncHandler(async (req, res) => {
 
   if (user.status !== 'ACTIVE') {
     await saveSession(req);
-    return res.redirect('/access-request.html?status=pending');
+    return res.redirect('/login.html?error=twitch_callback_failed');
   }
 
   if (!user.streamerProfile && user.role === 'STREAMER') {

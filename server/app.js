@@ -21,6 +21,8 @@ const { analyticsRoutes } = require('./routes/analytics.routes');
 const { settingsRoutes } = require('./routes/settings.routes');
 const { adminRoutes } = require('./routes/admin.routes');
 const { i18nRoutes } = require('./routes/i18n.routes');
+const { overlayRoutes, overlayPublicRoutes } = require('./routes/overlay.routes');
+const { viewerStatsRoutes } = require('./routes/viewerStats.routes');
 
 const app = express();
 const publicDir = path.resolve(process.cwd(), 'public');
@@ -55,6 +57,9 @@ app.use('/api/fan-cards', fanCardRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/overlays', overlayRoutes);
+app.use('/api/overlay-public', overlayPublicRoutes);
+app.use('/api/viewer-stats', viewerStatsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use(twitchRoutes);
 

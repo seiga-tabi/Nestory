@@ -26,7 +26,7 @@
       <button type="button" data-lang-option="ja">JA</button>
     </div>
     <a class="ghost-btn" href="login.html" data-i18n="nav.login">로그인</a>
-    <a class="primary-btn" href="access-request.html" data-i18n="nav.start">스트리머 시작하기</a>
+    <a class="primary-btn" href="register.html" data-i18n="nav.start">Twitch로 시작하기</a>
   </div>
 </header>
     
@@ -44,7 +44,7 @@
       <div class="field"><label for="targetStreamer" data-i18n="fanCardWrite.targetStreamer">대상 스트리머</label><select id="targetStreamer"></select></div>
       <div class="two-col"><div class="field"><label for="nickname" data-i18n="fanCardWrite.nickname">닉네임</label><input id="nickname" placeholder="익명 팬" data-i18n-placeholder="dashboard.anonymousFan" /></div><div class="field"><label for="lang" data-i18n="index.language">언어</label><select id="lang"><option data-i18n="index.languageKo">한국어</option><option data-i18n="index.languageJa">日本語</option><option>KR / JA</option></select></div></div>
       <div class="field"><label for="message" data-i18n="fanCardWrite.message">응원 메시지</label><textarea id="message" maxlength="300" placeholder="응원 메시지를 입력해주세요." data-i18n-placeholder="fanCardWrite.messagePlaceholder"></textarea></div>
-      <div class="field"><label data-i18n="fanCardWrite.visibility">공개 옵션</label><div class="radio-row"><label class="option-chip"><input name="visibility" type="radio" value="public" checked /> <span data-i18n="fanCardWrite.visibilityPublic">공개 가능</span></label><label class="option-chip"><input name="visibility" type="radio" value="private" /> <span data-i18n="fanCardWrite.visibilityPrivate">스트리머만 보기</span></label></div></div>
+      <div class="field"><label data-i18n="fanCardWrite.visibility">공개 옵션</label><div class="radio-row visibility-options" id="visibilityOptions"><label class="option-chip visibility-option is-selected"><input name="visibility" type="radio" value="public" checked /> <span><strong data-i18n="fanCardWrite.visibilityPublic">공개 가능</strong><small data-i18n="fanCardWrite.visibilityPublicNote">팬 카드 목록에 공개될 수 있어요.</small></span></label><label class="option-chip visibility-option"><input name="visibility" type="radio" value="private" /> <span><strong data-i18n="fanCardWrite.visibilityPrivate">스트리머만 보기</strong><small data-i18n="fanCardWrite.visibilityPrivateNote">스트리머에게만 조용히 전달돼요.</small></span></label></div></div>
       <div class="submit-row"><button class="primary-btn" type="submit" data-i18n="streamerDetail.sendFanCard">팬 카드 보내기</button><a class="ghost-btn" href="index.html" data-i18n="nav.backToList">목록으로</a></div>
     </form>
   </article>

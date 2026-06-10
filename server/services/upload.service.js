@@ -6,24 +6,37 @@ const { env } = require('../config/env');
 const { createHttpError } = require('../utils/httpError');
 
 const avatarDir = path.join(env.uploadDirAbs, 'avatars');
+const coverDir = path.join(env.uploadDirAbs, 'covers');
+const overlayDir = path.join(env.uploadDirAbs, 'overlays');
 fs.mkdirSync(avatarDir, { recursive: true });
+fs.mkdirSync(coverDir, { recursive: true });
+fs.mkdirSync(overlayDir, { recursive: true });
 
 const MAX_AVATAR_BYTES = Math.round(env.MAX_AVATAR_UPLOAD_MB * 1024 * 1024);
+const MAX_OVERLAY_ASSET_BYTES = Math.round(env.MAX_OVERLAY_ASSET_UPLOAD_MB * 1024 * 1024);
 const allowedImages = {
   jpeg: { mime: 'image/jpeg', extensions: new Set(['.jpg', '.jpeg']) },
   png: { mime: 'image/png', extensions: new Set(['.png']) },
   webp: { mime: 'image/webp', extensions: new Set(['.webp']) }
 };
+const allowedOverlayAssets = {
+  ...allowedImages,
+  gif: { mime: 'image/gif', extensions: new Set(['.gif']) }
+};
 const allowedExt = new Set(Object.values(allowedImages).flatMap((item) => Array.from(item.extensions)));
 const allowedMime = new Set(Object.values(allowedImages).map((item) => item.mime));
+const allowedOverlayExt = new Set(Object.values(allowedOverlayAssets).flatMap((item) => Array.from(item.extensions)));
+const allowedOverlayMime = new Set(Object.values(allowedOverlayAssets).map((item) => item.mime));
 
-const avatarStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, avatarDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname || '').toLowerCase();
-    cb(null, `${crypto.randomUUID()}${ext}`);
-  }
-});
+function uploadStorage(uploadDir) {
+  return multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || '').toLowerCase();
+      cb(null, `${crypto.randomUUID()}${ext}`);
+    }
+  });
+}
 
 function imageFilter(_req, file, cb) {
   const ext = path.extname(file.originalname || '').toLowerCase();
@@ -33,10 +46,30 @@ function imageFilter(_req, file, cb) {
   return cb(null, true);
 }
 
+function overlayAssetFilter(_req, file, cb) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  if (!allowedOverlayExt.has(ext) || !allowedOverlayMime.has(file.mimetype)) {
+    return cb(createHttpError(415, 'jpg, jpeg, png, webp, gif 이미지만 업로드할 수 있습니다.', 'UNSUPPORTED_IMAGE_TYPE'));
+  }
+  return cb(null, true);
+}
+
 const avatarUpload = multer({
-  storage: avatarStorage,
+  storage: uploadStorage(avatarDir),
   fileFilter: imageFilter,
   limits: { fileSize: MAX_AVATAR_BYTES, files: 1 }
+});
+
+const coverUpload = multer({
+  storage: uploadStorage(coverDir),
+  fileFilter: imageFilter,
+  limits: { fileSize: MAX_AVATAR_BYTES, files: 1 }
+});
+
+const overlayAssetUpload = multer({
+  storage: uploadStorage(overlayDir),
+  fileFilter: overlayAssetFilter,
+  limits: { fileSize: MAX_OVERLAY_ASSET_BYTES, files: 1 }
 });
 
 function detectImageType(buffer) {
@@ -66,10 +99,17 @@ function detectImageType(buffer) {
     return 'webp';
   }
 
+  if (
+    buffer.length >= 6
+    && ['GIF87a', 'GIF89a'].includes(buffer.toString('ascii', 0, 6))
+  ) {
+    return 'gif';
+  }
+
   return null;
 }
 
-async function validateUploadedAvatar(file) {
+async function validateUploadedImageFile(file, allowedTypes, maxBytes, message) {
   if (!file) {
     throw createHttpError(400, '업로드할 이미지를 선택해주세요.', 'UPLOAD_FILE_REQUIRED');
   }
@@ -84,22 +124,64 @@ async function validateUploadedAvatar(file) {
   }
 
   const type = detectImageType(buffer);
-  const expected = type ? allowedImages[type] : null;
+  const expected = type ? allowedTypes[type] : null;
   const isValid = expected
     && expected.mime === file.mimetype
     && expected.extensions.has(ext)
-    && file.size <= MAX_AVATAR_BYTES;
+    && file.size <= maxBytes;
 
   if (!isValid) {
     await fs.promises.unlink(file.path).catch(() => {});
-    throw createHttpError(415, '유효한 jpg, jpeg, png, webp 이미지만 업로드할 수 있습니다.', 'INVALID_IMAGE_CONTENT');
+    throw createHttpError(415, message, 'INVALID_IMAGE_CONTENT');
   }
 }
 
-function removeUpload(publicPath) {
-  if (!publicPath || !publicPath.startsWith('/uploads/avatars/')) return;
-  const fullPath = path.join(env.uploadDirAbs, publicPath.replace('/uploads/', ''));
-  fs.promises.unlink(fullPath).catch(() => {});
+async function validateUploadedImage(file) {
+  return validateUploadedImageFile(
+    file,
+    allowedImages,
+    MAX_AVATAR_BYTES,
+    '유효한 jpg, jpeg, png, webp 이미지만 업로드할 수 있습니다.'
+  );
 }
 
-module.exports = { avatarUpload, validateUploadedAvatar, removeUpload, MAX_AVATAR_BYTES };
+async function validateUploadedAvatar(file) {
+  return validateUploadedImage(file);
+}
+
+async function validateUploadedOverlayAsset(file) {
+  return validateUploadedImageFile(
+    file,
+    allowedOverlayAssets,
+    MAX_OVERLAY_ASSET_BYTES,
+    '유효한 jpg, jpeg, png, webp, gif 이미지만 업로드할 수 있습니다.'
+  );
+}
+
+function removeUpload(publicPath) {
+  if (
+    !publicPath
+    || (
+      !publicPath.startsWith('/uploads/avatars/')
+      && !publicPath.startsWith('/uploads/covers/')
+      && !publicPath.startsWith('/uploads/overlays/')
+    )
+  ) return Promise.resolve();
+  const relativePath = publicPath.replace('/uploads/', '');
+  const fullPath = path.resolve(env.uploadDirAbs, relativePath);
+  const uploadRoot = path.resolve(env.uploadDirAbs);
+  if (!fullPath.startsWith(`${uploadRoot}${path.sep}`)) return Promise.resolve();
+  return fs.promises.unlink(fullPath).catch(() => {});
+}
+
+module.exports = {
+  avatarUpload,
+  coverUpload,
+  overlayAssetUpload,
+  validateUploadedAvatar,
+  validateUploadedImage,
+  validateUploadedOverlayAsset,
+  removeUpload,
+  MAX_AVATAR_BYTES,
+  MAX_OVERLAY_ASSET_BYTES
+};

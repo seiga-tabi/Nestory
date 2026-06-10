@@ -15,6 +15,8 @@
   const $ = (id) => document.getElementById(id);
   const languageLabels = { KR: '한국어', JA: '日本語', 'KR/JA': 'KR / JA', 'JA/KR': 'JA / KR' };
   let currentProfile = null;
+  let favoriteActive = false;
+  let favoriteBusy = false;
 
   function t(key, params = {}, fallback = key) {
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
@@ -140,6 +142,82 @@
     return schedule.filter((item) => item?.isActive !== false && (item?.startTime || item?.title));
   }
 
+  function isFavoriteProfile(profile = {}) {
+    return profile?.isFavorite === true
+      || profile?.favorited === true
+      || profile?.favorite === true
+      || profile?.isBookmarked === true;
+  }
+
+  function currentNextPath() {
+    return `streamer-detail.html?slug=${encodeURIComponent(slug)}`;
+  }
+
+  function setFavoriteButtons(active = false) {
+    favoriteActive = Boolean(active);
+    const buttons = [
+      { node: $('detailFavoriteButton'), inactiveKey: 'streamerDetail.favorite', inactiveFallback: '즐겨찾기' },
+      { node: $('detailSideFavoriteButton'), inactiveKey: 'streamerDetail.favoriteAdd', inactiveFallback: '즐겨찾기 추가' }
+    ];
+    buttons.forEach(({ node, inactiveKey, inactiveFallback }) => {
+      if (!node) return;
+      node.disabled = favoriteBusy;
+      node.classList.toggle('is-active', favoriteActive);
+      node.setAttribute('aria-pressed', favoriteActive ? 'true' : 'false');
+      node.textContent = favoriteActive
+        ? t('streamerDetail.favorited', {}, '즐겨찾기됨')
+        : t(inactiveKey, {}, inactiveFallback);
+    });
+  }
+
+  async function authState() {
+    if (window.SeigaAuth?.getAuthState) {
+      return window.SeigaAuth.getAuthState({ force: true });
+    }
+    try {
+      return await api.getJson('/api/auth/me');
+    } catch (_error) {
+      return { authenticated: false };
+    }
+  }
+
+  async function handleFavoriteClick(event) {
+    event.preventDefault();
+    if (favoriteBusy) return;
+    const state = await authState();
+    if (!state?.authenticated) {
+      location.href = `login.html?next=${encodeURIComponent(currentNextPath())}`;
+      return;
+    }
+    favoriteBusy = true;
+    setFavoriteButtons(favoriteActive);
+    try {
+      const response = favoriteActive
+        ? await api.deleteJson(`/api/public/streamers/${encodeURIComponent(slug)}/favorite`)
+        : await api.postJson(`/api/public/streamers/${encodeURIComponent(slug)}/favorite`, {});
+      setFavoriteButtons(isFavoriteProfile(response));
+      api.showToast(response?.favorited || response?.isFavorite
+        ? t('streamerDetail.favoriteDone', {}, '즐겨찾기에 추가했습니다.')
+        : t('streamerDetail.favoriteRemoved', {}, '즐겨찾기를 해제했습니다.'));
+    } catch (error) {
+      api.showToast(error.message || t('streamerDetail.favoriteError', {}, '즐겨찾기 상태를 변경하지 못했습니다.'));
+    } finally {
+      favoriteBusy = false;
+      setFavoriteButtons(favoriteActive);
+    }
+  }
+
+  async function loadFavoriteStatus() {
+    const state = await authState();
+    if (!state?.authenticated) return;
+    try {
+      const response = await api.getJson(`/api/public/streamers/${encodeURIComponent(slug)}/favorite`);
+      setFavoriteButtons(isFavoriteProfile(response));
+    } catch (_error) {
+      setFavoriteButtons(isFavoriteProfile(currentProfile || {}));
+    }
+  }
+
   function renderDetailProfileCard(profile = {}, options = {}) {
     const slot = $('detailProfileCardSlot');
     const renderer = window.SeigaProfileCard;
@@ -179,6 +257,7 @@
   }
 
   function renderLoading() {
+    setFavoriteButtons(false);
     renderCover({}, 'loading');
     renderAllAvatars({ name: '?' }, 'loading');
     $('detailHeroName').textContent = t('streamerDetail.heroLoadingName', {}, '프로필을 불러오는 중입니다.');
@@ -193,6 +272,7 @@
 
   function renderError(error) {
     const message = error?.message || t('streamerDetail.profileLoadError', {}, '프로필 데이터를 불러오지 못했습니다.');
+    setFavoriteButtons(false);
     renderCover({}, 'error');
     renderAllAvatars({ name: '?' }, 'error');
     $('detailLiveBadge').innerHTML = '<span class="dot"></span>ERROR';
@@ -277,6 +357,7 @@
 
   function render(profile) {
     currentProfile = profile;
+    setFavoriteButtons(isFavoriteProfile(profile));
     const isLive = Boolean(profile.isLive);
     const name = safeText(profile.name, t('index.noName', {}, '이름 없는 스트리머'));
     const handle = safeText(profile.handle, t('index.noHandle', {}, '핸들 없음'));
@@ -314,6 +395,7 @@
     renderLinks(profile);
     renderFanCards(profile.fanCards || []);
     renderSchedule(profile.schedule || []);
+    loadFavoriteStatus();
   }
 
   function loginToast(event) {
@@ -327,6 +409,8 @@
   }
 
   document.addEventListener('click', loginToast);
+  $('detailFavoriteButton')?.addEventListener('click', handleFavoriteClick);
+  $('detailSideFavoriteButton')?.addEventListener('click', handleFavoriteClick);
   document.addEventListener('seiga:i18n-change', () => {
     if (currentProfile) render(currentProfile);
     else renderLoading();

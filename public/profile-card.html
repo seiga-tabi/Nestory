@@ -181,10 +181,10 @@
         <div class="field"><label for="subtitle" data-i18n="profileCard.bio">소개 / Bio</label><textarea id="subtitle" autocomplete="off" maxlength="180"></textarea></div>
         <textarea id="intro" hidden></textarea>
         <div class="two-col">
-          <div class="field"><label for="mainContent" data-i18n="profileCard.mainContent">주 콘텐츠</label><select id="mainContent"><option value="" data-i18n="common.noneSelected">선택 안 함</option><option data-i18n="index.categoryMinecraft">마인크래프트</option><option>League of Legends</option><option data-i18n="index.categoryChat">잡담</option><option data-i18n="index.categoryMusic">노래 / 음악</option><option data-i18n="profileCard.categoryStoryGame">스토리 게임</option></select></div>
-          <div class="field"><label for="language" data-i18n="profileCard.language">언어 / Language</label><select id="language"><option value="" data-i18n="common.noneSelected">선택 안 함</option><option value="KR" data-i18n="index.languageKo">한국어</option><option value="JA" data-i18n="index.languageJa">日本語</option><option value="KR/JA">KR / JA</option><option value="JA/KR">JA / KR</option></select></div>
+          <div class="field tag-input-field"><label for="mainContent" data-i18n="profileCard.mainContent">주 콘텐츠</label><div class="tag-input-shell"><input id="mainContent" type="text" list="mainContentPresets" maxlength="80" autocomplete="off" placeholder="LoL, Minecraft, VALORANT" data-i18n-placeholder="profileCard.mainContentPlaceholder" /></div><div class="tag-presets" data-tag-target="mainContent" data-tag-mode="replace" data-i18n-aria-label="profileCard.mainContentPresets" aria-label="주 콘텐츠 추천"><button class="tag-preset-chip" type="button">LoL</button><button class="tag-preset-chip" type="button">Minecraft</button><button class="tag-preset-chip" type="button">VALORANT</button><button class="tag-preset-chip" type="button" data-i18n="profileCard.presetJustChatting">잡담</button></div><datalist id="mainContentPresets"><option value="LoL"></option><option value="Minecraft"></option><option value="VALORANT"></option><option value="Just Chatting"></option><option value="League of Legends"></option><option value="마인크래프트"></option><option value="잡담"></option><option value="노래 / 음악"></option></datalist></div>
+          <div class="field tag-input-field"><label for="language" data-i18n="profileCard.language">언어 / Language</label><div class="tag-input-shell"><input id="language" type="text" list="languagePresets" maxlength="40" autocomplete="off" placeholder="한국어, 日本語, English" data-i18n-placeholder="profileCard.languagePlaceholder" /></div><div class="tag-presets" data-tag-target="language" data-tag-mode="append" data-i18n-aria-label="profileCard.languagePresets" aria-label="언어 추천"><button class="tag-preset-chip" type="button">한국어</button><button class="tag-preset-chip" type="button">日本語</button><button class="tag-preset-chip" type="button">English</button><button class="tag-preset-chip" type="button">KR / JA</button></div><datalist id="languagePresets"><option value="한국어"></option><option value="日本語"></option><option value="English"></option><option value="KR / JA"></option><option value="JA / KR"></option><option value="KR"></option><option value="JA"></option></datalist></div>
         </div>
-        <div class="field"><label for="playStyleTags" data-i18n="profileCard.playStyleTags">플레이 스타일 태그</label><input id="playStyleTags" type="text" autocomplete="off" placeholder="예: 초보 환영, 솔랭, 협동" data-i18n-placeholder="profileCard.playStylePlaceholder" /></div>
+        <div class="field tag-input-field"><label for="playStyleTags" data-i18n="profileCard.playStyleTags">플레이 스타일 태그</label><div class="tag-input-shell"><input id="playStyleTags" type="text" autocomplete="off" placeholder="예: 초보 환영, 솔랭, 협동" data-i18n-placeholder="profileCard.playStylePlaceholder" /></div><div class="tag-presets" data-tag-target="playStyleTags" data-tag-mode="append" data-i18n-aria-label="profileCard.playStylePresets" aria-label="플레이 스타일 추천"><button class="tag-preset-chip" type="button" data-i18n="profileCard.presetBeginner">초보 환영</button><button class="tag-preset-chip" type="button" data-i18n="profileCard.presetSoloQueue">솔랭</button><button class="tag-preset-chip" type="button" data-i18n="profileCard.presetCoop">협동</button><button class="tag-preset-chip" type="button" data-i18n="profileCard.presetCozy">힐링</button></div><div class="tag-pill-list" id="playStyleTagPills" aria-live="polite" hidden></div></div>
         <input id="liveStatus" type="hidden" value="AUTO" />
       </div>
     </section>
@@ -201,6 +201,7 @@
     <section class="panel">
       <div class="panel-title"><div><h2 data-i18n="profileCard.imageTitle">프로필 이미지</h2><p data-i18n="profileCard.imageDescription">대표 이미지와 배경 이미지를 미리보기에 바로 반영합니다.</p></div><span class="badge">Upload</span></div>
       <div class="upload-grid"><label class="upload-box"><input id="avatarUpload" type="file" accept="image/*" /><div><strong data-i18n="profileCard.avatarImage">대표 프로필 이미지</strong><span data-i18n="profileCard.avatarImageNote">PNG/JPG 권장<br />인물 또는 캐릭터 이미지 추천</span></div></label><label class="upload-box"><input id="backgroundUpload" type="file" accept="image/*" /><div><strong data-i18n="profileCard.backgroundImage">배경 이미지</strong><span data-i18n="profileCard.backgroundImageNote">상세 프로필 화면에서 사용되는 배경 이미지입니다</span></div></label></div>
+      <p class="upload-status" id="backgroundUploadStatus" data-i18n="profileCard.backgroundNoFile">배경 이미지가 아직 선택되지 않았습니다</p>
     </section>
 
     <section class="panel">
@@ -234,7 +235,6 @@
         <label class="toggle-row"><div><strong data-i18n="profileCard.publicProfile">공개 프로필</strong><span data-i18n="profileCard.publicProfileNote">끄면 미리보기와 저장 상태가 비공개로 표시됩니다.</span></div><span class="switch"><input id="isPublicToggle" type="checkbox" /><span class="switch-slider"></span></span></label>
       </div>
       <input id="showSchedule" type="checkbox" checked hidden />
-      <input id="showQr" type="checkbox" checked hidden />
     </section>
   </div>
 
@@ -304,7 +304,6 @@
           </div>
 
           <span id="previewFloatingText" class="profile-card__support-text" hidden></span>
-          <div class="profile-card__qr qr-box" id="qrBox" hidden></div>
         </div>
           </article>
         </div>
