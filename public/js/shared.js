@@ -6,6 +6,7 @@
   const adminSelector = '[data-auth-admin]';
   const streamerSelector = '[data-auth-streamer]';
   const viewerSelector = '[data-auth-viewer]';
+  const userOnlySelector = '[data-auth-user-only]';
   const controlledSelector = '[data-auth-controlled]';
   const authStorageKeys = [
     'seiga_auth_state',
@@ -178,6 +179,12 @@
     node.dataset.authViewer = 'true';
   }
 
+  function markUserOnlyNode(node, kind = 'user-only') {
+    if (!node) return;
+    markViewerNode(node, kind);
+    node.dataset.authUserOnly = 'true';
+  }
+
   function ensureAdminHeaderLink(actions) {
     const link = ensureAuthLink(
       actions,
@@ -223,7 +230,7 @@
     return link;
   }
 
-  function ensureViewerSidebarLink(nav, href, icon, i18nKey, fallback, kind, beforeNode = null) {
+  function ensureViewerSidebarLink(nav, href, icon, i18nKey, fallback, kind, beforeNode = null, options = {}) {
     if (!nav) return null;
     let link = nav.querySelector(`[data-auth-kind="${kind}"], a[href="${href}"]`);
     if (!link) {
@@ -234,7 +241,8 @@
       if (beforeNode) nav.insertBefore(link, beforeNode);
       else nav.append(link);
     }
-    markViewerNode(link, kind);
+    if (options.userOnly) markUserOnlyNode(link, kind);
+    else markViewerNode(link, kind);
     link.href = href;
     link.dataset.authKind = kind;
     const label = link.querySelector('[data-i18n], [data-shell-nav-label]') || link;
@@ -250,7 +258,7 @@
     const settingsLink = nav.querySelector('a[href="settings.html"]');
     ensureViewerSidebarLink(nav, 'viewer-stats.html', '📈', 'nav.viewerStats', '내 통계', 'viewer-stats', dashboardLink || settingsLink);
     ensureViewerSidebarLink(nav, 'favorites.html', '♡', 'nav.favorites', '즐겨찾기', 'favorites', dashboardLink || settingsLink);
-    ensureViewerSidebarLink(nav, 'streamer-apply.html', '✦', 'nav.streamerApply', '스트리머 등록 신청', 'streamer-apply', dashboardLink || settingsLink);
+    ensureViewerSidebarLink(nav, 'streamer-apply.html', '✦', 'nav.streamerApply', '스트리머 등록 신청', 'streamer-apply', dashboardLink || settingsLink, { userOnly: true });
   }
 
   function ensureAdminSidebarLink(nav) {
@@ -326,9 +334,9 @@
           configureAction(node, 'login.html');
         }
 
-        if (href === 'register.html' || i18nKey === 'nav.start') {
+        if (i18nKey === 'nav.start') {
           markAuthNode(node, 'guest', 'start');
-          configureAction(node, 'register.html');
+          configureAction(node, 'login.html');
         }
 
         if (href === 'dashboard.html') {
@@ -369,7 +377,11 @@
       'a[href="favorites.html"]',
       'a[href="streamer-apply.html"]',
       '[data-auth-viewer]'
-    ].join(',')).forEach((node) => markViewerNode(node, node.dataset.authKind || 'viewer'));
+    ].join(',')).forEach((node) => {
+      const kind = node.dataset.authKind || 'viewer';
+      if (node.getAttribute('href') === 'streamer-apply.html' || node.matches('[data-auth-user-only]')) markUserOnlyNode(node, kind);
+      else markViewerNode(node, kind);
+    });
     root.querySelectorAll('.sidebar .nav').forEach(ensureViewerSidebarLinks);
   }
 
@@ -382,7 +394,8 @@
     const authenticated = Boolean(state?.authenticated);
     const admin = isAdminState(state);
     const streamer = isStreamerState(state);
-    const viewer = authenticated && !admin && !streamer;
+    const viewer = authenticated && !admin;
+    const userOnly = authenticated && !admin && !streamer;
     const role = normalizeRole(state?.role || state?.user?.role);
     document.documentElement.classList.remove(
       'auth-loading',
@@ -406,6 +419,7 @@
     document.querySelectorAll(adminSelector).forEach((node) => setVisible(node, admin));
     document.querySelectorAll(streamerSelector).forEach((node) => setVisible(node, streamer));
     document.querySelectorAll(viewerSelector).forEach((node) => setVisible(node, viewer));
+    document.querySelectorAll(userOnlySelector).forEach((node) => setVisible(node, userOnly));
     document.querySelectorAll(controlledSelector).forEach((node) => {
       if (!node.matches(guestSelector) && !node.matches(userSelector) && !node.matches(adminSelector) && !node.matches(streamerSelector)) setVisible(node, true);
     });

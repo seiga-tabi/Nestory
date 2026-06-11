@@ -48,8 +48,8 @@ router.get('/streamers', asyncHandler(async (req, res) => {
   res.json({ items });
 }));
 
-router.get('/rankings', asyncHandler(async (_req, res) => {
-  res.json({ items: await rankings() });
+router.get('/rankings', asyncHandler(async (req, res) => {
+  res.json({ items: await rankings(req.query) });
 }));
 
 const accessRequestSchema = z.object({

@@ -1,10 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: seiga_db
-      POSTGRES_USER: seiga
-      POSTGRES_PASSWORD: seiga_password
+      POSTGRES_DB: ${POSTGRES_DB:-seiga_db}
+      POSTGRES_USER: ${POSTGRES_USER:-seiga}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-seiga_password}
     ports:
       - "5432:5432"
     volumes:
@@ -17,15 +18,21 @@ services:
 
   app:
     build: .
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://seiga:seiga_password@postgres:5432/seiga_db
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-seiga}:${POSTGRES_PASSWORD:-seiga_password}@postgres:5432/${POSTGRES_DB:-seiga_db}
       PORT: 25570
-      PUBLIC_BASE_URL: http://localhost:25570
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:25570}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      TOKEN_ENCRYPTION_SECRET: ${TOKEN_ENCRYPTION_SECRET:-}
+      SESSION_STORE: database
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SEED_SAMPLE_DATA: ${SEED_SAMPLE_DATA:-false}
     ports:
       - "25570:25570"

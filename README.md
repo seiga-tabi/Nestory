@@ -35,6 +35,18 @@ Seeded accounts:
 
 If you already have a local PostgreSQL on port `5432`, either point `DATABASE_URL` at that database or use Docker.
 
+## Public page frontend checks
+
+`index.html`과 `streamers.html`은 별도 `public/js/index.js`, `public/js/streamers.js`를 두지 않고 `public/js/public.js` 단일 컨트롤러를 공유합니다.
+`public.js`는 DOM 존재 여부로 홈 화면의 검색/인기 스트리머 위젯과 스트리머 탐색 화면의 검색/필터/정렬 리스트를 구분해 초기화합니다.
+
+공개 페이지 JS 정적 검사는 아래 명령을 기준으로 합니다.
+
+```bash
+node --check public/js/public.js
+npm run check
+```
+
 ## 로컬 실행 안내
 
 권장 실행 방법은 Docker Compose입니다. Mac과 Windows 모두 Docker Desktop을 켠 뒤 아래 명령을 실행합니다.
@@ -69,8 +81,33 @@ docker compose up -d --build app
 ```
 
 The app is exposed at `http://localhost:25570`; Postgres is exposed at `localhost:5432`; uploads are stored in the `uploads` Docker volume.
+Docker Compose는 app과 postgres에 `restart: unless-stopped`를 적용합니다. 기본 로컬 검수는 `.env`의 `NODE_ENV=development`를 사용하며, production 검수 또는 실제 배포 때만 `NODE_ENV=production`으로 실행하세요.
 Docker Compose는 컨테이너 시작 시 `npx prisma migrate deploy`와 `npm run seed`를 실행하지만, `SEED_SAMPLE_DATA` 기본값은 `false`입니다. 로컬 데모 샘플 스트리머가 필요할 때만 `.env` 또는 실행 환경에 `SEED_SAMPLE_DATA=true`를 설정하세요.
 Docker에서 seed가 반복 실행되어도 기존 관리자 비밀번호는 `ADMIN_RESET_PASSWORD_ON_SEED=true`가 아니면 바뀌지 않습니다. `SEED_SAMPLE_DATA=true`로 샘플을 켜도 seed snapshot/pageView는 seed marker 기준으로 갱신되어 같은 데이터가 계속 누적되지 않습니다.
+Docker app 컨테이너의 `DATABASE_URL`은 `postgres` 서비스명을 사용합니다. `.env.example`의 `localhost:5432` 값은 Docker를 쓰지 않고 호스트에서 `npm start`로 직접 실행할 때만 사용하세요.
+운영 배포 전 `.env` 또는 배포 secret 저장소에서 `SESSION_SECRET`, `TOKEN_ENCRYPTION_SECRET`, `ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, `PUBLIC_BASE_URL`, Twitch OAuth 값을 실제 운영 값으로 교체해야 합니다. secret 값은 Git과 문서에 기록하지 않습니다.
+DB 연결 문제를 확인할 때는 `docker compose ps`, `docker compose logs --tail=200`, `curl -i http://localhost:25570/health`를 먼저 확인하세요. `/health`가 `503`이면 app 컨테이너가 Postgres에 연결하지 못한 상태입니다.
+
+### Docker production 검수
+
+로컬 Docker 검수는 기본적으로 development secret placeholder를 허용합니다. production 검수나 실제 배포는 아래 값을 모두 강한 값으로 설정한 뒤 `NODE_ENV=production`으로 실행해야 합니다.
+
+- `SESSION_SECRET`: 32자 이상, placeholder/dev/example 계열 금지, 문자 종류 2개 이상
+- `TOKEN_ENCRYPTION_SECRET`: 32자 이상, placeholder/dev/example 계열 금지, 문자 종류 2개 이상
+- `ADMIN_PASSWORD`: 12자 이상, 대문자/소문자/숫자/특수문자 포함
+
+검수 실행 예:
+
+```bash
+cp .env.example .env
+# .env에서 NODE_ENV와 production secret 값을 실제 검수용 값으로 교체합니다.
+docker compose up -d --build app
+docker compose ps
+docker compose logs --tail=200 app
+curl -i http://localhost:25570/health
+```
+
+production secret 검증 실패 시 서버 로그에는 부족한 환경변수 key 이름만 표시되며 실제 값은 출력하지 않습니다.
 
 ## Environment
 
@@ -106,6 +143,7 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 주요 `.env` 값:
 
 - `DATABASE_URL`: PostgreSQL 연결 문자열
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`: Docker Compose Postgres 컨테이너 설정
 - `SESSION_SECRET`: 세션 쿠키 서명 비밀값
 - `TOKEN_ENCRYPTION_SECRET`: Twitch OAuth 토큰 암호화 비밀값
 - `SESSION_STORE`: `database` 또는 `memory`
@@ -153,8 +191,8 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - `GET /api/viewer-stats/me`
 - `GET /api/i18n/locale`
 - `POST /api/i18n/locale`
-- `POST /api/access-requests`
 - `POST /api/streamer-requests`
+- `POST /api/access-requests` (legacy alias / 레거시 호환 경로)
 - `GET /api/dashboard/summary`
 - `GET /api/profile-card`
 - `PUT /api/profile-card`
@@ -183,14 +221,14 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - `PUT /api/settings/profile`
 - `PUT /api/settings/password`
 - `PUT /api/settings/privacy`
-- `GET /api/admin/access-requests`
-- `GET /api/admin/access-requests/:id`
-- `POST /api/admin/access-requests/:id/approve`
-- `POST /api/admin/access-requests/:id/reject`
 - `GET /api/admin/streamer-requests`
 - `GET /api/admin/streamer-requests/:id`
 - `POST /api/admin/streamer-requests/:id/approve`
 - `POST /api/admin/streamer-requests/:id/reject`
+- `GET /api/admin/access-requests` (legacy alias / 레거시 호환 경로)
+- `GET /api/admin/access-requests/:id` (legacy alias / 레거시 호환 경로)
+- `POST /api/admin/access-requests/:id/approve` (legacy alias / 레거시 호환 경로)
+- `POST /api/admin/access-requests/:id/reject` (legacy alias / 레거시 호환 경로)
 
 `GET /api/auth/me`는 프론트엔드 라우팅에 필요한 안전한 권한 힌트로 `role`과 `isAdmin`을 포함합니다. 비밀번호 해시, OAuth 토큰, 세션 ID, Twitch Client Secret은 포함하지 않습니다.
 `/api/admin/*` 라우트는 서버 세션 사용자 로딩과 `requireAdmin`으로 보호됩니다. 비로그인 요청은 `401 AUTH_REQUIRED`, 로그인했지만 관리자가 아닌 요청은 `403 ADMIN_REQUIRED`를 반환합니다.
@@ -200,6 +238,7 @@ Twitch OAuth 시작 URL은 세션 state에 intent를 저장해 로그인/재연�
 - Existing HTML/CSS design is preserved under `public/`.
 - Public cards intentionally omit intro, follower count, fan-card count in the profile-card preview, and manual broadcast status input.
 - Broadcast status is read from Twitch when configured, otherwise the latest `StreamSnapshot` is used as a fallback.
+- Public streamer list/ranking APIs default to `limit=24` with max `100`. Fan-card, page-view, and favorite counts are aggregated with grouped queries, and list/ranking stream status uses the latest stored `StreamSnapshot` to avoid per-profile Twitch/API lookups.
 - Actual `.env` files and uploaded assets are ignored by Git.
 - API errors keep the legacy `message` field and also include `ok: false` plus a stable `code`.
 - Avatar and cover uploads are limited by `MAX_AVATAR_UPLOAD_MB` and validated by extension, MIME type, and image signature. Cover uploads use multipart field `coverImage`, persist `StreamerProfile.coverImageUrl`, and return `/uploads/covers/...` public URLs.

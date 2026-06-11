@@ -585,10 +585,63 @@
   padding: clamp(18px, 3vw, 32px);
 }
 
+.profile-card.profile-card--portrait.profile-card--skeleton {
+  pointer-events: none;
+}
+
+.profile-card--skeleton .profile-card__image {
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent),
+    linear-gradient(135deg, rgba(226, 232, 240, 0.88), rgba(210, 202, 244, 0.68));
+  background-size: 220% 100%, 100% 100%;
+  animation: profile-card-skeleton-bg 1.5s ease-in-out infinite;
+}
+
+.profile-card--skeleton .profile-card__name {
+  flex: 1 1 auto;
+  width: 68%;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.profile-card--skeleton .profile-card__badge {
+  background: rgba(167, 139, 250, 0.18);
+  box-shadow: none;
+}
+
+.profile-card--skeleton .profile-card__handle {
+  width: 48%;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.profile-card--skeleton .profile-card__bio {
+  display: block;
+  height: 44px;
+  border-radius: 16px;
+}
+
+.profile-card--skeleton .profile-card__tag {
+  width: 64px;
+  height: 28px;
+  padding: 0;
+}
+
+.profile-card--skeleton .profile-card__stat {
+  min-height: 54px;
+  display: block;
+}
+
+.profile-card--skeleton .profile-card__button {
+  min-height: 46px;
+  display: block;
+}
+
 .profile-card--skeleton .profile-card__image,
 .profile-card--skeleton .profile-card__name,
 .profile-card--skeleton .profile-card__handle,
 .profile-card--skeleton .profile-card__bio,
+.profile-card--skeleton .profile-card__tag,
 .profile-card--skeleton .profile-card__stat,
 .profile-card--skeleton .profile-card__button {
   position: relative;
@@ -599,6 +652,7 @@
 .profile-card--skeleton .profile-card__name::after,
 .profile-card--skeleton .profile-card__handle::after,
 .profile-card--skeleton .profile-card__bio::after,
+.profile-card--skeleton .profile-card__tag::after,
 .profile-card--skeleton .profile-card__stat::after,
 .profile-card--skeleton .profile-card__button::after {
   content: "";
@@ -612,6 +666,12 @@
 @keyframes profile-card-shimmer {
   to {
     transform: translateX(100%);
+  }
+}
+
+@keyframes profile-card-skeleton-bg {
+  to {
+    background-position: -220% 0, 0 0;
   }
 }
 

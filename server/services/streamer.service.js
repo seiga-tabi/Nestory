@@ -1,10 +1,18 @@
 const { prisma } = require('../db/prisma');
 const { normalizeUrl } = require('../utils/sanitize');
 const { slugify } = require('../utils/slug');
-const { streamStatusForProfile } = require('./twitch.service');
 
 const includePublicProfile = {
-  user: true,
+  user: {
+    select: {
+      id: true,
+      displayName: true,
+      role: true,
+      status: true,
+      twitchUserId: true,
+      twitchLogin: true
+    }
+  },
   socialLinks: { where: { isVisible: true }, orderBy: { sortOrder: 'asc' } },
   schedule: { orderBy: { dayOfWeek: 'asc' } },
   fanCards: {
@@ -48,13 +56,86 @@ function mapFanCards(cards = []) {
   }));
 }
 
-async function mapPublicProfile(profile, options = {}) {
-  const streamStatus = options.streamStatus || await streamStatusForProfile(profile);
-  const approvedFanCount = await prisma.fanCard.count({
-    where: { profileId: profile.id, status: 'APPROVED', isPublic: true }
+function normalizeLimit(value, fallback = 24, max = 100) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(1, Math.min(max, Math.round(number)));
+}
+
+function streamStatusFromSnapshot(profile) {
+  const last = profile.snapshots?.[0];
+  if (!last) {
+    return {
+      isLive: false,
+      title: null,
+      gameName: null,
+      viewerCount: 0,
+      startedAt: null,
+      source: 'none'
+    };
+  }
+
+  return {
+    isLive: last.isLive,
+    title: last.title,
+    gameName: last.gameName,
+    viewerCount: last.viewerCount,
+    startedAt: last.startedAt,
+    source: 'snapshot'
+  };
+}
+
+function countMap(rows, key = 'profileId') {
+  const map = new Map();
+  rows.forEach((row) => {
+    map.set(row[key], row._count?._all || 0);
   });
-  const viewCount = await prisma.pageView.count({ where: { profileId: profile.id } });
-  const favoriteCount = await prisma.favorite.count({ where: { streamerProfileId: profile.id } });
+  return map;
+}
+
+async function publicProfileMetrics(profileIds = []) {
+  if (!profileIds.length) {
+    return {
+      fanCardCounts: new Map(),
+      viewCounts: new Map(),
+      favoriteCounts: new Map()
+    };
+  }
+
+  const [fanCardRows, pageViewRows, favoriteRows] = await Promise.all([
+    prisma.fanCard.groupBy({
+      by: ['profileId'],
+      where: {
+        profileId: { in: profileIds },
+        status: 'APPROVED',
+        isPublic: true
+      },
+      _count: { _all: true }
+    }),
+    prisma.pageView.groupBy({
+      by: ['profileId'],
+      where: { profileId: { in: profileIds } },
+      _count: { _all: true }
+    }),
+    prisma.favorite.groupBy({
+      by: ['streamerProfileId'],
+      where: { streamerProfileId: { in: profileIds } },
+      _count: { _all: true }
+    })
+  ]);
+
+  return {
+    fanCardCounts: countMap(fanCardRows),
+    viewCounts: countMap(pageViewRows),
+    favoriteCounts: countMap(favoriteRows, 'streamerProfileId')
+  };
+}
+
+function mapPublicProfile(profile, options = {}) {
+  const streamStatus = options.streamStatus || streamStatusFromSnapshot(profile);
+  const approvedFanCount = options.fanCardCount ?? 0;
+  const viewCount = options.viewCount ?? 0;
+  const favoriteCount = options.favoriteCount ?? 0;
 
   return {
     id: profile.id,
@@ -92,6 +173,7 @@ async function listPublicStreamers(query = {}) {
   const category = query.category;
   const language = query.language;
   const sort = query.sort || 'popular';
+  const limit = normalizeLimit(query.limit);
 
   const where = {
     isPublic: true,
@@ -118,10 +200,16 @@ async function listPublicStreamers(query = {}) {
     where,
     include: includePublicProfile,
     orderBy: sort === 'name' ? { name: 'asc' } : { updatedAt: 'desc' },
-    take: 100
+    take: Math.min(100, Math.max(limit, status === 'all' ? limit : 100))
   });
 
-  const mapped = await Promise.all(profiles.map((profile) => mapPublicProfile(profile)));
+  const metrics = await publicProfileMetrics(profiles.map((profile) => profile.id));
+  const mapped = profiles.map((profile) => mapPublicProfile(profile, {
+    streamStatus: streamStatusFromSnapshot(profile),
+    fanCardCount: metrics.fanCardCounts.get(profile.id) || 0,
+    viewCount: metrics.viewCounts.get(profile.id) || 0,
+    favoriteCount: metrics.favoriteCounts.get(profile.id) || 0
+  }));
   const filtered = mapped.filter((profile) => {
     if (status === 'live') return profile.isLive;
     if (status === 'offline') return !profile.isLive;
@@ -137,7 +225,7 @@ async function listPublicStreamers(query = {}) {
       || a.name.localeCompare(b.name));
   }
 
-  return filtered;
+  return filtered.slice(0, limit);
 }
 
 async function getPublicStreamer(slug) {
@@ -153,7 +241,13 @@ async function getPublicStreamer(slug) {
     include: includePublicProfile
   });
   if (!profile) return null;
-  return mapPublicProfile(profile);
+  const metrics = await publicProfileMetrics([profile.id]);
+  return mapPublicProfile(profile, {
+    streamStatus: streamStatusFromSnapshot(profile),
+    fanCardCount: metrics.fanCardCounts.get(profile.id) || 0,
+    viewCount: metrics.viewCounts.get(profile.id) || 0,
+    favoriteCount: metrics.favoriteCounts.get(profile.id) || 0
+  });
 }
 
 async function getRawProfileByUser(userId) {

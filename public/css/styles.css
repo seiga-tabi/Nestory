@@ -140,7 +140,9 @@ html.auth-ready.authenticated [data-auth-guest],
 html.auth-ready.unauthenticated [data-auth-user],
 html.auth-ready:not(.admin) [data-auth-admin],
 html.auth-ready:not(.streamer) [data-auth-streamer],
-html.auth-ready:not(.role-user) [data-auth-viewer],
+html.auth-ready.unauthenticated [data-auth-viewer],
+html.auth-ready.admin [data-auth-viewer],
+html.auth-ready:not(.role-user) [data-auth-user-only],
 [data-auth-controlled][hidden] {
   display: none !important;
 }
@@ -155,6 +157,9 @@ html.auth-ready.streamer .nav [data-auth-streamer] {
   display: flex;
 }
 html.auth-ready.role-user .nav [data-auth-viewer] {
+  display: flex;
+}
+html.auth-ready.streamer .nav [data-auth-viewer] {
   display: flex;
 }
 
@@ -1684,47 +1689,81 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
   top: 20px;
 }
 .overlay-preview-panel {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
   background:
-    linear-gradient(135deg, rgba(255,255,255,.64), rgba(255,255,255,.46)),
-    rgba(255,255,255,.58);
+    radial-gradient(circle at 12% 0%, rgba(167,139,250,.16), transparent 34%),
+    radial-gradient(circle at 100% 8%, rgba(125,211,252,.13), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.48)),
+    rgba(255,255,255,.62);
+}
+.overlay-preview-panel .panel-title {
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 0;
+}
+.overlay-preview-panel .section-kicker {
+  margin-bottom: 5px;
+}
+.overlay-preview-panel .panel-title h2,
+.overlay-preview-panel .panel-title p {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .overlay-preview-canvas {
+  --overlay-preview-scale: 1;
+  --overlay-preview-stage-width: 1920px;
+  --overlay-preview-stage-height: 1080px;
   position: relative;
+  isolation: isolate;
   width: 100%;
   aspect-ratio: var(--overlay-preview-ratio, 16 / 9);
-  min-height: 260px;
+  min-height: 0;
   overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(255,255,255,.78);
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.86);
   background:
-    linear-gradient(45deg, rgba(148,163,184,.14) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(148,163,184,.14) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(148,163,184,.14) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(148,163,184,.14) 75%);
-  background-size: 28px 28px;
-  background-position: 0 0, 0 14px, 14px -14px, -14px 0;
-  background-color: rgba(15,23,42,.08);
-  box-shadow: inset 0 0 0 999px rgba(255,255,255,.18), 0 24px 60px rgba(102,88,160,.16);
+    linear-gradient(45deg, rgba(148,163,184,.16) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(148,163,184,.16) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(148,163,184,.16) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(148,163,184,.16) 75%),
+    rgba(15,23,42,.07);
+  background-size: 24px 24px;
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.34), 0 18px 42px rgba(102,88,160,.14);
+}
+.overlay-preview-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(rgba(124,58,237,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,.08) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, transparent 52%, rgba(15,23,42,.08));
+  background-size: 64px 64px, 64px 64px, 100% 100%;
+  pointer-events: none;
 }
 .overlay-preview-canvas::after {
-  content: "1920 x 1080";
+  content: "";
   position: absolute;
-  right: 14px;
-  bottom: 12px;
+  inset: 0;
   z-index: 1;
-  padding: 6px 9px;
-  border-radius: 999px;
-  color: rgba(32,32,51,.68);
-  background: rgba(255,255,255,.68);
-  border: 1px solid rgba(255,255,255,.72);
-  font-size: 11px;
-  font-weight: 950;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.08), inset 0 -34px 48px rgba(15,23,42,.08);
   pointer-events: none;
-  backdrop-filter: blur(12px);
 }
 .overlay-preview-stage {
   position: absolute;
-  inset: 0;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: var(--overlay-preview-stage-width);
+  height: var(--overlay-preview-stage-height);
+  transform: scale(var(--overlay-preview-scale));
+  transform-origin: top left;
+  will-change: transform;
 }
 .overlay-preview-widget {
   position: absolute;
@@ -2047,12 +2086,12 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin: 4px 0 12px;
-  padding: 10px 12px;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 10px;
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,.68);
-  background: rgba(255,255,255,.48);
+  background: rgba(255,255,255,.54);
   color: var(--muted);
   font-size: 12px;
   font-weight: 850;
@@ -2080,15 +2119,31 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
   font-weight: 950;
   white-space: nowrap;
 }
+#previewSizeBadge {
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(255,255,255,.86);
+  box-shadow: 0 10px 22px rgba(102,88,160,.1);
+}
 .overlay-preview-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   justify-content: flex-end;
 }
 .overlay-preview-actions .ghost-btn {
-  min-height: 38px;
+  min-height: 40px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  line-height: 1.2;
+  white-space: normal;
 }
 #testOverlayAlertButton {
   color: #fff;
@@ -2105,9 +2160,6 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
 #regenerateTokenButton {
   border-color: rgba(124,58,237,.16);
   background: rgba(255,255,255,.72);
-}
-.overlay-preview-frame-wrap {
-  padding: 0;
 }
 .overlay-preview-frame {
   display: block;
@@ -2960,8 +3012,29 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
     min-height: 132px;
   }
   .overlay-preview-toolbar {
-    align-items: flex-start;
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .overlay-preview-panel {
+    padding: 14px;
+  }
+  .overlay-preview-panel .panel-title {
+    align-items: stretch;
     flex-direction: column;
+  }
+  .overlay-preview-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .overlay-preview-actions .ghost-btn {
+    flex: 1 1 140px;
+  }
+  #previewSizeBadge {
+    align-self: flex-start;
+  }
+  .overlay-preview-canvas {
+    border-radius: 18px;
   }
   .overlay-submit-row {
     gap: 10px;
@@ -3027,6 +3100,12 @@ html.auth-ready.role-user .nav [data-auth-viewer] {
   .top-actions { display:grid; grid-template-columns:1fr; }
   .overlay-chat-template-preview {
     min-height: 112px;
+  }
+  .overlay-preview-toolbar {
+    flex-direction: column;
+  }
+  .overlay-preview-actions .ghost-btn {
+    flex-basis: 100%;
   }
   .overlay-submit-row .ghost-btn,
   .overlay-submit-row .primary-btn {

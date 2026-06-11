@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-i18n="register.documentTitle">Seiga Studio - 회원가입</title>
+  <meta http-equiv="refresh" content="0; url=login.html" />
+  <title data-i18n="auth.loginDocumentTitle">Seiga Studio - 로그인</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/public-pages.css" />
 </head>
@@ -14,112 +15,28 @@
         <div class="logo">S</div>
         <div class="brand-text"><strong>Seiga Studio</strong><span data-i18n="public.brandSubtitle">스트리머 프로필 플랫폼</span></div>
       </a>
-      <nav class="nav">
-        <a href="index.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
-        <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
-        <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
-        <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
-      </nav>
       <div class="header-actions">
         <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="언어 선택">
           <button type="button" data-lang-option="ko">KR</button>
           <button type="button" data-lang-option="ja">JA</button>
         </div>
-        <a class="ghost-btn" href="login.html" data-i18n="nav.login">로그인</a>
-        <a class="primary-btn" href="register.html" data-i18n="nav.start">Twitch로 시작하기</a>
+        <a class="primary-btn" href="login.html" data-i18n="nav.start">Twitch로 시작하기</a>
       </div>
     </header>
 
     <section class="hero">
-      <div class="eyebrow" data-i18n="register.eyebrow">Twitch Account</div>
-      <h1 data-i18n="register.title">Twitch로 가입하고 바로 팔로우 목록을 확인하세요.</h1>
-      <p data-i18n="register.description">일반 사용자는 관리자 승인 없이 Twitch OAuth로 시작합니다. 스트리머 등록은 가입 후 별도 신청 화면에서 진행합니다.</p>
+      <div class="eyebrow" data-i18n="auth.loginTitle">Twitch로 시작하기</div>
+      <h1 data-i18n="auth.loginTitle">Twitch로 시작하기</h1>
+      <p data-i18n="auth.loginDescription">일반 사용자는 Twitch로 가입/로그인하고 바로 팔로우 목록을 확인할 수 있습니다.</p>
       <div class="hero-actions">
-        <a class="primary-btn" href="/auth/twitch?intent=login" data-i18n="register.twitchStart">Twitch로 시작하기</a>
-        <a class="ghost-btn" href="login.html" data-i18n="register.goLogin">이미 계정이 있어요</a>
+        <a class="primary-btn" href="login.html" data-i18n="nav.start">Twitch로 시작하기</a>
+        <a class="ghost-btn" href="streamers.html" data-i18n="nav.streamers">스트리머</a>
       </div>
-    </section>
-
-    <section class="grid-2">
-      <article class="panel">
-        <div class="panel-title">
-          <div>
-            <h2 data-i18n="register.twitchTitle">Twitch 기본 가입</h2>
-            <p data-i18n="register.twitchDescription">Twitch 계정으로 로그인하면 일반 사용자 계정이 생성되고 팔로우 목록을 바로 불러옵니다.</p>
-          </div>
-          <span class="badge">OAuth</span>
-        </div>
-        <div class="rank-list">
-          <div class="liquid-card feature-card">
-            <div class="feature-icon">T</div>
-            <h3 data-i18n="register.twitchCardTitle">Twitch로 가입/로그인</h3>
-            <p data-i18n="register.twitchCardText">Twitch 이메일과 팔로우 권한을 사용해 일반 사용자 화면을 준비합니다.</p>
-            <div class="hero-actions">
-              <a class="primary-btn" href="/auth/twitch?intent=login" data-i18n="register.twitchStart">Twitch로 시작하기</a>
-            </div>
-          </div>
-        </div>
-        <details class="secondary-register">
-          <summary data-i18n="register.emailFallbackTitle">이메일 보조 가입</summary>
-          <p class="field-hint" data-i18n="register.emailFallbackDescription">Twitch를 사용할 수 없는 경우에만 사용합니다. Twitch 팔로우 목록은 나중에 설정에서 연결해야 합니다.</p>
-          <form id="registerForm" class="form" novalidate>
-            <div class="field">
-              <label for="displayName" data-i18n="register.displayName">표시 이름</label>
-              <input id="displayName" name="displayName" type="text" maxlength="80" autocomplete="name" data-i18n-placeholder="register.displayNamePlaceholder" placeholder="화면에 표시할 이름" />
-            </div>
-            <div class="field">
-              <label for="email" data-i18n="auth.email">이메일</label>
-              <input id="email" name="email" type="email" autocomplete="email" placeholder="example@email.com" required />
-            </div>
-            <div class="two-col">
-              <div class="field">
-                <label for="password" data-i18n="auth.password">비밀번호</label>
-                <input id="password" name="password" type="password" minlength="8" autocomplete="new-password" data-i18n-placeholder="register.passwordPlaceholder" placeholder="영문과 숫자 포함 8자 이상" required />
-              </div>
-              <div class="field">
-                <label for="confirmPassword" data-i18n="register.confirmPassword">비밀번호 확인</label>
-                <input id="confirmPassword" name="confirmPassword" type="password" minlength="8" autocomplete="new-password" data-i18n-placeholder="register.confirmPasswordPlaceholder" placeholder="비밀번호를 다시 입력" required />
-              </div>
-            </div>
-            <div id="registerMessage" class="form-message" aria-live="polite"></div>
-            <div class="submit-row">
-              <button id="registerButton" class="ghost-btn" type="submit" data-i18n="register.submit">이메일로 가입</button>
-              <a class="ghost-btn" href="login.html" data-i18n="register.goLogin">이미 계정이 있어요</a>
-            </div>
-          </form>
-        </details>
-      </article>
-
-      <aside class="panel">
-        <div class="panel-title">
-          <div>
-            <h2 data-i18n="register.streamerRequestTitle">스트리머 등록은 별도 승인</h2>
-            <p data-i18n="register.streamerRequestDescription">일반 USER 기능과 스트리머 승인 대기 상태는 서로 다릅니다.</p>
-          </div>
-        </div>
-        <div class="rank-list">
-          <div class="liquid-card feature-card">
-            <div class="feature-icon">1</div>
-            <h3 data-i18n="register.stepUser">일반 사용자 화면</h3>
-            <p data-i18n="register.stepUserText">가입 직후 Twitch 팔로우 목록과 등록된 스트리머 매칭을 확인합니다.</p>
-          </div>
-          <div class="liquid-card feature-card">
-            <div class="feature-icon">2</div>
-            <h3 data-i18n="register.stepStreamer">스트리머 등록 신청</h3>
-            <p data-i18n="register.stepStreamerText">스트리머 전용 기능은 신청 승인 후 표시됩니다.</p>
-          </div>
-        </div>
-        <div class="hero-actions">
-          <a class="primary-btn" href="login.html?next=streamer-apply.html" data-i18n="register.requestAccess">스트리머 등록 신청</a>
-          <a class="ghost-btn" href="index.html" data-i18n="nav.streamers">스트리머 둘러보기</a>
-        </div>
-      </aside>
     </section>
   </div>
   <script src="js/api.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/shared.js"></script>
   <script src="js/public.js"></script>
-  <script src="js/register.js"></script>
 </body>
 </html>

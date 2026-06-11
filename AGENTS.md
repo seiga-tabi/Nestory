@@ -9,7 +9,7 @@ This is a Twitch streamer profile card platform.
 - Database: PostgreSQL
 - Auth: JWT/session-based auth
 - Main pages: index, profile, dashboard/editor, login, register
-- Main features: Twitch API, profile editor, live preview, i18n, PNG export, QR code
+- Main features: Twitch API, profile editor, live preview, i18n, PNG export
 
 ## Rules
 - Do not rewrite the whole project unless explicitly requested.

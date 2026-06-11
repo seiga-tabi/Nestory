@@ -47,6 +47,136 @@
     return text || fallback;
   }
 
+  function activityToken(value) {
+    return String(value || '')
+      .trim()
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .replace(/[\s.-]+/g, '_')
+      .replace(/[^a-zA-Z0-9_]/g, '')
+      .toLowerCase();
+  }
+
+  const activityTypeKeys = {
+    profile_updated: 'dashboard.recentActivity.profileUpdated',
+    overlay_created: 'dashboard.recentActivity.overlayCreated',
+    overlay_updated: 'dashboard.recentActivity.overlayUpdated',
+    favorite_added: 'dashboard.recentActivity.favoriteAdded',
+    streamer_approved: 'dashboard.recentActivity.streamerApproved',
+    fan_card_received: 'dashboard.recentActivity.fanCardReceived',
+    twitch_connected: 'dashboard.recentActivity.twitchConnected'
+  };
+
+  const activityLabelKeys = {
+    '최근 활동': 'dashboard.recentActivity.title',
+    '프로필 상태': 'dashboard.recentActivity.profileStatus',
+    '방송 상태': 'dashboard.recentActivity.streamStatus',
+    '최근 팬 카드': 'dashboard.recentActivity.recentFanCards',
+    '계정 상태': 'dashboard.recentActivity.accountStatus',
+    'Twitch 연동': 'dashboard.recentActivity.twitchLink',
+    '스트리머 등록': 'dashboard.recentActivity.streamerRegistration',
+    '프로필을 수정했습니다.': 'dashboard.recentActivity.profileUpdated',
+    '오버레이를 생성했습니다.': 'dashboard.recentActivity.overlayCreated',
+    '오버레이를 수정했습니다.': 'dashboard.recentActivity.overlayUpdated',
+    '즐겨찾기에 추가했습니다.': 'dashboard.recentActivity.favoriteAdded',
+    '스트리머 등록이 승인되었습니다.': 'dashboard.recentActivity.streamerApproved',
+    '팬 카드를 받았습니다.': 'dashboard.recentActivity.fanCardReceived',
+    'Twitch 계정을 연결했습니다.': 'dashboard.recentActivity.twitchConnected'
+  };
+
+  const activityValueKeys = {
+    '공개 중': 'dashboard.recentActivity.profilePublic',
+    '비공개': 'dashboard.recentActivity.profilePrivate',
+    '일반 사용자': 'dashboard.roleUser',
+    '스트리머': 'dashboard.roleStreamer',
+    '관리자': 'dashboard.roleAdmin',
+    '미연결': 'dashboard.twitchDisconnectedBadge',
+    '신청 가능': 'dashboard.recentActivity.requestAvailable',
+    not_requested: 'dashboard.recentActivity.requestAvailable',
+    pending: 'dashboard.recentActivity.requestPending',
+    approved: 'dashboard.recentActivity.requestApproved',
+    rejected: 'dashboard.recentActivity.requestRejected',
+    public: 'dashboard.recentActivity.profilePublic',
+    private: 'dashboard.recentActivity.profilePrivate',
+    live: 'common.live',
+    offline: 'common.offline',
+    user: 'dashboard.roleUser',
+    viewer: 'dashboard.roleUser',
+    streamer: 'dashboard.roleStreamer',
+    admin: 'dashboard.roleAdmin'
+  };
+
+  function activityParams(item = {}) {
+    return {
+      userName: safeText(item.userName || item.actorName || item.name),
+      streamerName: safeText(item.streamerName),
+      overlayName: safeText(item.overlayName),
+      cardName: safeText(item.cardName),
+      count: numberText(item.count)
+    };
+  }
+
+  function recentActivityKey(item = {}) {
+    const explicitKey = safeText(item.i18nKey || item.translationKey || item.messageKey);
+    if (explicitKey) return explicitKey;
+
+    const type = activityToken(item.type || item.eventType || item.action || item.kind || item.activityType);
+    if (type && activityTypeKeys[type]) return activityTypeKeys[type];
+
+    const label = safeText(item.label || item.message || item.title);
+    return activityLabelKeys[label] || '';
+  }
+
+  function countFromActivityValue(value) {
+    const match = String(value || '').trim().match(/^([0-9][0-9,\.]*)\s*(?:개|건|件)$/);
+    if (!match) return null;
+    const count = Number(match[1].replace(/[^0-9]/g, ''));
+    return Number.isFinite(count) ? count : null;
+  }
+
+  function translateActivityValue(value, item = {}) {
+    const text = safeText(value);
+    if (!text) return '';
+
+    const explicitKey = safeText(item.valueKey || item.descriptionKey || item.detailKey);
+    if (explicitKey) return t(explicitKey, activityParams(item), text);
+
+    const count = countFromActivityValue(text);
+    const labelKey = recentActivityKey(item);
+    if (count !== null && labelKey === 'dashboard.recentActivity.recentFanCards') {
+      return t('dashboard.recentActivity.fanCardCount', { count: numberText(count) }, `${numberText(count)}개`);
+    }
+
+    const directKey = activityValueKeys[text] || activityValueKeys[activityToken(text)];
+    if (directKey) return t(directKey, {}, text);
+
+    return text;
+  }
+
+  function formatActivityTime(item = {}) {
+    const raw = item.updatedAt || item.createdAt || item.timestamp || item.time;
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    const time = new Intl.DateTimeFormat(localeTag(), {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(date);
+    return t('dashboard.recentActivity.updatedAt', { time }, `업데이트: ${time}`);
+  }
+
+  function normalizeRecentActivity(item = {}) {
+    const key = recentActivityKey(item);
+    const params = activityParams(item);
+    const rawLabel = safeText(item.label || item.message || item.title, t('dashboard.activityFallback', {}, '활동'));
+    const label = key ? t(key, params, rawLabel) : rawLabel;
+    const value = translateActivityValue(item.value || item.description || item.detail, item);
+    const updatedAt = formatActivityTime(item);
+    return {
+      label,
+      meta: [value, updatedAt].filter(Boolean).join(' · ')
+    };
+  }
+
   function roleOf(auth = {}) {
     const value = String(auth.role || auth.user?.role || auth.raw?.role || 'USER').toUpperCase();
     return value === 'VIEWER' ? 'USER' : value;
@@ -112,7 +242,10 @@
     if (userPanel) userPanel.hidden = true;
 
     const followPanel = $('followedChannelsPanel');
-    if (followPanel) followPanel.hidden = true;
+    if (followPanel) followPanel.hidden = false;
+
+    const generalPanel = $('dashboardGeneralPanel');
+    if (generalPanel) generalPanel.hidden = false;
 
     const roleBadge = $('dashboardUserRoleBadge');
     if (roleBadge) roleBadge.textContent = roleLabel().toUpperCase();
@@ -186,12 +319,12 @@
     $('dashboardHeroText').textContent = t('dashboard.heroLoadingText', {}, '잠시만 기다려주세요.');
     renderDashboardProfileCard({}, { loading: true });
     $('recentActivityBadge').textContent = t('dashboard.statusLoading', {}, 'LOADING');
-    renderListState($('recentActivityList'), 'dashboard.recentActivityLoading', '최근 활동을 불러오는 중입니다.');
+    renderListState($('recentActivityList'), 'dashboard.recentActivity.loading', '최근 활동을 불러오는 중입니다.');
     renderListState($('recentFanCardsList'), 'dashboard.fanCardsLoading', '팬 카드를 불러오는 중입니다.');
   }
 
   function renderStreamerEmpty() {
-    renderListState($('recentActivityList'), 'dashboard.activityEmpty', '표시할 최근 활동이 없습니다.');
+    renderListState($('recentActivityList'), 'dashboard.recentActivity.empty', '아직 최근 활동이 없습니다.');
     renderListState($('recentFanCardsList'), 'dashboard.fanCardsEmpty', '아직 팬 카드가 없습니다.');
   }
 
@@ -235,18 +368,21 @@
     if (!list) return;
     $('recentActivityBadge').textContent = t('dashboard.countItems', { count: numberText(items.length) }, `${items.length}개`);
     if (!items.length) {
-      renderListState(list, 'dashboard.activityEmpty', '표시할 최근 활동이 없습니다.');
+      renderListState(list, 'dashboard.recentActivity.empty', '아직 최근 활동이 없습니다.');
       return;
     }
-    list.innerHTML = items.map((item) => `
+    list.innerHTML = items.map((item) => {
+      const activity = normalizeRecentActivity(item);
+      return `
       <div class="list-item">
         <div class="item-icon">•</div>
         <div class="item-content">
-          <strong>${api.escapeHtml(item.label || t('dashboard.activityFallback', {}, '활동'))}</strong>
-          <span>${api.escapeHtml(item.value || '')}</span>
+          <strong>${api.escapeHtml(activity.label)}</strong>
+          ${activity.meta ? `<span>${api.escapeHtml(activity.meta)}</span>` : ''}
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderStreamerSummary(summary) {
@@ -692,6 +828,11 @@
     if (showDone) api.showToast(t('dashboard.refreshDone', {}, '대시보드 데이터를 새로고침했습니다.'));
   }
 
+  async function refreshDashboard(showDone = false) {
+    await refreshUserDashboard(false);
+    await loadSummary(showDone);
+  }
+
   function composeRequestMessage() {
     const parts = [
       [t('dashboard.requestMainContent', {}, '주 콘텐츠'), $('requestMainContent')?.value],
@@ -809,6 +950,9 @@
 
   function rerenderCurrentState() {
     applyDashboardShell();
+    if (twitchStatus) renderTwitchStatus(twitchStatus);
+    renderFavoriteStreamers(favoriteItems);
+    renderFollowedChannels(followedItems);
     if (renderState === 'summary' && lastSummary) {
       renderStreamerSummary(lastSummary);
     } else if (renderState === 'error') {
@@ -818,7 +962,7 @@
     }
   }
 
-  $('refreshDashboardButton')?.addEventListener('click', () => loadSummary(true));
+  $('refreshDashboardButton')?.addEventListener('click', () => refreshDashboard(true));
   $('prepareBroadcastButton')?.addEventListener('click', () => { location.href = 'profile-card.html'; });
   $('downloadDashboardJsonButton')?.addEventListener('click', downloadDashboardJson);
   $('dashboardTwitchConnectButton')?.addEventListener('click', () => {
@@ -846,5 +990,5 @@
 
   handleTwitchQueryNotice();
   applyDashboardShell();
-  await loadSummary();
+  await refreshDashboard(false);
 })();

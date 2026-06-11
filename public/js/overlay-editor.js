@@ -39,6 +39,7 @@
   let alertAssetObjectUrl = '';
   let alertAssetName = '';
   let alertAssetFile = null;
+  let previewResizeObserver = null;
 
   function t(key, params = {}, fallback = key) {
     return window.SeigaI18n?.t?.(key, params, fallback) || fallback;
@@ -542,11 +543,41 @@
       .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, '');
   }
 
-  function syncPreviewCanvasRatio() {
-    const canvas = document.querySelector('.overlay-preview-canvas');
-    if (!canvas) return;
+  function syncPreviewScale() {
+    const canvas = document.querySelector('.overlay-preview-viewport') || document.querySelector('.overlay-preview-canvas');
+    const stage = $('overlayPreviewStage');
+    const frame = $('overlayPreviewFrame');
+    if (!canvas || !stage) return;
     const { width, height } = dimensions();
     canvas.style.setProperty('--overlay-preview-ratio', `${width} / ${height}`);
+    canvas.style.setProperty('--overlay-preview-stage-width', `${width}px`);
+    canvas.style.setProperty('--overlay-preview-stage-height', `${height}px`);
+    stage.style.setProperty('--overlay-preview-stage-width', `${width}px`);
+    stage.style.setProperty('--overlay-preview-stage-height', `${height}px`);
+    if (frame) {
+      frame.setAttribute('width', String(width));
+      frame.setAttribute('height', String(height));
+    }
+    const viewportWidth = canvas.clientWidth;
+    const viewportHeight = canvas.clientHeight;
+    if (!viewportWidth || !viewportHeight) {
+      stage.style.setProperty('--overlay-preview-scale', '1');
+      return;
+    }
+    const scale = Math.max(0.01, Math.min(viewportWidth / width, viewportHeight / height));
+    stage.style.setProperty('--overlay-preview-scale', String(scale));
+  }
+
+  function setupPreviewResizeObserver() {
+    const canvas = document.querySelector('.overlay-preview-viewport') || document.querySelector('.overlay-preview-canvas');
+    if (!canvas) return;
+    if (previewResizeObserver) previewResizeObserver.disconnect();
+    if ('ResizeObserver' in window) {
+      previewResizeObserver = new ResizeObserver(() => syncPreviewScale());
+      previewResizeObserver.observe(canvas);
+    }
+    window.addEventListener('resize', syncPreviewScale);
+    syncPreviewScale();
   }
 
   function widgetDocumentMarkup(widgets, width, height) {
@@ -756,7 +787,7 @@
     updateStaticLabels();
     updateModeControls();
     syncPresetControls();
-    syncPreviewCanvasRatio();
+    syncPreviewScale();
     const frame = $('overlayPreviewFrame');
     if (!frame) return;
     frame.setAttribute('sandbox', canRunCustomJs() ? 'allow-scripts' : '');
@@ -1309,6 +1340,36 @@
     }
   }
 
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_error) {
+        // 권한이 없는 브라우저에서는 아래 textarea fallback으로 한 번 더 시도합니다.
+      }
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    textarea.style.left = '-9999px';
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    let copied = false;
+    try {
+      copied = document.execCommand?.('copy') === true;
+    } catch (_error) {
+      copied = false;
+    } finally {
+      textarea.remove();
+    }
+    return copied;
+  }
+
   async function copyObsUrl() {
     if (!canUseObsUrl()) {
       api.showToast(obsBlockedMessage());
@@ -1321,12 +1382,11 @@
       api.showToast(t('overlay.obsUrlMissing', {}, '복사할 OBS URL이 없습니다. token을 재발급해주세요.'));
       return;
     }
-    try {
-      await navigator.clipboard.writeText(url);
+    if (await copyTextToClipboard(url)) {
       api.showToast(t('common.copyDone', {}, '복사 완료'));
-    } catch (_error) {
-      api.showToast(t('common.copyFailed', {}, '복사 실패'));
+      return;
     }
+    api.showToast(t('common.copyFailed', {}, '복사 실패'));
   }
 
   function updateActionState() {
@@ -1455,6 +1515,7 @@
   }
 
   bind();
+  setupPreviewResizeObserver();
   syncPresetControls();
   updateActionState();
   await loadOverlay();

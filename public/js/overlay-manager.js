@@ -172,9 +172,42 @@
     return url;
   }
 
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_error) {
+        // 클립보드 권한이 없는 브라우저에서는 textarea fallback으로 한 번 더 시도합니다.
+      }
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    textarea.style.left = '-9999px';
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    let copied = false;
+    try {
+      copied = document.execCommand?.('copy') === true;
+    } catch (_error) {
+      copied = false;
+    } finally {
+      textarea.remove();
+    }
+    return copied;
+  }
+
   async function copyText(text) {
-    await navigator.clipboard.writeText(text);
-    api.showToast(t('common.copyDone', {}, '복사 완료'));
+    if (await copyTextToClipboard(text)) {
+      api.showToast(t('common.copyDone', {}, '복사 완료'));
+      return;
+    }
+    throw new Error(t('common.copyFailed', {}, '복사 실패'));
   }
 
   function appendMeta(card, labelKey, fallback, value) {

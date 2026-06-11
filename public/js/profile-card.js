@@ -779,8 +779,8 @@
       const canvas = await renderVisibleCardCanvas(target);
       const blob = await canvasToBlob(canvas);
       triggerPngDownload(blob, buildExportFilename());
-      const savedMessage = t('profileCard.pngSaved', {}, `${canvas.width}x${canvas.height} PNG로 저장했습니다.`)
-        .replace('1200x675', `${canvas.width}x${canvas.height}`);
+      const exportSizeText = `${canvas.width}x${canvas.height}`;
+      const savedMessage = t('profileCard.pngSaved', { size: exportSizeText }, `${exportSizeText} PNG로 저장했습니다.`);
       api.showToast(savedMessage);
     } catch (error) {
       api.showToast(error?.message || t('profileCard.pngFailed', {}, 'PNG 내보내기에 실패했습니다. 이미지 권한 또는 네트워크 상태를 확인해주세요.'));

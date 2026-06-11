@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="streamers.documentTitle">Seiga Studio - 스트리머 탐색</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/public-pages.css" />
+  <link rel="stylesheet" href="css/card.css" />
+</head>
+<body>
+  <div class="page page--wide">
+    <header class="header">
+      <a class="brand" href="index.html">
+        <div class="logo">S</div>
+        <div class="brand-text">
+          <strong>Seiga Studio</strong>
+          <span data-i18n="public.brandSubtitle">Streamer Profile Platform</span>
+        </div>
+      </a>
+
+      <nav id="publicNavigation" class="nav">
+        <a href="streamers.html" data-public-nav data-i18n="nav.streamers">스트리머</a>
+        <a href="rankings.html" data-public-nav data-i18n="nav.rankings">인기 랭킹</a>
+        <a href="fan-card-write.html" data-public-nav data-i18n="nav.fanCard">팬 카드</a>
+        <a href="about.html" data-public-nav data-i18n="nav.about">서비스 소개</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="language-switcher" data-i18n-aria-label="language.label" aria-label="Language selector">
+          <button type="button" data-lang-option="ko">KR</button>
+          <button type="button" data-lang-option="ja">JA</button>
+        </div>
+        <a class="primary-btn" href="login.html" data-i18n="nav.start">Twitch로 시작하기</a>
+        <button class="mobile-menu" type="button" aria-controls="publicNavigation" aria-expanded="false" data-i18n-aria-label="dashboard.mobileMenu" aria-label="메뉴 열기">☰</button>
+      </div>
+    </header>
+
+    <section class="hero streamer-directory-hero">
+      <div class="eyebrow" data-i18n="streamers.eyebrow">Streamer Explorer</div>
+      <h1 data-i18n="streamers.title">전체 스트리머 탐색</h1>
+      <p data-i18n="streamers.description">검색어와 필터를 조합해 공개 스트리머 프로필을 찾아보세요. 검색 결과는 실제 공개 스트리머 API 응답을 기준으로 표시됩니다.</p>
+
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="스트리머 이름, 게임, 태그 검색" data-i18n-placeholder="index.searchPlaceholder" />
+        <button type="button" id="searchButton" data-i18n="index.searchButton">검색</button>
+      </div>
+    </section>
+
+    <main class="main-layout streamer-directory-layout">
+      <aside class="filter-panel">
+        <div class="filter-title">
+          <strong data-i18n="index.filter">필터</strong>
+          <span data-i18n="index.filterDescription">원하는 방송 스타일과 콘텐츠를 선택해서 스트리머를 찾아보세요.</span>
+        </div>
+
+        <div class="filter-group" data-filter-group="status">
+          <label data-i18n="index.status">방송 상태</label>
+          <button type="button" class="filter-btn active" data-filter-group="status" data-filter="all" aria-pressed="true" data-i18n="index.all">전체</button>
+          <button type="button" class="filter-btn" data-filter-group="status" data-filter="live" aria-pressed="false" data-i18n="index.live">라이브 중</button>
+          <button type="button" class="filter-btn" data-filter-group="status" data-filter="offline" aria-pressed="false" data-i18n="index.offline">오프라인</button>
+        </div>
+
+        <div class="filter-group" data-filter-group="category">
+          <label data-i18n="index.category">카테고리</label>
+          <button type="button" class="filter-btn" data-filter-group="category" data-filter="마인크래프트" aria-pressed="false" data-i18n="index.categoryMinecraft">마인크래프트</button>
+          <button type="button" class="filter-btn" data-filter-group="category" data-filter="League of Legends" aria-pressed="false" data-i18n="index.categoryLol">League of Legends</button>
+          <button type="button" class="filter-btn" data-filter-group="category" data-filter="잡담" aria-pressed="false" data-i18n="index.categoryChat">잡담</button>
+          <button type="button" class="filter-btn" data-filter-group="category" data-filter="음악" aria-pressed="false" data-i18n="index.categoryMusic">노래 / 음악</button>
+        </div>
+
+        <div class="filter-group" data-filter-group="language">
+          <label data-i18n="index.language">언어</label>
+          <button type="button" class="filter-btn" data-filter-group="language" data-filter="KR" aria-pressed="false" data-i18n="index.languageKo">한국어</button>
+          <button type="button" class="filter-btn" data-filter-group="language" data-filter="JA" aria-pressed="false" data-i18n="index.languageJa">日本語</button>
+          <button type="button" class="filter-btn" data-filter-group="language" data-filter="KR/JA" aria-pressed="false" data-i18n="index.languageBilingual">KR / JA</button>
+        </div>
+      </aside>
+
+      <section class="list-section">
+        <div class="section-header">
+          <div>
+            <h2 data-i18n="index.streamerList">스트리머 리스트</h2>
+            <p id="resultText" data-i18n="index.loading">스트리머 데이터를 불러오는 중입니다.</p>
+          </div>
+
+          <select class="sort-select" aria-label="정렬" data-i18n-aria-label="index.sortLabel">
+            <option value="popular" data-i18n="index.sortPopular">인기순</option>
+            <option value="recent" data-i18n="index.sortRecent">최근 방송순</option>
+            <option value="name" data-i18n="index.sortName">이름순</option>
+          </select>
+        </div>
+
+        <div id="streamerGrid" class="streamer-grid is-loading" aria-live="polite">
+          <article class="profile-card profile-card--portrait profile-card--skeleton streamer-card" aria-hidden="true">
+            <div class="profile-card__media">
+              <div class="profile-card__image"></div>
+            </div>
+            <div class="profile-card__body">
+              <div class="profile-card__header">
+                <div class="profile-card__title">
+                  <span class="profile-card__name skeleton-block"></span>
+                  <span class="profile-card__badge skeleton-block"></span>
+                </div>
+                <span class="profile-card__handle skeleton-block"></span>
+              </div>
+              <span class="profile-card__bio skeleton-block"></span>
+              <div class="profile-card__tags">
+                <span class="profile-card__tag skeleton-block"></span>
+                <span class="profile-card__tag skeleton-block"></span>
+              </div>
+              <div class="profile-card__stats">
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+              </div>
+              <div class="profile-card__actions">
+                <span class="profile-card__button skeleton-block"></span>
+                <span class="profile-card__button skeleton-block"></span>
+              </div>
+            </div>
+          </article>
+          <article class="profile-card profile-card--portrait profile-card--skeleton streamer-card" aria-hidden="true">
+            <div class="profile-card__media">
+              <div class="profile-card__image"></div>
+            </div>
+            <div class="profile-card__body">
+              <div class="profile-card__header">
+                <div class="profile-card__title">
+                  <span class="profile-card__name skeleton-block"></span>
+                  <span class="profile-card__badge skeleton-block"></span>
+                </div>
+                <span class="profile-card__handle skeleton-block"></span>
+              </div>
+              <span class="profile-card__bio skeleton-block"></span>
+              <div class="profile-card__tags">
+                <span class="profile-card__tag skeleton-block"></span>
+                <span class="profile-card__tag skeleton-block"></span>
+              </div>
+              <div class="profile-card__stats">
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+              </div>
+              <div class="profile-card__actions">
+                <span class="profile-card__button skeleton-block"></span>
+                <span class="profile-card__button skeleton-block"></span>
+              </div>
+            </div>
+          </article>
+          <article class="profile-card profile-card--portrait profile-card--skeleton streamer-card" aria-hidden="true">
+            <div class="profile-card__media">
+              <div class="profile-card__image"></div>
+            </div>
+            <div class="profile-card__body">
+              <div class="profile-card__header">
+                <div class="profile-card__title">
+                  <span class="profile-card__name skeleton-block"></span>
+                  <span class="profile-card__badge skeleton-block"></span>
+                </div>
+                <span class="profile-card__handle skeleton-block"></span>
+              </div>
+              <span class="profile-card__bio skeleton-block"></span>
+              <div class="profile-card__tags">
+                <span class="profile-card__tag skeleton-block"></span>
+                <span class="profile-card__tag skeleton-block"></span>
+              </div>
+              <div class="profile-card__stats">
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+                <span class="profile-card__stat skeleton-block"></span>
+              </div>
+              <div class="profile-card__actions">
+                <span class="profile-card__button skeleton-block"></span>
+                <span class="profile-card__button skeleton-block"></span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div id="emptyState" class="empty-state empty-state--list" hidden>
+          <div class="index-state-card index-state-card--empty">
+            <div class="index-state-icon" aria-hidden="true">S</div>
+            <strong data-i18n="index.emptyTitle">등록된 스트리머가 아직 없습니다.</strong>
+            <p data-i18n="index.emptyDescription">첫 번째 스트리머 프로필은 스트리머 등록 신청 화면에서 신청 후 승인되면 공개됩니다.</p>
+            <div class="index-state-actions">
+              <a class="primary-btn" href="login.html" data-i18n="index.emptyAction">Twitch로 시작하기</a>
+            </div>
+          </div>
+        </div>
+        <div id="errorState" class="empty-state error" hidden>
+          <div class="index-state-card index-state-card--error">
+            <div class="index-state-icon" aria-hidden="true">!</div>
+            <strong data-i18n="index.errorTitle">스트리머 데이터를 불러오지 못했습니다.</strong>
+            <p data-i18n="index.errorDescription">API 응답을 확인한 뒤 다시 시도해주세요.</p>
+            <div class="index-state-actions">
+              <button class="primary-btn" type="button" data-retry-streamers data-i18n="index.errorAction">다시 시도</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="loginToast" class="login-toast" data-i18n="index.favoriteLogin">
+    즐겨찾기는 로그인 후 사용할 수 있습니다.
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/public.js"></script>
+</body>
+</html>

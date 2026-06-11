@@ -33,7 +33,7 @@
 
   initPublicMobileMenu();
   initAuthAwarePublicNav();
-  initPublicStreamerList();
+  initPublicStreamerDirectory();
 })();
 
 function publicT(key, params = {}, fallback = key) {
@@ -115,23 +115,27 @@ async function initAuthAwarePublicNav() {
   }
 }
 
-async function initPublicStreamerList() {
+async function initPublicStreamerDirectory() {
   const api = window.SeigaApi;
   const streamerGrid = document.getElementById('streamerGrid');
-  if (!api || !streamerGrid) return;
-
+  const popularList = document.getElementById('popularStreamersList');
+  const heroTagList = document.getElementById('heroTagList');
   const searchInput = document.getElementById('searchInput');
   const searchButton = document.getElementById('searchButton');
+  const hasExplorer = Boolean(streamerGrid);
+  const hasHomeWidgets = Boolean(popularList || heroTagList || searchInput);
+  if (!api || (!hasExplorer && !hasHomeWidgets)) return;
+
   const resultText = document.getElementById('resultText');
   const emptyState = document.getElementById('emptyState');
   const errorState = document.getElementById('errorState');
-  const popularList = document.getElementById('popularStreamersList');
-  const heroTagList = document.getElementById('heroTagList');
   const filterButtons = document.querySelectorAll('.filter-btn');
   const sortSelect = document.querySelector('.sort-select');
   const loginToast = document.getElementById('loginToast');
 
   const filters = { status: 'all', category: '', language: '' };
+  const queryParams = new URLSearchParams(location.search);
+  let activeTag = '';
   let allItems = [];
 
   function safeText(value, fallback = '') {
@@ -188,6 +192,11 @@ async function initPublicStreamerList() {
   function profileCover(profile) {
     return safeText(firstValue(profile, ['coverImage', 'backgroundImage', 'coverUrl', 'backgroundUrl']));
   }
+
+  if (searchInput && queryParams.has('q')) {
+    searchInput.value = safeText(queryParams.get('q'));
+  }
+  activeTag = safeText(queryParams.get('tag'));
 
   function profileDetailUrl(profile) {
     const explicitUrl = safeText(firstValue(profile, ['profileUrl', 'detailUrl']));
@@ -247,6 +256,13 @@ async function initPublicStreamerList() {
     return searchable.includes(text);
   }
 
+  function matchesTag(profile, tag) {
+    const text = safeText(tag).toLowerCase();
+    if (!text) return true;
+    if (text === publicT('common.live', {}, 'LIVE').toLowerCase() || text === 'live') return isLiveProfile(profile);
+    return profileTags(profile).some((value) => value.toLowerCase() === text || value.toLowerCase().includes(text));
+  }
+
   function matchesFilters(profile) {
     if (filters.status === 'live' && !isLiveProfile(profile)) return false;
     if (filters.status === 'offline' && isLiveProfile(profile)) return false;
@@ -270,8 +286,22 @@ async function initPublicStreamerList() {
 
   function applyControls() {
     const query = searchInput?.value || '';
-    const filtered = allItems.filter((profile) => matchesSearch(profile, query) && matchesFilters(profile));
+    const filtered = allItems.filter((profile) => matchesSearch(profile, query) && matchesTag(profile, activeTag) && matchesFilters(profile));
     render(sortProfiles(filtered, sortValue()));
+  }
+
+  function streamersHref(params = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      const text = safeText(value);
+      if (text) query.set(key, text);
+    });
+    const queryString = query.toString();
+    return `streamers.html${queryString ? `?${queryString}` : ''}`;
+  }
+
+  function goToStreamerSearch() {
+    location.href = streamersHref({ q: searchInput?.value || '' });
   }
 
   function safeStyleUrl(value) {
@@ -320,7 +350,7 @@ async function initPublicStreamerList() {
     });
   }
 
-  streamerGrid.addEventListener('error', (event) => {
+  streamerGrid?.addEventListener('error', (event) => {
     const image = event.target;
     if (!(image instanceof HTMLImageElement)) return;
     const avatar = image.closest('.profile-card__image');
@@ -331,7 +361,8 @@ async function initPublicStreamerList() {
 
   function renderPopularStreamers(items = []) {
     if (!popularList) return;
-    popularList.classList.add('profile-card-grid', 'profile-card-grid--featured');
+    popularList.classList.remove('profile-card-grid', 'profile-card-grid--featured');
+    popularList.classList.add('rank-list', 'rank-list--home');
     const popularItems = sortProfiles(items, 'popular').slice(0, 3);
     if (!popularItems.length) {
       popularList.innerHTML = `
@@ -349,25 +380,18 @@ async function initPublicStreamerList() {
     popularList.innerHTML = popularItems.map((profile, index) => {
       const detailUrl = profileDetailUrl(profile);
       const isLive = isLiveProfile(profile);
-      return window.SeigaProfileCard.renderProfileCard(profile, {
-        className: 'streamer-card streamer-card--popular',
-        rank: index + 1,
-        slug: safeText(profile.slug),
-        name: profileName(profile),
-        handle: profileHandle(profile),
-        bio: profileBio(profile),
-        imageUrl: profileAvatar(profile) || profileCover(profile),
-        isLive,
-        tags: profileTags(profile),
-        stats: [
-          { icon: '♡', value: numberText(followerLikeCount(profile)), label: publicT('profileCard.statFollowers', {}, '팔로워'), format: false },
-          { icon: '▣', value: numberText(fanCardCount(profile)), label: publicT('profileCard.statFanCards', {}, '팬 카드'), format: false },
-          { icon: '●', value: isLive ? 'LIVE' : 'OFF', label: publicT('profileCard.statStatus', {}, '상태'), format: false }
-        ],
-        actions: [
-          { label: publicT('index.profileView', {}, '프로필 보기'), icon: '+', detailUrl, disabled: !detailUrl }
-        ]
-      });
+      const meta = [profileHandle(profile) ? `@${profileHandle(profile).replace(/^@/, '')}` : '', firstValue(profile, ['mainContent', 'category'])].filter(Boolean).join(' · ');
+      return `
+        <article class="rank-card rank-card--home liquid-card" ${detailUrl ? `data-detail-url="${api.escapeHtml(detailUrl)}"` : ''}>
+          <span class="rank-no">${index + 1}</span>
+          <span class="rank-avatar">${avatarMarkup(profile)}</span>
+          <span class="rank-info">
+            <strong>${api.escapeHtml(profileName(profile))}</strong>
+            <span>${api.escapeHtml(meta || profileBio(profile))}</span>
+          </span>
+          <span class="live-pill${isLive ? '' : ' off'}"><span class="dot"></span>${api.escapeHtml(isLive ? publicT('common.live', {}, 'LIVE') : publicT('common.offline', {}, 'OFFLINE'))}</span>
+        </article>
+      `;
     }).join('');
   }
 
@@ -389,7 +413,7 @@ async function initPublicStreamerList() {
 
     heroTagList.innerHTML = tags
       .slice(0, 6)
-      .map((tag) => `<span class="hero-tag">#${api.escapeHtml(tag)}</span>`)
+      .map((tag) => `<button class="hero-tag" type="button" data-hero-tag="${api.escapeHtml(tag)}">#${api.escapeHtml(tag)}</button>`)
       .join('');
   }
 
@@ -423,17 +447,31 @@ async function initPublicStreamerList() {
 
   function streamerSkeletonMarkup() {
     return Array.from({ length: 3 }).map(() => `
-      <article class="streamer-card streamer-card--skeleton" aria-hidden="true">
-        <div class="cover">
-          <span class="skeleton-block skeleton-pill"></span>
+      <article class="profile-card profile-card--portrait profile-card--skeleton streamer-card" aria-hidden="true">
+        <div class="profile-card__media">
+          <div class="profile-card__image"></div>
         </div>
-        <div class="card-body">
-          <span class="skeleton-block skeleton-title"></span>
-          <span class="skeleton-block skeleton-line"></span>
-          <span class="skeleton-block skeleton-line short"></span>
-          <div class="card-actions">
-            <span class="skeleton-block skeleton-button"></span>
-            <span class="skeleton-block skeleton-button"></span>
+        <div class="profile-card__body">
+          <div class="profile-card__header">
+            <div class="profile-card__title">
+              <span class="profile-card__name skeleton-block"></span>
+              <span class="profile-card__badge skeleton-block"></span>
+            </div>
+            <span class="profile-card__handle skeleton-block"></span>
+          </div>
+          <span class="profile-card__bio skeleton-block"></span>
+          <div class="profile-card__tags">
+            <span class="profile-card__tag skeleton-block"></span>
+            <span class="profile-card__tag skeleton-block"></span>
+          </div>
+          <div class="profile-card__stats">
+            <span class="profile-card__stat skeleton-block"></span>
+            <span class="profile-card__stat skeleton-block"></span>
+            <span class="profile-card__stat skeleton-block"></span>
+          </div>
+          <div class="profile-card__actions">
+            <span class="profile-card__button skeleton-block"></span>
+            <span class="profile-card__button skeleton-block"></span>
           </div>
         </div>
       </article>
@@ -442,7 +480,7 @@ async function initPublicStreamerList() {
 
   function popularSkeletonMarkup() {
     return Array.from({ length: 3 }).map(() => `
-      <article class="ranking-item ranking-item--skeleton" aria-hidden="true">
+      <article class="rank-card rank-card--skeleton liquid-card" aria-hidden="true">
         <span class="skeleton-block rank-no"></span>
         <span class="skeleton-block rank-avatar"></span>
         <span class="rank-info">
@@ -457,19 +495,23 @@ async function initPublicStreamerList() {
   function renderLoading() {
     if (emptyState) emptyState.hidden = true;
     if (errorState) errorState.hidden = true;
-    streamerGrid.hidden = false;
-    streamerGrid.classList.remove('has-results', 'is-short');
-    streamerGrid.classList.add('is-loading');
-    streamerGrid.innerHTML = streamerSkeletonMarkup();
+    if (streamerGrid) {
+      streamerGrid.hidden = false;
+      streamerGrid.classList.remove('has-results', 'is-short');
+      streamerGrid.classList.add('is-loading');
+      streamerGrid.innerHTML = streamerSkeletonMarkup();
+    }
     if (popularList) popularList.innerHTML = popularSkeletonMarkup();
     if (heroTagList) heroTagList.innerHTML = `<span class="hero-tag">${publicT('index.tagLoading', {}, '태그 데이터를 불러오는 중입니다.')}</span>`;
     if (resultText) resultText.textContent = publicT('index.loading', {}, '스트리머 데이터를 불러오는 중입니다.');
   }
 
   function renderEmpty(hasSourceData = allItems.length > 0) {
-    streamerGrid.hidden = true;
-    streamerGrid.classList.remove('has-results', 'is-short', 'is-loading');
-    streamerGrid.innerHTML = '';
+    if (streamerGrid) {
+      streamerGrid.hidden = true;
+      streamerGrid.classList.remove('has-results', 'is-short', 'is-loading');
+      streamerGrid.innerHTML = '';
+    }
     if (emptyState) {
       emptyState.hidden = false;
       emptyState.innerHTML = hasSourceData
@@ -487,7 +529,7 @@ async function initPublicStreamerList() {
           title: publicT('index.emptyTitle', {}, '등록된 스트리머가 아직 없습니다.'),
           message: publicT('index.emptyDescription', {}, '첫 번째 스트리머 프로필은 스트리머 등록 신청 화면에서 신청 후 승인되면 공개됩니다.'),
           actionLabel: publicT('index.emptyAction', {}, 'Twitch로 시작하기'),
-          actionHref: 'register.html'
+          actionHref: 'login.html'
         });
     }
     if (errorState) errorState.hidden = true;
@@ -497,9 +539,11 @@ async function initPublicStreamerList() {
   }
 
   function renderError(error) {
-    streamerGrid.hidden = true;
-    streamerGrid.classList.remove('has-results', 'is-short', 'is-loading');
-    streamerGrid.innerHTML = '';
+    if (streamerGrid) {
+      streamerGrid.hidden = true;
+      streamerGrid.classList.remove('has-results', 'is-short', 'is-loading');
+      streamerGrid.innerHTML = '';
+    }
     if (emptyState) emptyState.hidden = true;
     if (errorState) {
       errorState.hidden = false;
@@ -531,6 +575,11 @@ async function initPublicStreamerList() {
   }
 
   function render(items = []) {
+    if (!hasExplorer) {
+      renderPopularStreamers(allItems);
+      renderHeroTags(allItems);
+      return;
+    }
     if (!items.length) {
       renderEmpty();
       return;
@@ -549,6 +598,7 @@ async function initPublicStreamerList() {
 
   function resetControls() {
     if (searchInput) searchInput.value = '';
+    activeTag = '';
     filters.status = 'all';
     filters.category = '';
     filters.language = '';
@@ -609,51 +659,73 @@ async function initPublicStreamerList() {
     window.__loginToastTimer = setTimeout(() => loginToast.classList.remove('show'), 2200);
   }
 
-  filterButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const group = button.dataset.filterGroup || button.closest('[data-filter-group]')?.dataset.filterGroup;
-      if (!group) return;
+  if (hasExplorer) {
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const group = button.dataset.filterGroup || button.closest('[data-filter-group]')?.dataset.filterGroup;
+        if (!group) return;
 
-      const value = button.dataset.filter || '';
-      const wasSelected = filters[group] === value || (group === 'status' && (filters.status || 'all') === value);
-      if (group === 'status') {
-        filters.status = value === 'all' || wasSelected ? 'all' : value;
-      } else {
-        filters[group] = wasSelected ? '' : value;
+        const value = button.dataset.filter || '';
+        const wasSelected = filters[group] === value || (group === 'status' && (filters.status || 'all') === value);
+        if (group === 'status') {
+          filters.status = value === 'all' || wasSelected ? 'all' : value;
+        } else {
+          filters[group] = wasSelected ? '' : value;
+        }
+
+        syncFilterButtonStates();
+        applyControls();
+      });
+    });
+
+    searchButton?.addEventListener('click', applyControls);
+    searchInput?.addEventListener('input', () => {
+      clearTimeout(window.__streamerSearchTimer);
+      window.__streamerSearchTimer = setTimeout(applyControls, 250);
+    });
+    sortSelect?.addEventListener('change', applyControls);
+    emptyState?.addEventListener('click', (event) => {
+      if (event.target.closest('[data-clear-streamer-filters]')) resetControls();
+      if (event.target.closest('[data-retry-streamers]')) load();
+    });
+    errorState?.addEventListener('click', (event) => {
+      if (event.target.closest('[data-retry-streamers]')) load();
+    });
+
+    streamerGrid?.addEventListener('click', (event) => {
+      const loginButton = event.target.closest('[data-login-required]');
+      if (loginButton) return toastLogin(event);
+
+      const profileButton = event.target.closest('[data-detail-url]');
+      if (profileButton?.dataset.detailUrl) {
+        location.href = profileButton.dataset.detailUrl;
       }
 
-      syncFilterButtonStates();
-      applyControls();
+      const fanButton = event.target.closest('[data-fan-write]');
+      if (fanButton?.dataset.fanWrite) {
+        location.href = `fan-card-write.html?slug=${encodeURIComponent(fanButton.dataset.fanWrite)}`;
+      }
     });
-  });
+  } else {
+    searchButton?.addEventListener('click', goToStreamerSearch);
+    searchInput?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        goToStreamerSearch();
+      }
+    });
+  }
 
-  searchButton?.addEventListener('click', applyControls);
-  searchInput?.addEventListener('input', () => {
-    clearTimeout(window.__streamerSearchTimer);
-    window.__streamerSearchTimer = setTimeout(applyControls, 250);
-  });
-  sortSelect?.addEventListener('change', applyControls);
-  emptyState?.addEventListener('click', (event) => {
-    if (event.target.closest('[data-clear-streamer-filters]')) resetControls();
-    if (event.target.closest('[data-retry-streamers]')) load();
-  });
-  errorState?.addEventListener('click', (event) => {
-    if (event.target.closest('[data-retry-streamers]')) load();
-  });
-
-  streamerGrid.addEventListener('click', (event) => {
-    const loginButton = event.target.closest('[data-login-required]');
-    if (loginButton) return toastLogin(event);
-
-    const profileButton = event.target.closest('[data-detail-url]');
-    if (profileButton?.dataset.detailUrl) {
-      location.href = profileButton.dataset.detailUrl;
+  heroTagList?.addEventListener('click', (event) => {
+    const tagButton = event.target.closest('[data-hero-tag]');
+    if (!tagButton) return;
+    const tag = tagButton.dataset.heroTag || '';
+    if (!hasExplorer) {
+      location.href = streamersHref({ tag });
+      return;
     }
-
-    const fanButton = event.target.closest('[data-fan-write]');
-    if (fanButton?.dataset.fanWrite) {
-      location.href = `fan-card-write.html?slug=${encodeURIComponent(fanButton.dataset.fanWrite)}`;
-    }
+    activeTag = activeTag === tag ? '' : tag;
+    applyControls();
   });
 
   popularList?.addEventListener('click', (event) => {
@@ -672,10 +744,10 @@ async function initPublicStreamerList() {
     }
   });
 
-  syncFilterButtonStates();
+  if (hasExplorer) syncFilterButtonStates();
   load();
   document.addEventListener('seiga:i18n-change', () => {
-    syncFilterButtonStates();
+    if (hasExplorer) syncFilterButtonStates();
     if (allItems.length) {
       applyControls();
     }

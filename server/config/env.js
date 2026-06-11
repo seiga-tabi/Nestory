@@ -50,22 +50,41 @@ if (!parsed.success) {
   throw new Error('Invalid environment configuration');
 }
 
+const weakProductionSecretPattern = /change-me|dev-|example|password|secret/i;
+const productionSecretRequirements = {
+  SESSION_SECRET: { minLength: 32, categories: 2 },
+  TOKEN_ENCRYPTION_SECRET: { minLength: 32, categories: 2 },
+  ADMIN_PASSWORD: { minLength: 12, categories: 4 }
+};
+
+function characterCategories(value) {
+  return [
+    /[a-z]/.test(value),
+    /[A-Z]/.test(value),
+    /[0-9]/.test(value),
+    /[^A-Za-z0-9]/.test(value)
+  ].filter(Boolean).length;
+}
+
+function isInvalidProductionSecret(key, value) {
+  const requirement = productionSecretRequirements[key];
+  if (!requirement || !value) return true;
+  if (String(value).length < requirement.minLength) return true;
+  if (weakProductionSecretPattern.test(value)) return true;
+  return characterCategories(value) < requirement.categories;
+}
+
 const productionWarnings = [];
 if (parsed.data.NODE_ENV === 'production') {
-  [
-    ['DATABASE_URL', parsed.data.DATABASE_URL],
-    ['SESSION_SECRET', parsed.data.SESSION_SECRET],
-    ['TOKEN_ENCRYPTION_SECRET', parsed.data.TOKEN_ENCRYPTION_SECRET],
-    ['ADMIN_PASSWORD', parsed.data.ADMIN_PASSWORD]
-  ].forEach(([key, value]) => {
-    if (!value || /change-me|dev-|example/i.test(value)) productionWarnings.push(key);
+  Object.keys(productionSecretRequirements).forEach((key) => {
+    if (isInvalidProductionSecret(key, parsed.data[key])) productionWarnings.push(key);
   });
 }
 
 if (productionWarnings.length) {
   console.error({
     invalidProductionEnv: productionWarnings,
-    message: 'Set production secrets in .env before starting the server.'
+    message: 'Set strong production secrets before starting the server. Values are not logged.'
   });
   throw new Error('Invalid production environment configuration');
 }
